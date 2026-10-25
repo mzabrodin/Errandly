@@ -4,6 +4,7 @@ COPY package.json package-lock.json ./
 COPY backend/package.json backend/
 COPY frontend/package.json frontend/
 RUN npm ci -w backend --ignore-scripts
+COPY tsconfig.base.json ./
 COPY backend backend
 RUN npm run build -w backend
 
@@ -17,4 +18,4 @@ RUN npm ci -w backend --omit=dev --ignore-scripts && npm cache clean --force
 COPY --from=build /app/backend/dist backend/dist
 USER node
 EXPOSE 3000
-CMD ["node", "backend/dist/main.js"]
+CMD ["node", "--enable-source-maps", "backend/dist/main.js"]
