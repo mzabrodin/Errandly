@@ -73,6 +73,8 @@ services:
       SMTP_SECURE: ${SMTP_SECURE:-false}
       SMTP_USER: ${SMTP_USER:-}
       SMTP_PASS: ${SMTP_PASS:-}
+      # Dev endpoint for emails from the frontend mock API; ignored unless SMTP is Mailpit
+      MAIL_DEV_API: ${MAIL_DEV_API:-true}
     ports:
       - '127.0.0.1:${API_PORT:-3000}:3000'
     networks: [frontend, backend]
