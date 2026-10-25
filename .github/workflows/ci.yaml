@@ -1,0 +1,54 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - name: Commit messages
+        if: github.event_name == 'pull_request'
+        run: npx commitlint --from ${{ github.event.pull_request.base.sha }} --to ${{ github.event.pull_request.head.sha }}
+      - run: npm run format:check
+      - run: npm run lint
+      - run: npm run build
+      - name: API contract is up to date
+        run: |
+          npm run api:sync
+          git diff --exit-code -- backend/openapi.json frontend/src/shared/api/schema.d.ts
+      - run: npm test -w frontend
+      - run: npm run test:cov -w backend
+      - run: npm run test:e2e -w backend
+
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Start the stack
+        run: docker compose up --build -d --wait
+      - name: Smoke test through nginx
+        run: curl -fsS http://localhost:8080/api/health
+      - name: Logs on failure
+        if: failure()
+        run: docker compose logs
+      - name: Stop
+        if: always()
+        run: docker compose down -v
