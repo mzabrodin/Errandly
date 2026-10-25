@@ -13,9 +13,19 @@ updates:
     commit-message:
       prefix: chore
       include: scope
+    ignore:
+      # Types must match the Node runtime; move together with .nvmrc and the Docker images
+      - dependency-name: '@types/node'
+        update-types: [version-update:semver-major]
+      # TypeScript 7 is the native compiler; Nest CLI, Vite and oxlint must support it first
+      - dependency-name: typescript
+        update-types: [version-update:semver-major]
     groups:
       nestjs:
         patterns: ['@nestjs/*']
+      # vitest and its plugins only work at the same version
+      vitest:
+        patterns: ['vitest', '@vitest/*']
       minor-and-patch:
         update-types: [minor, patch]
 
@@ -42,6 +52,10 @@ updates:
     commit-message:
       prefix: chore
       include: scope
+    ignore:
+      # Stay on Node LTS; the next LTS is a deliberate change together with .nvmrc and @types/node
+      - dependency-name: node
+        update-types: [version-update:semver-major]
 
   - package-ecosystem: docker-compose
     directory: /
@@ -53,3 +67,7 @@ updates:
     commit-message:
       prefix: chore
       include: scope
+    ignore:
+      # A PostgreSQL major upgrade needs a dump and restore of the data volume
+      - dependency-name: postgres
+        update-types: [version-update:semver-major]
