@@ -13,15 +13,16 @@
     "test": "npm run test --workspaces",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
+    "api:sync": "npm run openapi:export -w backend && npm run api:generate -w frontend",
     "prepare": "husky"
   },
-  "lint-staged": {
-    "*.{ts,tsx,js,jsx,json,css,md,yml,yaml}": "prettier --write"
-  },
   "engines": {
-    "node": ">=22"
+    "node": ">=24"
   },
   "devDependencies": {
+    "@commitlint/cli": "^21.2.4",
+    "@commitlint/config-conventional": "^21.2.4",
+    "@ianvs/prettier-plugin-sort-imports": "^4.7.1",
     "husky": "^9.1.7",
     "lint-staged": "^17.6.0",
     "prettier": "^3.9.10"
