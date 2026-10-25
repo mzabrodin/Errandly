@@ -8,5 +8,18 @@ export default defineConfig({
     globals: true,
     root: './',
     include: ['**/*.spec.ts'],
+    setupFiles: ['reflect-metadata'],
+    coverage: {
+      provider: 'v8',
+      include: ['src/**/*.ts'],
+      exclude: [
+        'src/**/*.spec.ts',
+        'src/main.ts',
+        'src/openapi.ts',
+        'src/app.setup.ts',
+        'src/**/*.module.ts',
+      ],
+      thresholds: { lines: 70, functions: 70, branches: 70, statements: 70 },
+    },
   },
 });
