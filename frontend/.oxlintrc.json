@@ -1,8 +1,42 @@
 {
   "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
+  "extends": ["../.oxlintrc.json"],
+  "plugins": ["typescript", "unicorn", "oxc", "import", "promise", "vitest", "react", "jsx-a11y"],
+  "env": {
+    "browser": true
+  },
   "rules": {
     "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
+    "react/exhaustive-deps": "error",
+    "react/only-export-components": ["error", { "allowConstantExport": true }],
+    "typescript/consistent-type-imports": "error",
+    "react/react-in-jsx-scope": "off"
+  },
+  "overrides": [
+    {
+      "files": ["src/shared/**"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "group": ["**/pages/**", "**/app/**"],
+                "message": "shared must not depend on pages or app."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": ["src/pages/**"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          { "patterns": [{ "group": ["**/app/**"], "message": "pages must not depend on app." }] }
+        ]
+      }
+    }
+  ]
 }
