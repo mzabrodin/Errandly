@@ -1,0 +1,203 @@
+.wrapper {
+  position: relative;
+}
+
+.bell {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border: var(--border);
+  border-radius: 50%;
+  background: var(--paper);
+  cursor: pointer;
+  transition: background-color 0.12s ease;
+}
+
+.bell:hover {
+  background: var(--lime);
+}
+
+/* дзвіночок легенько хитається, коли є непрочитане */
+.bellActive svg {
+  transform-origin: 50% 10%;
+  animation: ring 4s ease-in-out infinite;
+}
+
+.badge {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  display: grid;
+  place-items: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 5px;
+  border: 1.5px solid var(--ink);
+  border-radius: var(--radius-pill);
+  background: var(--coral);
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.panel {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  z-index: 30;
+  width: min(380px, calc(100vw - 24px));
+  max-height: min(520px, calc(100dvh - 100px));
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: var(--border);
+  border-radius: var(--radius);
+  background: var(--paper);
+  box-shadow: 5px 5px 0 var(--ink);
+  animation: pop-in 0.14s ease-out;
+}
+
+.head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 14px 16px;
+  border-bottom: var(--border);
+  background: var(--sky);
+}
+
+.title {
+  font-size: 18px;
+}
+
+.readAll {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 10px;
+  border: var(--border);
+  border-radius: var(--radius-pill);
+  background: var(--paper);
+  font-size: 12.5px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.readAll:hover {
+  background: var(--lime);
+}
+
+.list {
+  margin: 0;
+  padding: 6px;
+  overflow-y: auto;
+  list-style: none;
+}
+
+.item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  width: 100%;
+  padding: 10px;
+  border: 1.5px solid transparent;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  font-size: 14px;
+  line-height: 1.4;
+  text-align: left;
+  cursor: pointer;
+}
+
+.item:hover,
+.item:focus-visible {
+  border-color: var(--ink);
+  background: var(--cream);
+  box-shadow: none;
+}
+
+.unread {
+  background: var(--accent-faint);
+}
+
+.icon {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border: var(--border);
+  border-radius: 50%;
+}
+
+.text {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.time {
+  font-size: 12px;
+  color: var(--ink-soft);
+}
+
+.dot {
+  flex: none;
+  width: 10px;
+  height: 10px;
+  margin-top: 6px;
+  border: 1.5px solid var(--ink);
+  border-radius: 50%;
+  background: var(--coral);
+}
+
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 32px 20px;
+  color: var(--ink-soft);
+  font-weight: 600;
+  text-align: center;
+}
+
+@keyframes ring {
+  0%,
+  88%,
+  100% {
+    transform: rotate(0);
+  }
+  91% {
+    transform: rotate(14deg);
+  }
+  94% {
+    transform: rotate(-12deg);
+  }
+  97% {
+    transform: rotate(6deg);
+  }
+}
+
+@keyframes pop-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+}
+
+@media (max-width: 520px) {
+  .panel {
+    position: fixed;
+    top: calc(var(--header-h) + 6px);
+    right: 12px;
+    left: 12px;
+    width: auto;
+  }
+}

@@ -1,0 +1,165 @@
+:root {
+  /* палітра: кремовий папір і темне чорнило (blume), небо й трава (kummba) */
+  --cream: #faf7ea;
+  --cream-deep: #f1ecd6;
+  --paper: #ffffff;
+  --ink: #2b2420;
+  --ink-soft: #6b625b;
+  --ink-faint: #a39a90;
+  --line: #2b2420;
+  --line-soft: #e3dcc8;
+
+  --grass: #3e7b27;
+  --grass-deep: #2d5e1b;
+  --leaf: #8bc34a;
+  --lime: #e6f36b;
+  --sky: #bfe0f7;
+  --sky-deep: #8ec3ea;
+  --coral: #ff8f78;
+  --danger: #c2391f;
+
+  /* небо, пагорби, декор */
+  --sky-top: #8ec3ea;
+  --sky-bottom: #e4f1fb;
+  --hill-light: #6ba539;
+  --hill-mid: #4f8f2f;
+  --hill-dark: #3e7b27;
+  --hill-blades: #2d5e1b;
+  --cloud: #ffffff;
+  --flower-alt: #f6b6cf;
+  --flower-mint: #9ee0c0;
+
+  /* похідні відтінки */
+  --accent-soft: #f4fbbf;
+  --accent-faint: #fbfde6;
+  --accent-deep: #d6e85a;
+  --danger-soft: #fff4f0;
+  --paper-glass: rgb(255 255 255 / 0.6);
+  --grid-line: #f0ead3;
+  --header-bg: rgb(250 247 234 / 0.92);
+
+  /* статуси задач */
+  --status-planned: var(--sky);
+  --status-done: #cfe8a9;
+  --status-overdue: #ffd2c7;
+  --status-unassigned: var(--cream-deep);
+
+  --font-display: 'Unbounded Variable', 'Arial Black', sans-serif;
+  --font-body: 'Manrope Variable', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-pixel: 'Pixelify Sans', 'Courier New', monospace;
+
+  --radius-sm: 10px;
+  --radius: 18px;
+  --radius-lg: 28px;
+  --radius-pill: 999px;
+  --border: 1.5px solid var(--line);
+
+  --shadow-pop: 4px 4px 0 var(--ink);
+  --focus-ring: 0 0 0 3px var(--lime), 0 0 0 4.5px var(--ink);
+
+  --header-h: 68px;
+  --bottom-nav-h: 64px;
+}
+
+/* ---------- теми ---------- */
+/* Кожна тема — лише інший набір токенів; розмітка й компоненти ті самі. */
+
+/* Сакура: пудрово-рожева, як «pretty little marketer» з референсу */
+:root[data-theme='sakura'] {
+  --cream: #fdf4f2;
+  --cream-deep: #f7e3e3;
+  --ink: #3a2430;
+  --ink-soft: #7a5e69;
+  --ink-faint: #b39aa4;
+  --line: #3a2430;
+  --line-soft: #f0d9dc;
+  --grass: #c9407f;
+  --grass-deep: #9e2d61;
+  --leaf: #e98bb6;
+  --lime: #f8b4d0;
+  --sky: #dce9f7;
+  --sky-deep: #b9d3ef;
+  --sky-top: #c4dbf3;
+  --sky-bottom: #f6f0f6;
+  --hill-light: #a6c98f;
+  --hill-mid: #8db677;
+  --hill-dark: #6f9e5c;
+  --hill-blades: #4f7a3f;
+  --flower-alt: #ffd3a5;
+  --accent-soft: #fde6ef;
+  --accent-faint: #fff5f9;
+  --accent-deep: #f294bb;
+  --grid-line: #f6e4e4;
+  --header-bg: rgb(253 244 242 / 0.92);
+  --status-done: #f9d3e3;
+  --shadow-pop: 4px 4px 0 var(--ink);
+}
+
+/* Піксель: гарячий рожевий і неон, як dino lab — з майже квадратними кутами */
+:root[data-theme='pixel'] {
+  --cream: #f1f1ef;
+  --cream-deep: #e2e2df;
+  --paper: #ffffff;
+  --ink: #141414;
+  --ink-soft: #555555;
+  --ink-faint: #9a9a9a;
+  --line: #141414;
+  --line-soft: #dedede;
+  --grass: #ff3d9a;
+  --grass-deep: #d61f78;
+  --leaf: #4ade80;
+  --lime: #ff7ab8;
+  --sky: #d8ecff;
+  --sky-deep: #9fd0ff;
+  --sky-top: #b9dcff;
+  --sky-bottom: #f0f7ff;
+  --hill-light: #4ade80;
+  --hill-mid: #22c55e;
+  --hill-dark: #16a34a;
+  --hill-blades: #0b6b2e;
+  --flower-alt: #ffe14d;
+  --flower-mint: #7dd3fc;
+  --accent-soft: #ffe0ef;
+  --accent-faint: #fff3f9;
+  --accent-deep: #ff4fa3;
+  --grid-line: #e4e4e1;
+  --header-bg: rgb(241 241 239 / 0.94);
+  --status-done: #bbf7d0;
+  --radius-sm: 3px;
+  --radius: 5px;
+  --radius-lg: 8px;
+  --radius-pill: 6px;
+  --shadow-pop: 5px 5px 0 var(--ink);
+}
+
+/* Захід сонця: персикове небо, фіолетові пагорби */
+:root[data-theme='sunset'] {
+  --cream: #fff4ea;
+  --cream-deep: #fbe3cf;
+  --ink: #2e1f2c;
+  --ink-soft: #6e5566;
+  --ink-faint: #a8909d;
+  --line: #2e1f2c;
+  --line-soft: #f3dcc9;
+  --grass: #e8613c;
+  --grass-deep: #b8442a;
+  --leaf: #f59e6b;
+  --lime: #ffc46b;
+  --sky: #ffd9b8;
+  --sky-deep: #ffb38a;
+  --sky-top: #ff9f8f;
+  --sky-bottom: #ffe8d4;
+  --hill-light: #b679a3;
+  --hill-mid: #9a5f8a;
+  --hill-dark: #7d4a73;
+  --hill-blades: #5a3053;
+  --cloud: #fff7ef;
+  --flower-alt: #c9b6f2;
+  --accent-soft: #ffeccc;
+  --accent-faint: #fff8ec;
+  --accent-deep: #ffad3b;
+  --grid-line: #f6e5d4;
+  --header-bg: rgb(255 244 234 / 0.92);
+  --status-planned: #ffe0c7;
+  --status-done: #fde4a8;
+}

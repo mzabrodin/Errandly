@@ -1,0 +1,124 @@
+.card {
+  position: relative;
+  margin-bottom: 24px;
+  padding: 24px;
+  border: var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--lime);
+  box-shadow: var(--shadow-pop);
+}
+
+.star {
+  position: absolute;
+  top: -18px;
+  left: 22px;
+  animation: spin 14s linear infinite;
+}
+
+.close {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border: var(--border);
+  border-radius: 50%;
+  background: var(--paper);
+  cursor: pointer;
+}
+
+.title {
+  font-size: clamp(22px, 3vw, 28px);
+  letter-spacing: -0.04em;
+}
+
+.progress {
+  margin-top: 4px;
+  font-weight: 700;
+}
+
+.steps {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+  margin: 18px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.step {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 16px;
+  border: var(--border);
+  border-radius: var(--radius);
+  background: var(--paper);
+}
+
+.done {
+  background: var(--paper-glass);
+  border-style: dashed;
+}
+
+.done .text strong {
+  text-decoration: line-through;
+  text-decoration-thickness: 2px;
+}
+
+.marker {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border: var(--border);
+  border-radius: 50%;
+  background: var(--cream);
+  font-family: var(--font-pixel);
+  font-size: 16px;
+}
+
+.done .marker {
+  background: var(--leaf);
+}
+
+.text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 14px;
+}
+
+.text strong {
+  font-size: 15.5px;
+}
+
+.text span {
+  color: var(--ink-soft);
+}
+
+.action {
+  margin-top: auto;
+  padding: 7px 14px;
+  border: var(--border);
+  border-radius: var(--radius-pill);
+  background: var(--ink);
+  color: var(--cream);
+  font-size: 13.5px;
+  font-weight: 700;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.action:hover {
+  box-shadow: 2px 2px 0 var(--grass);
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

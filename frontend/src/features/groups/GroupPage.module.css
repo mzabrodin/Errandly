@@ -1,0 +1,157 @@
+.layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 360px;
+  align-items: start;
+  gap: 24px;
+}
+
+.members {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 14px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.member {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 18px;
+}
+
+.memberInfo {
+  flex: 1;
+  min-width: 0;
+}
+
+.memberName {
+  font-weight: 800;
+  font-size: 17px;
+}
+
+.me {
+  font-weight: 500;
+  color: var(--ink-soft);
+}
+
+.memberEmail {
+  font-size: 13.5px;
+  color: var(--ink-soft);
+  overflow-wrap: anywhere;
+}
+
+.memberTags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 10px;
+}
+
+.iconButton {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border: 1.5px solid transparent;
+  border-radius: 50%;
+  background: transparent;
+  cursor: pointer;
+}
+
+.iconButton:hover {
+  border-color: var(--ink);
+  background: var(--cream);
+}
+
+.side {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.absences {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  background: var(--sky);
+  position: relative;
+  overflow: hidden;
+}
+
+.cloud {
+  position: absolute;
+  top: -12px;
+  right: -22px;
+  pointer-events: none;
+}
+
+.sectionTitle {
+  font-size: 18px;
+}
+
+.sectionText {
+  font-size: 14px;
+}
+
+.muted {
+  font-size: 14px;
+  color: var(--ink-soft);
+}
+
+.absenceList {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.absence {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 4px 4px 4px 14px;
+  border: var(--border);
+  border-radius: var(--radius-pill);
+  background: var(--paper);
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.absence span {
+  flex: 1;
+}
+
+.absenceForm {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  align-items: end;
+}
+
+.absenceForm button {
+  grid-column: 1 / -1;
+}
+
+@media (max-width: 960px) {
+  .layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* хмарка-стікер повільно пливе */
+.cloud {
+  animation: cloud-float 9s ease-in-out infinite;
+}
+
+@keyframes cloud-float {
+  50% {
+    transform: translate(-14px, 4px);
+  }
+}

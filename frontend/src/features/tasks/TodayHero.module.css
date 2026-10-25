@@ -1,0 +1,174 @@
+.hero {
+  position: relative;
+  min-height: 190px;
+  margin-bottom: 24px;
+  overflow: hidden;
+  border: var(--border);
+  border-radius: var(--radius-lg);
+  background: linear-gradient(180deg, var(--sky-top) 0%, var(--sky) 70%, var(--sky-bottom) 100%);
+  box-shadow: var(--shadow-pop);
+}
+
+.content {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  max-width: 560px;
+  padding: 24px 24px 64px;
+}
+
+.hello {
+  font-size: clamp(26px, 4vw, 36px);
+  font-weight: 800;
+  letter-spacing: -0.04em;
+}
+
+.summaryRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.summary {
+  padding: 5px 14px;
+  border: var(--border);
+  border-radius: var(--radius-pill);
+  background: var(--cream);
+  font-size: 15px;
+  font-weight: 700;
+}
+
+button.summary {
+  cursor: pointer;
+  transition:
+    transform 0.12s ease,
+    box-shadow 0.12s ease;
+}
+
+button.summary:hover {
+  transform: translate(-1px, -1px);
+  box-shadow: 2px 2px 0 var(--ink);
+}
+
+.summaryOverdue {
+  border-color: var(--danger);
+  background: var(--status-overdue);
+  color: var(--danger);
+}
+
+button.summaryOverdue:hover {
+  box-shadow: 2px 2px 0 var(--danger);
+}
+
+.week {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  margin-top: 4px;
+}
+
+.weekLabel {
+  font-size: 13px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.bar {
+  width: min(220px, 50vw);
+  height: 16px;
+  overflow: hidden;
+  border: var(--border);
+  border-radius: var(--radius-pill);
+  background: var(--paper);
+}
+
+.bar span {
+  display: block;
+  height: 100%;
+  /* тінь замість border-right: на 100% її обрізає контейнер, і смужка доходить до краю */
+  box-shadow: 1.5px 0 0 var(--ink);
+  background: repeating-linear-gradient(-45deg, var(--lime) 0 8px, var(--accent-deep) 8px 16px);
+  transition: width 0.4s ease;
+}
+
+.count {
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.cloudBig {
+  position: absolute;
+  top: 16px;
+  right: 18%;
+  z-index: 1;
+  animation: drift 9s ease-in-out infinite;
+}
+
+.cloudSmall {
+  position: absolute;
+  top: 56px;
+  right: 4%;
+  z-index: 1;
+  animation: drift 7s ease-in-out infinite reverse;
+}
+
+.hills {
+  height: 42%;
+}
+
+.flower {
+  position: absolute;
+  right: 30%;
+  bottom: 6px;
+  z-index: 1;
+  transform: rotate(-10deg);
+  animation: sway 3.5s ease-in-out infinite;
+}
+
+@keyframes drift {
+  0%,
+  100% {
+    transform: translate(0, 0);
+  }
+  50% {
+    transform: translate(-40px, 6px);
+  }
+}
+
+@keyframes sway {
+  50% {
+    transform: rotate(6deg) translateY(-4px);
+  }
+}
+
+@media (max-width: 760px) {
+  .cloudBig {
+    right: -24px;
+    width: 96px;
+    height: auto;
+  }
+
+  .cloudSmall {
+    display: none;
+  }
+
+  .flower {
+    right: 12px;
+    width: 64px;
+    height: 64px;
+  }
+
+  .content {
+    padding: 20px 18px 56px;
+  }
+}
+
+.summaryUnassigned {
+  border-style: dashed;
+  background: var(--paper);
+}

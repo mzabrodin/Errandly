@@ -1,0 +1,479 @@
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px 16px;
+  margin-bottom: 14px;
+}
+
+.nav {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.navButton {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border: var(--border);
+  border-radius: 50%;
+  background: var(--paper);
+  cursor: pointer;
+}
+
+.navButton:hover {
+  background: var(--lime);
+}
+
+.period {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 20px;
+  text-transform: lowercase;
+}
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0 0 18px;
+  padding: 0;
+  list-style: none;
+}
+
+.legendItem {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 12px 3px 4px;
+  border: 1.5px solid var(--line-soft);
+  border-radius: var(--radius-pill);
+  background: var(--paper);
+  font-size: 13.5px;
+  font-weight: 700;
+}
+
+.legendAway {
+  padding-left: 10px;
+  border-style: dashed;
+  border-color: var(--ink-faint);
+  color: var(--ink-soft);
+}
+
+/* ---------- відсутності ---------- */
+.away {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0 0 6px;
+  padding: 0;
+  list-style: none;
+}
+
+.awayItem {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 8px 2px 2px;
+  border: 1.5px dashed var(--ink);
+  border-radius: var(--radius-pill);
+  background: repeating-linear-gradient(-45deg, var(--member-color) 0 6px, var(--paper) 6px 12px);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.awayItem span[aria-hidden] {
+  padding: 0 4px;
+  border-radius: var(--radius-pill);
+  background: var(--paper);
+}
+
+.awayItem svg {
+  flex: none;
+  margin-left: auto;
+}
+
+.awayCompact {
+  flex-direction: row;
+  flex-wrap: wrap;
+  margin: 0;
+}
+
+.awayCompact .awayItem {
+  gap: 2px;
+  padding: 1px 4px 1px 1px;
+}
+
+/* ---------- тиждень ---------- */
+.week {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  overflow: hidden;
+  border: var(--border);
+  border-radius: var(--radius);
+  background: var(--paper);
+}
+
+.weekDay {
+  min-height: 360px;
+  padding: 10px 8px;
+  border-right: 1.5px solid var(--line-soft);
+}
+
+.weekDay:last-child {
+  border-right: 0;
+}
+
+.weekDayHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+  padding: 0 4px;
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+
+.headRight {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.dayNumber {
+  font-family: var(--font-pixel);
+  font-size: 22px;
+  font-weight: 500;
+  color: var(--ink);
+}
+
+/* сьогодні: насичений лаймовий фон, смужка зверху й наліпка «сьогодні» */
+.today {
+  position: relative;
+  background:
+    linear-gradient(var(--lime), var(--lime)) top / 100% 6px no-repeat,
+    var(--accent-soft);
+}
+
+.today::after {
+  content: attr(data-today-label);
+  position: absolute;
+  top: -1px;
+  left: 8px;
+  padding: 1px 10px 2px;
+  border: 1.5px solid var(--ink);
+  border-top: 0;
+  border-radius: 0 0 10px 10px;
+  background: var(--lime);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.weekDay.today {
+  padding-top: 22px;
+}
+
+.monthCell.today::after {
+  display: none;
+}
+
+.monthCell.today {
+  box-shadow: inset 0 0 0 2px var(--ink);
+}
+
+.today .dayNumber,
+.today .monthNumber {
+  display: inline-grid;
+  place-items: center;
+  min-width: 34px;
+  padding: 0 6px;
+  border: var(--border);
+  border-radius: var(--radius-pill);
+  background: var(--lime);
+}
+
+.chips {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.chipItem {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.chip {
+  width: 100%;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  color: inherit;
+  text-decoration: none;
+  transition: transform 0.12s ease;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  padding: 6px 8px;
+  border: var(--border);
+  border-radius: 10px;
+  font-size: 12.5px;
+  line-height: 1.25;
+  overflow: hidden;
+}
+
+.chip:hover {
+  transform: translate(-1px, -1px);
+  box-shadow: 2px 2px 0 var(--ink);
+}
+
+.chipTime {
+  font-family: var(--font-pixel);
+  font-size: 13px;
+}
+
+.chipTitle {
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.chip svg {
+  align-self: flex-end;
+  margin-top: -14px;
+}
+
+.done {
+  opacity: 0.55;
+}
+
+.done .chipTitle {
+  text-decoration: line-through;
+}
+
+.overdue {
+  border-color: var(--danger);
+  outline: 2px solid var(--danger);
+  outline-offset: -4px;
+}
+
+.unassigned {
+  border-style: dashed;
+  background: var(--paper);
+}
+
+/* ---------- місяць ---------- */
+.month {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  overflow: hidden;
+  border: var(--border);
+  border-radius: var(--radius);
+  background: var(--paper);
+}
+
+.monthHead {
+  padding: 8px;
+  border-bottom: var(--border);
+  background: var(--cream);
+  font-size: 12.5px;
+  font-weight: 800;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.monthCell {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-height: 118px;
+  padding: 6px;
+  border-right: 1.5px solid var(--line-soft);
+  border-bottom: 1.5px solid var(--line-soft);
+}
+
+.monthCell:nth-of-type(7n) {
+  border-right: 0;
+}
+
+.outside {
+  background: var(--cream);
+  color: var(--ink-faint);
+}
+
+.outside .chips {
+  opacity: 0.6;
+}
+
+.monthNumber {
+  align-self: flex-start;
+  padding: 0 4px;
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  font-family: var(--font-pixel);
+  font-size: 16px;
+}
+
+.chipCompact {
+  flex-direction: row;
+  gap: 4px;
+  padding: 2px 6px;
+  border-width: 1px;
+  border-radius: 6px;
+  font-size: 11.5px;
+  white-space: nowrap;
+}
+
+.chipCompact .chipTitle {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.chipCompact .chipTime,
+.chipCompact svg {
+  display: none;
+}
+
+.more {
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--ink-soft);
+}
+
+.monthNumber:hover {
+  background: var(--cream-deep);
+}
+
+.dots {
+  display: none;
+}
+
+@media (max-width: 760px) {
+  .week {
+    grid-template-columns: 1fr;
+  }
+
+  .weekDay {
+    display: grid;
+    grid-template-columns: 56px 1fr;
+    gap: 10px;
+    min-height: 0;
+    border-right: 0;
+    border-bottom: 1.5px solid var(--line-soft);
+  }
+
+  .weekDay:last-child {
+    border-bottom: 0;
+  }
+
+  .dayBody {
+    min-width: 0;
+  }
+
+  .headRight {
+    flex-direction: column;
+  }
+
+  .weekDayHead {
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: center;
+    gap: 2px;
+    margin: 0;
+  }
+
+  .chip {
+    flex-direction: row;
+    gap: 8px;
+  }
+
+  .monthCell {
+    min-height: 64px;
+  }
+
+  .monthCell .chips,
+  .more {
+    display: none;
+  }
+
+  .dots {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 3px;
+  }
+
+  .dot {
+    width: 8px;
+    height: 8px;
+    border: 1px solid var(--ink);
+    border-radius: 50%;
+  }
+}
+
+/* «+» додати задачу на день */
+.addDay {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  flex: none;
+  padding: 0;
+  border: 1.5px solid var(--line-soft);
+  border-radius: 50%;
+  background: var(--paper);
+  color: var(--ink-soft);
+  line-height: 0;
+  cursor: pointer;
+  opacity: 0.7;
+  transition:
+    opacity 0.12s ease,
+    background-color 0.12s ease;
+}
+
+.weekDay:hover .addDay,
+.monthCell:hover .addDay,
+.addDay:focus-visible {
+  opacity: 1;
+}
+
+.addDay:hover {
+  border-color: var(--ink);
+  background: var(--lime);
+  color: var(--ink);
+}
+
+.addDayCompact {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 24px;
+  height: 24px;
+  margin: 0;
+}
+
+.monthCell {
+  position: relative;
+}
+
+@media (hover: none) {
+  .addDay {
+    opacity: 1;
+  }
+}

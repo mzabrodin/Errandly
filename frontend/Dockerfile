@@ -6,6 +6,9 @@ COPY frontend/package.json frontend/
 RUN npm ci -w frontend --ignore-scripts
 COPY tsconfig.base.json ./
 COPY frontend frontend
+# поки бекенд не реалізує API, збірка працює на мок-даних (MSW); вимкнути: --build-arg VITE_USE_MOCKS=false
+ARG VITE_USE_MOCKS=true
+ENV VITE_USE_MOCKS=$VITE_USE_MOCKS
 RUN npm run build -w frontend
 
 FROM nginx:1.30-alpine

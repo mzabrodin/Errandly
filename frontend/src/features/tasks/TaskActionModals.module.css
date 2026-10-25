@@ -1,0 +1,40 @@
+.taskName {
+  margin-bottom: 12px;
+  font-weight: 800;
+}
+
+.options {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0 0 8px;
+  padding: 0;
+  list-style: none;
+}
+
+.option {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 52px;
+  padding: 8px 14px;
+  border: var(--border);
+  border-radius: var(--radius-pill);
+  background: var(--paper);
+  font-weight: 700;
+  text-align: left;
+  cursor: pointer;
+}
+
+.option:hover:not(:disabled) {
+  background: var(--lime);
+}
+
+.current {
+  background: var(--cream-deep);
+}
+
+.optionName {
+  flex: 1;
+}

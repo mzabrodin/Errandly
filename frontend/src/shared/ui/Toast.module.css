@@ -1,0 +1,81 @@
+.region {
+  position: fixed;
+  inset: auto;
+  width: auto;
+  height: auto;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  overflow: visible;
+  right: 16px;
+  bottom: calc(16px + env(safe-area-inset-bottom));
+  left: 16px;
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  pointer-events: none;
+}
+
+/* закрита popover-область не повинна займати місце; без підтримки popover лишається звичайним fixed-блоком */
+@supports selector(:popover-open) {
+  .region:not(:popover-open) {
+    display: none;
+  }
+}
+
+@media (max-width: 760px) {
+  .region {
+    bottom: calc(var(--bottom-nav-h) + 12px + env(safe-area-inset-bottom));
+  }
+}
+
+.toast {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  max-width: min(480px, 100%);
+  padding: 12px 18px;
+  border: var(--border);
+  border-radius: var(--radius-pill);
+  background: var(--ink);
+  color: var(--cream);
+  font-size: 14px;
+  font-weight: 700;
+  box-shadow: 3px 3px 0 var(--lime);
+  animation: rise 0.2s ease-out;
+  pointer-events: auto;
+}
+
+.action {
+  flex: none;
+  padding: 5px 12px;
+  border: 1.5px solid var(--lime);
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: var(--lime);
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.action:hover {
+  background: var(--lime);
+  color: var(--ink);
+}
+
+.toast[data-tone='error'] {
+  background: var(--paper);
+  border-color: var(--danger);
+  color: var(--danger);
+  box-shadow: 3px 3px 0 var(--danger);
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}

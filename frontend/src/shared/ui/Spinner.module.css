@@ -1,0 +1,20 @@
+.spinner {
+  display: inline-block;
+  flex: none;
+  border: 2.5px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+
+.page {
+  display: grid;
+  place-items: center;
+  min-height: 40vh;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

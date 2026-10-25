@@ -1,0 +1,38 @@
+.wrap {
+  display: grid;
+  place-items: center;
+  padding-top: 6vh;
+}
+
+.card {
+  position: relative;
+  width: min(480px, 100%);
+  padding: 36px 28px 28px;
+  border: var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--paper);
+  box-shadow: var(--shadow-pop);
+}
+
+.star {
+  position: absolute;
+  top: -22px;
+  right: 24px;
+}
+
+.title {
+  font-size: 30px;
+  letter-spacing: -0.04em;
+}
+
+.subtitle {
+  margin-top: 8px;
+  color: var(--ink-soft);
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-top: 24px;
+}
