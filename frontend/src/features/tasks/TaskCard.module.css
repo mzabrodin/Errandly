@@ -1,0 +1,267 @@
+.card {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 14px 8px 14px 22px;
+  border: var(--border);
+  border-radius: var(--radius);
+  background: var(--paper);
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+/* кольоровий «корінець» виконавця — як закладка в зошиті */
+.card::before {
+  content: '';
+  position: absolute;
+  top: -1.5px;
+  bottom: -1.5px;
+  left: -1.5px;
+  width: 12px;
+  border: var(--border);
+  border-right-width: 1.5px;
+  border-radius: var(--radius) 0 0 var(--radius);
+  background: var(--member-color);
+}
+
+.card:has(.body:hover) {
+  transform: translate(-1px, -2px) rotate(-0.3deg);
+  box-shadow: 4px 5px 0 var(--ink);
+}
+
+.mine {
+  box-shadow: 3px 3px 0 var(--ink);
+}
+
+.done {
+  background: var(--cream);
+  box-shadow: none;
+}
+
+.done .title {
+  text-decoration: line-through;
+  text-decoration-thickness: 2px;
+  color: var(--ink-soft);
+}
+
+.overdue {
+  border-color: var(--danger);
+}
+
+.overdue::before {
+  border-color: var(--danger);
+  background: repeating-linear-gradient(
+    -45deg,
+    var(--member-color) 0 5px,
+    var(--status-overdue) 5px 10px
+  );
+}
+
+.mine.overdue {
+  box-shadow: 3px 3px 0 var(--danger);
+}
+
+.unassigned {
+  border-style: dashed;
+}
+
+.unassigned::before {
+  border-style: dashed;
+  background: var(--cream);
+}
+
+.check {
+  position: relative;
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  margin-top: 2px;
+  border: 2px solid var(--ink);
+  border-radius: 50%;
+  background: var(--paper);
+  color: var(--ink);
+  cursor: pointer;
+  transition:
+    background-color 0.12s ease,
+    transform 0.12s ease;
+}
+
+.check:hover:not(:disabled) {
+  background: var(--lime);
+  transform: scale(1.08) rotate(-6deg);
+}
+
+.check:disabled {
+  border-style: dashed;
+  border-color: var(--ink-faint);
+  cursor: not-allowed;
+}
+
+.done .check {
+  border-style: solid;
+  border-color: var(--grass-deep);
+  background: var(--leaf);
+}
+
+.checkIcon {
+  position: relative;
+  z-index: 1;
+  animation: check-pop 0.35s cubic-bezier(0.3, 1.6, 0.5, 1);
+}
+
+/* святковий астериск, що спалахує при виконанні */
+.burst {
+  position: absolute;
+  inset: -6px;
+  margin: auto;
+  pointer-events: none;
+  opacity: 0;
+  animation: burst 0.6s ease-out;
+}
+
+.body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: stretch;
+  min-width: 0;
+  margin: -6px 0;
+  padding: 6px 8px;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+}
+
+.body {
+  position: relative;
+  padding-right: 44px;
+}
+
+/* підказка, що картка відкриває меню (особливо для тач-екранів без ховера) */
+.hint {
+  position: absolute;
+  top: 2px;
+  right: 4px;
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border: 1.5px solid transparent;
+  border-radius: 50%;
+  color: var(--ink-soft);
+  transition:
+    background-color 0.12s ease,
+    border-color 0.12s ease;
+}
+
+.body:hover .hint,
+.body[aria-expanded='true'] .hint {
+  border-color: var(--ink);
+  background: var(--lime);
+  color: var(--ink);
+}
+
+.body:focus-visible {
+  box-shadow: var(--focus-ring);
+}
+
+.titleRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 10px;
+}
+
+.title {
+  font-size: 16.5px;
+  font-weight: 800;
+  overflow-wrap: anywhere;
+}
+
+.status {
+  flex: none;
+}
+
+.description {
+  margin-top: 2px;
+  font-size: 14px;
+  color: var(--ink-soft);
+}
+
+.meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 14px;
+  margin-top: 8px;
+  font-size: 13.5px;
+  color: var(--ink-soft);
+}
+
+.metaItem {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-weight: 600;
+}
+
+.assignee {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.nobody {
+  padding: 2px 10px;
+  border: 1.5px dashed var(--ink-faint);
+  border-radius: var(--radius-pill);
+  color: var(--ink-soft);
+}
+
+.dots {
+  display: inline-flex;
+  gap: 3px;
+}
+
+.dot {
+  width: 8px;
+  height: 8px;
+  border: 1.5px solid var(--ink);
+  background: var(--paper);
+}
+
+.dotOn {
+  background: var(--grass);
+}
+
+@keyframes check-pop {
+  from {
+    transform: scale(0.2) rotate(-30deg);
+  }
+}
+
+@keyframes burst {
+  0% {
+    opacity: 1;
+    transform: scale(0.4) rotate(0);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.7) rotate(90deg);
+  }
+}
+
+@media (max-width: 520px) {
+  .assignee {
+    margin-left: 0;
+  }
+}

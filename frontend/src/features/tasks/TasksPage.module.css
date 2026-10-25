@@ -1,0 +1,165 @@
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px 16px;
+  margin-bottom: 24px;
+}
+
+.chips {
+  display: flex;
+  gap: 6px;
+  max-width: 100%;
+  /* запас під тінь активного чипа: overflow-x її обрізає */
+  padding: 2px 4px 4px 2px;
+  margin: -2px -4px -4px -2px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.chip {
+  flex: none;
+  min-height: 36px;
+  padding: 0 14px;
+  border: 1.5px solid var(--line-soft);
+  border-radius: var(--radius-pill);
+  background: transparent;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.chip:hover {
+  border-color: var(--ink);
+}
+
+.chipOn,
+.chipOn:hover {
+  border-color: var(--ink);
+  background: var(--paper);
+  box-shadow: 2px 2px 0 var(--ink);
+}
+
+.chip-planned.chipOn {
+  background: var(--status-planned);
+}
+
+.chip-overdue.chipOn {
+  background: var(--status-overdue);
+}
+
+.chip-unassigned.chipOn {
+  background: var(--status-unassigned);
+}
+
+.chip-done.chipOn {
+  background: var(--status-done);
+}
+
+.sections {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+  max-width: 820px;
+}
+
+.section {
+  scroll-margin-top: calc(var(--header-h) + 16px);
+  border-radius: var(--radius);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.dayLabel {
+  display: inline-flex;
+  align-self: flex-start;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 16px;
+  border: var(--border);
+  border-radius: var(--radius-pill);
+  background: var(--paper);
+  font-family: var(--font-body);
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: 0;
+}
+
+.todayLabel {
+  background: var(--lime);
+}
+
+.overdueLabel {
+  border-color: var(--danger);
+  background: var(--status-overdue);
+  color: var(--danger);
+}
+
+.date {
+  font-weight: 600;
+  color: var(--ink-soft);
+}
+
+.count {
+  display: inline-grid;
+  place-items: center;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 6px;
+  border-radius: var(--radius-pill);
+  background: var(--danger);
+  color: var(--paper);
+  font-size: 12px;
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* підсвітка блоку після переходу з банера */
+.section[data-flash] {
+  animation: flash 1.4s ease-out;
+}
+
+@keyframes flash {
+  0%,
+  40% {
+    box-shadow: 0 0 0 8px var(--lime);
+    background: var(--accent-soft);
+  }
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: minmax(0, 820px) 300px;
+  justify-content: space-between;
+  align-items: start;
+  gap: 32px;
+}
+
+.mainCol {
+  min-width: 0;
+}
+
+@media (max-width: 1100px) {
+  .layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .layout > aside {
+    display: none;
+  }
+}
+
+.emptyActions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+}

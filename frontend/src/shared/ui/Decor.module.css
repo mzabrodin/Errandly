@@ -1,0 +1,72 @@
+.clouds {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.skyCloud {
+  position: absolute;
+  min-width: 60px;
+  height: auto;
+  animation: cloud-drift 24s ease-in-out infinite;
+}
+
+/* хмари повільно пливуть туди-назад і трохи гойдаються */
+@keyframes cloud-drift {
+  0%,
+  100% {
+    transform: translate(0, 0);
+  }
+  25% {
+    transform: translate(28px, -6px);
+  }
+  50% {
+    transform: translate(64px, 0);
+  }
+  75% {
+    transform: translate(30px, 5px);
+  }
+}
+
+.hills {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 38%;
+  pointer-events: none;
+}
+
+.marquee {
+  overflow: hidden;
+  border-top: var(--border);
+  border-bottom: var(--border);
+  background: var(--cream);
+  white-space: nowrap;
+}
+
+.track {
+  display: inline-flex;
+  padding: 8px 0;
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 500;
+  animation: scroll 40s linear infinite;
+}
+
+.track span {
+  padding-right: 0.5em;
+}
+
+@keyframes scroll {
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+/* однакова товщина контуру незалежно від розміру (у px екрана, а не одиницях viewBox) */
+.stroke * {
+  vector-effect: non-scaling-stroke;
+}

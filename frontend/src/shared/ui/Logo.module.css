@@ -1,0 +1,14 @@
+.logo {
+  font-family: var(--font-display);
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.star {
+  display: inline-block;
+  margin-left: 0.02em;
+  color: var(--grass);
+  transform: translateY(-0.12em);
+}

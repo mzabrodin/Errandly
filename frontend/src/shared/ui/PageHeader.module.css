@@ -1,0 +1,55 @@
+.header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.text {
+  min-width: 0;
+}
+
+.title {
+  font-size: clamp(30px, 5vw, 48px);
+  font-weight: 800;
+  letter-spacing: -0.05em;
+  overflow-wrap: anywhere;
+}
+
+.mark {
+  /* маркерне виділення, як у «the community» з референсу */
+  padding: 0 0.06em;
+  background: linear-gradient(transparent 56%, var(--lime) 56%, var(--lime) 92%, transparent 92%);
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+}
+
+.star {
+  display: inline-block;
+  margin-left: 0.12em;
+  vertical-align: top;
+  animation: spin 14s linear infinite;
+}
+
+.header:hover .star {
+  animation-duration: 2s;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.subtitle {
+  margin-top: 6px;
+  color: var(--ink-soft);
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}

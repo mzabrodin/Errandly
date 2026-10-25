@@ -1,0 +1,142 @@
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 12px;
+}
+
+.option {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 8px;
+  border: 1.5px solid var(--line-soft);
+  border-radius: var(--radius);
+  background: var(--paper);
+  font-weight: 700;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    transform 0.12s ease,
+    box-shadow 0.12s ease;
+}
+
+.option:hover {
+  border-color: var(--ink);
+  transform: translateY(-2px);
+}
+
+.selected {
+  border-color: var(--ink);
+  box-shadow: 3px 3px 0 var(--ink);
+}
+
+.label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 4px 2px;
+  font-size: 14px;
+}
+
+/* превʼю малюємо прямими кольорами теми, незалежно від поточної */
+.preview {
+  position: relative;
+  display: block;
+  height: 84px;
+  overflow: hidden;
+  border: 1.5px solid #2b2420;
+  border-radius: calc(var(--radius) - 4px);
+  background: var(--p-cream);
+}
+
+.sky {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, var(--p-sky-top), var(--p-sky));
+}
+
+.cloud {
+  position: absolute;
+  top: 14px;
+  right: 18px;
+  width: 34px;
+  height: 14px;
+  border-radius: 999px;
+  background: #fff;
+  box-shadow:
+    -8px -6px 0 -1px #fff,
+    6px -8px 0 0 #fff;
+}
+
+.hillBack,
+.hillFront {
+  position: absolute;
+  left: -10%;
+  width: 120%;
+  border-radius: 50% 50% 0 0;
+}
+
+.hillBack {
+  bottom: -26px;
+  height: 56px;
+  background: var(--p-hill-light);
+  transform: rotate(-6deg);
+}
+
+.hillFront {
+  bottom: -34px;
+  height: 52px;
+  background: var(--p-hill-dark);
+  transform: rotate(4deg);
+}
+
+.pill {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  width: 46px;
+  height: 14px;
+  border: 1.5px solid #2b2420;
+  border-radius: var(--p-pill);
+  background: var(--p-accent);
+}
+
+[data-theme-preview='meadow'] {
+  --p-cream: #faf7ea;
+  --p-sky-top: #8ec3ea;
+  --p-sky: #bfe0f7;
+  --p-hill-light: #6ba539;
+  --p-hill-dark: #3e7b27;
+  --p-accent: #e6f36b;
+  --p-pill: 999px;
+}
+
+[data-theme-preview='sakura'] {
+  --p-cream: #fdf4f2;
+  --p-sky-top: #c4dbf3;
+  --p-sky: #f6f0f6;
+  --p-hill-light: #a6c98f;
+  --p-hill-dark: #6f9e5c;
+  --p-accent: #f8b4d0;
+  --p-pill: 999px;
+}
+
+[data-theme-preview='pixel'] {
+  --p-cream: #f1f1ef;
+  --p-sky-top: #b9dcff;
+  --p-sky: #f0f7ff;
+  --p-hill-light: #4ade80;
+  --p-hill-dark: #16a34a;
+  --p-accent: #ff7ab8;
+  --p-pill: 3px;
+}
+
+[data-theme-preview='sunset'] {
+  --p-cream: #fff4ea;
+  --p-sky-top: #ff9f8f;
+  --p-sky: #ffe8d4;
+  --p-hill-light: #b679a3;
+  --p-hill-dark: #7d4a73;
+  --p-accent: #ffc46b;
+  --p-pill: 999px;
+}

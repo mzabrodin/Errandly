@@ -1,0 +1,28 @@
+.wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  max-width: 480px;
+  margin: 8vh auto 0;
+  text-align: center;
+}
+
+.icon {
+  display: grid;
+  place-items: center;
+  width: 72px;
+  height: 72px;
+  border: var(--border);
+  border-radius: 50%;
+  background: var(--lime);
+  box-shadow: var(--shadow-pop);
+}
+
+.title {
+  font-size: 32px;
+}
+
+.text {
+  color: var(--ink-soft);
+}

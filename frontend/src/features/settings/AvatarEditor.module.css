@@ -1,0 +1,61 @@
+.editor {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px 16px;
+}
+
+.photo {
+  position: relative;
+  /* без цього кнопка вища за аватарку (місце під базову лінію) і затемнення з'їжджає */
+  display: grid;
+  line-height: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  cursor: pointer;
+}
+
+.photo:disabled {
+  cursor: progress;
+}
+
+.overlay {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: rgb(0 0 0 / 0.42);
+  color: #fff;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.photo:hover .overlay,
+.photo:focus-visible .overlay,
+.photo:disabled .overlay {
+  opacity: 1;
+}
+
+.side {
+  display: flex;
+  flex: 1 1 220px;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 8px;
+}
+
+.hint {
+  width: 100%;
+  font-size: 12.5px;
+  color: var(--ink-soft);
+}

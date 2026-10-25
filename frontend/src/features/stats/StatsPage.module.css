@@ -1,0 +1,195 @@
+.totals {
+  margin-bottom: 20px;
+  background: linear-gradient(180deg, var(--sky-top), var(--sky));
+  position: relative;
+  overflow: hidden;
+}
+
+.cloud {
+  position: absolute;
+  top: -12px;
+  right: -22px;
+  pointer-events: none;
+}
+
+.cloudSmall {
+  position: absolute;
+  top: 44px;
+  right: 120px;
+  pointer-events: none;
+  animation: cloud-float 7s ease-in-out infinite reverse;
+}
+
+.totals > :not(svg) {
+  position: relative;
+}
+
+.totalsTitle {
+  font-size: 18px;
+}
+
+.numbers,
+.memberNumbers {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin: 14px 0 0;
+}
+
+.numbers dt,
+.memberNumbers dt {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ink-soft);
+}
+
+.numbers dd,
+.memberNumbers dd {
+  margin: 0;
+  font-family: var(--font-pixel);
+  line-height: 1;
+}
+
+.numbers dd {
+  font-size: clamp(40px, 7vw, 64px);
+}
+
+.memberNumbers dd {
+  font-size: 34px;
+}
+
+.memberNumbers dt {
+  font-size: 12px;
+}
+
+.bad {
+  color: var(--danger);
+}
+
+.shareBlock {
+  margin-top: 20px;
+}
+
+.shareLabel {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.shareBar {
+  display: flex;
+  height: 34px;
+  overflow: hidden;
+  border: var(--border);
+  border-radius: var(--radius-pill);
+  background: var(--paper);
+}
+
+.shareSegment {
+  display: grid;
+  place-items: center;
+  font-size: 12.5px;
+  font-weight: 800;
+  border-right: var(--border);
+}
+
+.shareSegment:last-child {
+  border-right: 0;
+}
+
+.members {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 14px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.member {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.memberHead {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.memberName {
+  font-weight: 800;
+}
+
+.you {
+  font-weight: 500;
+  color: var(--ink-soft);
+}
+
+.memberShare {
+  font-family: var(--font-pixel);
+  font-size: 15px;
+  color: var(--ink-soft);
+}
+
+.bar {
+  height: 10px;
+  margin-top: 14px;
+  overflow: hidden;
+  border: var(--border);
+  border-radius: var(--radius-pill);
+  background: var(--cream);
+}
+
+.bar span {
+  display: block;
+  height: 100%;
+  box-shadow: 1.5px 0 0 var(--ink);
+}
+
+@media (max-width: 520px) {
+  .numbers dt,
+  .memberNumbers dt {
+    font-size: 12px;
+  }
+}
+
+.memberNumbers {
+  grid-template-columns: repeat(3, auto);
+  justify-content: space-between;
+}
+
+.sticker {
+  position: absolute;
+  top: -14px;
+  right: 14px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 12px 3px 4px;
+  border: var(--border);
+  border-radius: var(--radius-pill);
+  background: var(--lime);
+  box-shadow: 2px 2px 0 var(--ink);
+  font-size: 12.5px;
+  font-weight: 800;
+  transform: rotate(3deg);
+}
+
+.members {
+  padding-top: 10px;
+}
+
+/* хмарка-стікер повільно пливе */
+.cloud {
+  animation: cloud-float 9s ease-in-out infinite;
+}
+
+@keyframes cloud-float {
+  50% {
+    transform: translate(-14px, 4px);
+  }
+}

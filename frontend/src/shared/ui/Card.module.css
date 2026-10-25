@@ -1,0 +1,10 @@
+.card {
+  padding: 20px;
+  border: var(--border);
+  border-radius: var(--radius);
+  background: var(--paper);
+}
+
+.pop {
+  box-shadow: var(--shadow-pop);
+}

@@ -1,0 +1,68 @@
+.dialog {
+  width: min(560px, calc(100vw - 24px));
+  max-height: calc(100dvh - 32px);
+  padding: 0;
+  border: var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--cream);
+  color: var(--ink);
+  box-shadow: 6px 6px 0 var(--ink);
+}
+
+.dialog[data-size='sm'] {
+  width: min(420px, calc(100vw - 24px));
+}
+
+.dialog::backdrop {
+  background: rgb(43 36 32 / 0.45);
+  backdrop-filter: blur(2px);
+}
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  max-height: calc(100dvh - 36px);
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 20px 20px 12px 24px;
+}
+
+.title {
+  font-size: 20px;
+}
+
+.close {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border: var(--border);
+  border-radius: 50%;
+  background: var(--paper);
+  cursor: pointer;
+}
+
+.body {
+  padding: 4px 24px 20px;
+  overflow-y: auto;
+}
+
+.footer {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 16px 24px 20px;
+  border-top: 1.5px dashed var(--line-soft);
+}
+
+@media (max-width: 520px) {
+  .footer > * {
+    flex: 1;
+  }
+}
