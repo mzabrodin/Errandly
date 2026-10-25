@@ -1,10 +1,27 @@
 {
   "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "rules": {
-    "typescript/no-explicit-any": "off",
-    "typescript/no-floating-promises": "error"
-  },
+  "extends": ["../.oxlintrc.json"],
   "env": {
     "node": true
-  }
+  },
+  "rules": {
+    "unicorn/prefer-node-protocol": "error",
+    "typescript/consistent-type-imports": "off",
+    "typescript/no-extraneous-class": ["error", { "allowWithDecorator": true }]
+  },
+  "overrides": [
+    {
+      "files": ["src/**"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              { "group": ["**/test/**"], "message": "Production code must not import tests." }
+            ]
+          }
+        ]
+      }
+    }
+  ]
 }

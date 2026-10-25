@@ -1,11 +1,10 @@
 import { render, screen } from '@testing-library/react';
+
 import { HomePage } from './HomePage';
 
 describe('HomePage', () => {
   it('renders app name', () => {
     render(<HomePage />);
-    expect(
-      screen.getByRole('heading', { name: 'Errandly' }),
-    ).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Errandly' })).toBeInTheDocument();
   });
 });

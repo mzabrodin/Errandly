@@ -1,7 +1,8 @@
+import type { JSX } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router';
 
-export function NotFoundPage() {
+export function NotFoundPage(): JSX.Element {
   const { t } = useTranslation();
 
   return (
