@@ -1,3 +1,7 @@
+import createClient from 'openapi-fetch';
+
+import type { paths } from './schema';
+
 export class ApiError extends Error {
   readonly status: number;
   readonly body: unknown;
@@ -9,27 +13,37 @@ export class ApiError extends Error {
   }
 }
 
-const BASE_URL = import.meta.env.VITE_API_URL ?? '/api';
+// Paths, params, bodies and responses are checked against backend/openapi.json (npm run api:sync)
+export const api = createClient<paths>({
+  baseUrl: import.meta.env.VITE_API_URL ?? '',
+  credentials: 'include',
+});
 
-export async function apiFetch<T>(
-  path: string,
-  init: RequestInit = {},
-): Promise<T> {
-  const response = await fetch(`${BASE_URL}${path}`, {
-    ...init,
-    credentials: 'include',
-    headers: {
-      'Content-Type': 'application/json',
-      ...init.headers,
-    },
-  });
+interface ApiSuccess<T> {
+  data: T;
+  error?: never;
+  response: Response;
+}
 
-  const body: unknown =
-    response.status === 204 ? null : await response.json().catch(() => null);
+interface ApiFailure<E> {
+  data?: never;
+  error: E;
+  response: Response;
+}
 
-  if (!response.ok) {
-    throw new ApiError(response.status, body);
+type ApiResult<T, E> = ApiSuccess<T> | ApiFailure<E>;
+
+// openapi-fetch returns the data branch for every 2xx response, and `error: undefined`
+// for an error without a body, so the status is the only reliable discriminator
+function isSuccess<T, E>(result: ApiResult<T, E>): result is ApiSuccess<T> {
+  return result.response.ok;
+}
+
+// Turns an error response into a thrown ApiError, so TanStack Query treats it as a failure
+export async function unwrap<T, E>(request: Promise<ApiResult<T, E>>): Promise<T> {
+  const result = await request;
+  if (!isSuccess(result)) {
+    throw new ApiError(result.response.status, result.error);
   }
-
-  return body as T;
+  return result.data;
 }
