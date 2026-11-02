@@ -46,7 +46,7 @@ services:
 
   mailpit:
     <<: *service
-    image: axllent/mailpit:v1.31
+    image: axllent/mailpit:v1.32
     environment:
       MP_SMTP_AUTH_ACCEPT_ANY: 1
       MP_SMTP_AUTH_ALLOW_INSECURE: 1
