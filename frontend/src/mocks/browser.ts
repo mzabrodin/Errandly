@@ -11,8 +11,8 @@ export async function startMocks(): Promise<void> {
     errandlyResetMocks: resetDb,
     errandlySendReminders: sendReminders,
   });
-  // oxlint-disable-next-line no-console -- підказка розробнику, що працює мок-API
+  // oxlint-disable-next-line no-console -- tells the developer the mock API is running
   console.info(
-    '[mock] Мок-API увімкнено. Демо-вхід: anya@errandly.dev / Pass1234. Скинути дані: errandlyResetMocks()',
+    '[mock] Mock API is on. Demo sign-in: anya@errandly.dev / Pass1234. Reset data: errandlyResetMocks()',
   );
 }

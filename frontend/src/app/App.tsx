@@ -5,10 +5,11 @@ import { RouterProvider } from 'react-router';
 import { sessionKey } from '../shared/api/auth';
 import { ApiError } from '../shared/api/client';
 import { ToastProvider } from '../shared/ui/Toast';
+import { LocaleSync } from './LocaleSync';
 import { router } from './router';
 
 function handleUnauthenticated(error: unknown) {
-  // сесія завершилась (NFR-SEC-03) — повертаємо на вхід
+  // Session expired (NFR-SEC-03): send the user back to sign-in
   if (error instanceof ApiError && error.status === 401) {
     queryClient.setQueryData(sessionKey, null);
   }
@@ -29,6 +30,7 @@ const queryClient = new QueryClient({
 export function App(): JSX.Element {
   return (
     <QueryClientProvider client={queryClient}>
+      <LocaleSync />
       <ToastProvider>
         <RouterProvider router={router} />
       </ToastProvider>

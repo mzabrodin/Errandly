@@ -1,4 +1,5 @@
-// Контракт API, на який спирається фронтенд. Повний опис — frontend/API.md
+// API contract the frontend relies on. Full description: frontend/API.md
+import type { Locale } from '../i18n';
 
 export interface User {
   id: string;
@@ -6,6 +7,8 @@ export interface User {
   email: string;
   emailVerified: boolean;
   timezone: string;
+  /** UI and email language */
+  locale: Locale;
   avatarUrl: string | null;
 }
 
@@ -46,7 +49,7 @@ export type TaskStatus = 'planned' | 'done' | 'overdue' | 'unassigned';
 export type Recurrence =
   | { type: 'once' }
   | { type: 'daily' }
-  | { type: 'weekly'; weekdays: number[] } // 1 = понеділок … 7 = неділя
+  | { type: 'weekly'; weekdays: number[] } // 1 = Monday … 7 = Sunday
   | { type: 'monthly' };
 
 export interface Task {
@@ -70,7 +73,7 @@ export interface TaskInput {
   dueAt: string;
   difficulty: number;
   recurrence: Recurrence;
-  assigneeId: string | null; // null — автоматичний розподіл
+  assigneeId: string | null; // null means automatic assignment
 }
 
 export type EditScope = 'one' | 'series';

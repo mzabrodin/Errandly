@@ -1,34 +1,45 @@
 import { bypass } from 'msw';
 
+import type { Locale } from '../shared/i18n';
 import { computeStatus, DAY_MS, db, defaultSettingsFor, isCompleted } from './db';
 
-// Мок-API не вміє SMTP, тому листи рендерить і надсилає бекенд через dev-ендпоінт
-// (backend/src/mail/dev-mail.controller.ts) у Mailpit: http://localhost:8025
+// The mock API cannot speak SMTP, so the backend renders and sends emails through a dev endpoint
+// (backend/src/mail/dev-mail.controller.ts) to Mailpit: http://localhost:8025
 
 type MailData = Record<string, string | number>;
 
 let warned = false;
 
-async function postMail(template: string, to: string, data: MailData): Promise<void> {
+async function postMail(
+  template: string,
+  to: string,
+  data: MailData,
+  locale: Locale,
+): Promise<void> {
   const response = await fetch(
     bypass('/api/dev/mail', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ template, to, data }),
+      body: JSON.stringify({ template, to, data, locale }),
     }),
   );
   if (!response.ok) throw new Error(String(response.status));
-  // oxlint-disable-next-line no-console -- у моках лист видно лише в консолі й Mailpit
-  console.info(`[mock] Лист «${template}» → ${to} (див. Mailpit: http://localhost:8025)`);
+  // oxlint-disable-next-line no-console -- with mocks the email is visible only in the console and Mailpit
+  console.info(`[mock] Email "${template}" → ${to} (see Mailpit: http://localhost:8025)`);
 }
 
-export function sendMail(template: string, to: string, data: MailData): void {
-  void postMail(template, to, data).catch(() => {
+/**
+ * Sends in the recipient's account language. An invite may go to someone without an account,
+ * so the caller can pass the sender's language instead.
+ */
+export function sendMail(template: string, to: string, data: MailData, locale?: Locale): void {
+  const recipient = db.users.find((user) => user.email === to);
+  void postMail(template, to, data, recipient?.locale ?? locale ?? 'uk').catch(() => {
     if (warned) return;
     warned = true;
-    // oxlint-disable-next-line no-console -- підказка розробнику, чому листи не доходять
+    // oxlint-disable-next-line no-console -- tells the developer why emails are not arriving
     console.warn(
-      '[mock] Листи не надсилаються: запустіть Mailpit і бекенд з MAIL_DEV_API=true (див. README)',
+      '[mock] Emails are not being sent: start Mailpit and the backend with MAIL_DEV_API=true (see README)',
     );
   });
 }
@@ -51,7 +62,7 @@ function taskMailData(task: TaskLike, userId: string): MailData | null {
   };
 }
 
-/** Сповіщення про призначення (FR-38), якщо учасник його не вимкнув */
+/** Assignment notification (FR-38), unless the member turned it off */
 export function notifyAssigned(task: TaskLike): void {
   if (task.assigneeId === null || task.assigneeId === '') return;
   if (!defaultSettingsFor(task.assigneeId).notifications.assigned) return;
@@ -61,8 +72,8 @@ export function notifyAssigned(task: TaskLike): void {
 }
 
 /**
- * На сервері нагадування «скоро термін» і «прострочено» шле планувальник.
- * У моках їх можна надіслати вручну з консолі: errandlySendReminders()
+ * On the server, the scheduler sends the "due soon" and "overdue" reminders.
+ * With mocks they can be sent by hand from the console: errandlySendReminders()
  */
 export function sendReminders(): string {
   const now = Date.now();
@@ -82,5 +93,5 @@ export function sendReminders(): string {
       sent += 1;
     }
   }
-  return `Надіслано нагадувань: ${sent}`;
+  return `Reminders sent: ${sent}`;
 }

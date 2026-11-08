@@ -3,6 +3,7 @@ import {
   endOfMonth,
   endOfWeek,
   format,
+  formatDistanceToNow,
   isSameDay,
   isToday,
   isTomorrow,
@@ -11,11 +12,19 @@ import {
   startOfMonth,
   startOfWeek,
 } from 'date-fns';
-import { uk } from 'date-fns/locale';
+import { enUS, uk, type Locale as DateLocale } from 'date-fns/locale';
 
-// Терміни зберігаються в UTC, показуються в часовому поясі браузера (NFR-COMP-03)
+import { currentLocale } from '../i18n';
 
-export const weekOptions = { weekStartsOn: 1 as const, locale: uk };
+// Due dates are stored in UTC and shown in the browser's time zone (NFR-COMP-03)
+
+// Weeks start on Monday in both languages
+export const weekOptions = { weekStartsOn: 1 as const };
+
+/** date-fns locale for the current UI language */
+export function dateLocale(): DateLocale {
+  return currentLocale() === 'en' ? enUS : uk;
+}
 
 export function formatTime(iso: string): string {
   return format(new Date(iso), 'HH:mm');
@@ -29,11 +38,16 @@ export function formatDayLabel(date: Date): 'today' | 'tomorrow' | 'yesterday' |
 }
 
 export function formatDate(date: Date, pattern = 'd MMMM, EEEEEE'): string {
-  return format(date, pattern, { locale: uk });
+  return format(date, pattern, { locale: dateLocale() });
 }
 
 export function formatShortDate(iso: string): string {
-  return format(new Date(iso), 'd MMM', { locale: uk });
+  return format(new Date(iso), 'd MMM', { locale: dateLocale() });
+}
+
+/** "in 3 hours" / "5 minutes ago" in the current UI language */
+export function formatRelative(iso: string): string {
+  return formatDistanceToNow(new Date(iso), { locale: dateLocale(), addSuffix: true });
 }
 
 export function weekRange(anchor: Date): { from: Date; to: Date } {
@@ -53,7 +67,7 @@ export function daysBetween(from: Date, to: Date): Date[] {
   return days;
 }
 
-/** Групує елементи за календарним днем, зберігаючи порядок */
+/** Groups items by calendar day, preserving order */
 export function groupByDay<T>(items: T[], getDate: (item: T) => Date): { day: Date; items: T[] }[] {
   const groups: { day: Date; items: T[] }[] = [];
   for (const item of items) {
@@ -65,7 +79,7 @@ export function groupByDay<T>(items: T[], getDate: (item: T) => Date): { day: Da
   return groups;
 }
 
-/** Значення для <input type="datetime-local"> у локальному часі */
+/** Value for <input type="datetime-local"> in local time */
 export function toLocalInputValue(date: Date): string {
   return format(date, "yyyy-MM-dd'T'HH:mm");
 }

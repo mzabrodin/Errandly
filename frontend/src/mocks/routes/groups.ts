@@ -93,11 +93,16 @@ const inviteHandlers = [
       persist();
       const url = `${location.origin}/invite/${invite.token}`;
       if (email !== undefined && email !== '') {
-        sendMail('invite', email, {
-          inviterName: auth.user.name,
-          groupName: must(groupName(groupId), 'group'),
-          url,
-        });
+        sendMail(
+          'invite',
+          email,
+          {
+            inviterName: auth.user.name,
+            groupName: must(groupName(groupId), 'group'),
+            url,
+          },
+          auth.user.locale,
+        );
       }
       return HttpResponse.json({ url, expiresAt: invite.expiresAt }, { status: 201 });
     },
@@ -181,7 +186,7 @@ const memberHandlers = [
       const admins = db.memberships.filter(
         (item) => item.groupId === groupId && item.role === 'admin',
       );
-      // у групі завжди лишається хоча б один адміністратор (FR-16)
+      // A group always keeps at least one admin (FR-16)
       if (role === 'member' && target.role === 'admin' && admins.length === 1) {
         return error(409, 'LAST_ADMIN');
       }
@@ -216,7 +221,7 @@ const memberHandlers = [
   }),
 ];
 
-/** Нові відсутності звільняють від автоматично призначених задач цього періоду */
+/** A new absence releases the auto-assigned tasks in that period */
 function releaseTasksDuring(groupId: string, userId: string, from: string, to: string): void {
   for (const task of db.tasks) {
     const day = toDateInputValue(new Date(task.dueAt));

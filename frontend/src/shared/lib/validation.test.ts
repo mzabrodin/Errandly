@@ -3,6 +3,9 @@ import { checkPassword, isValidEmail, isValidPassword } from './validation';
 describe('password rules (FR-01)', () => {
   it('accepts a password with 8+ chars, a letter and a digit', () => {
     expect(isValidPassword('Pass1234')).toBe(true);
+  });
+
+  it('counts Cyrillic letters as letters', () => {
     expect(isValidPassword('пароль12')).toBe(true);
   });
 

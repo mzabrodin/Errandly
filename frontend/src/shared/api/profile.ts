@@ -4,17 +4,15 @@ import { sessionKey } from './auth';
 import { http } from './client';
 import type { Settings, User } from './types';
 
-export function useUpdateProfile(): UseMutationResult<
-  User,
-  Error,
-  { name?: string; timezone?: string }
-> {
+type ProfilePatch = Partial<Pick<User, 'name' | 'timezone' | 'locale'>>;
+
+export function useUpdateProfile(): UseMutationResult<User, Error, ProfilePatch> {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (patch: { name?: string; timezone?: string }) => http.patch<User>('/me', patch),
+    mutationFn: (patch: ProfilePatch) => http.patch<User>('/me', patch),
     onSuccess: (user) => {
       queryClient.setQueryData(sessionKey, user);
-      // ім'я видно в учасниках груп
+      // The name is shown in group member lists
       void queryClient.invalidateQueries({ queryKey: ['groups'] });
     },
   });
@@ -58,7 +56,7 @@ function useAvatarMutation<TInput>(
     mutationFn: request,
     onSuccess: (user) => {
       queryClient.setQueryData(sessionKey, user);
-      // аватарка видна учасникам груп
+      // The avatar is shown to group members
       void queryClient.invalidateQueries({ queryKey: ['groups'] });
     },
   });

@@ -73,7 +73,7 @@ npm run dev:frontend                      # http://localhost:5173, /api прок
 
 Поки API в розробці, фронтенд працює на мок-API ([MSW](https://mswjs.io)): дані зберігаються в localStorage браузера.
 
-- демо-вхід: `anya@errandly.dev` / `Pass1234` (адміністраторка групи «Кімната 12»);
+- демо-вхід: `anya@errandly.dev` / `Pass1234` (адміністраторка групи «Room 12»; демо-дані англійською);
 - листи (підтвердження email, відновлення пароля, запрошення, нові задачі) приходять у Mailpit — див. нижче;
 - нагадування «скоро термін» / «прострочено» в моках надсилаються вручну: `errandlySendReminders()` у консолі;
 - скинути дані: `errandlyResetMocks()` у консолі;
@@ -91,7 +91,7 @@ cp backend/.env.example backend/.env     # SMTP_HOST=localhost, MAIL_DEV_API=tru
 npm run dev:backend
 ```
 
-- прев'ю всіх шаблонів: http://localhost:3000/api/dev/mail/preview
+- прев'ю всіх шаблонів обома мовами: <http://localhost:3000/api/dev/mail/preview> (окремий шаблон: `preview/<назва>?locale=en`)
 - мок-API фронтенду надсилає листи через `POST /api/dev/mail`; ендпоінт працює лише з `MAIL_DEV_API=true` і локальним SMTP
 - якщо порти 1025/8025 зайняті: `MAILPIT_SMTP_PORT=1026 MAILPIT_UI_PORT=8026 docker compose up -d mailpit` і `SMTP_PORT=1026` у `backend/.env`
 

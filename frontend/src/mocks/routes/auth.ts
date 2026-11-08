@@ -1,5 +1,6 @@
 import { http, HttpResponse } from 'msw';
 
+import { isLocale } from '../../shared/i18n';
 import { isValidPassword } from '../../shared/lib/validation';
 import { db, id, persist, publicUser } from '../db';
 import { sendMail } from '../mailer';
@@ -11,6 +12,7 @@ interface RegisterBody {
   name?: string;
   email?: string;
   password?: string;
+  locale?: string;
 }
 
 interface LoginBody {
@@ -25,7 +27,7 @@ export const authHandlers = [
   }),
 
   http.post<never, RegisterBody>(`${API}/auth/register`, async ({ request }) => {
-    const { name = '', email = '', password = '' } = await request.json();
+    const { name = '', email = '', password = '', locale } = await request.json();
     const fields: Record<string, string> = {};
     if (name.trim() === '') fields['name'] = 'required';
     if (!email.includes('@')) fields['email'] = 'invalid';
@@ -41,6 +43,7 @@ export const authHandlers = [
       email: normalized,
       emailVerified: false,
       timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+      locale: isLocale(locale) ? locale : 'uk',
       password,
       failedLogins: 0,
       lockedUntil: null,
@@ -93,7 +96,7 @@ export const authHandlers = [
   }),
 
   http.get(`${API}/auth/google`, () => {
-    // імітація OAuth: входимо демо-користувачем
+    // OAuth simulation: sign in as the demo user
     db.sessionUserId = 'u-anya';
     persist();
     return HttpResponse.redirect('/', 302);
@@ -108,7 +111,7 @@ export const authHandlers = [
         url: `${location.origin}/reset-password/${user.id}`,
       });
     }
-    // завжди 204, щоб не розкривати, чи існує email
+    // Always 204 so as not to reveal whether the email exists
     return emptyResponse();
   }),
 

@@ -4,6 +4,7 @@ declare const styles: {
   readonly "brand": string;
   readonly "flower": string;
   readonly "hero": string;
+  readonly "language": string;
   readonly "layout": string;
   readonly "main": string;
   readonly "panel": string;

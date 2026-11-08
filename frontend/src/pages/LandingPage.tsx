@@ -7,31 +7,32 @@ import { useSession } from '../shared/api/auth';
 import type { User } from '../shared/api/types';
 import { ButtonLink } from '../shared/ui/Button';
 import { Asterisk, Clouds, Flower, FlowerFace, Hills, Marquee } from '../shared/ui/Decor';
+import { LanguageSwitch } from '../shared/ui/LanguageSwitch';
 import { Logo } from '../shared/ui/Logo';
 import styles from './LandingPage.module.css';
 
 const PACKETS = [
-  { key: 'trash', color: 'var(--lime)', level: 2, repeat: 'twice', who: 'Аня' },
+  { key: 'trash', color: 'var(--lime)', level: 2, repeat: 'twice', who: 'anya' },
   {
     key: 'dishes',
     color: 'var(--sky-deep)',
     level: 1,
     repeat: 'daily',
-    who: 'Богдан',
+    who: 'bohdan',
   },
   {
     key: 'bath',
     color: 'var(--flower-alt)',
     level: 4,
     repeat: 'weekly',
-    who: 'Марта',
+    who: 'marta',
   },
   {
     key: 'plants',
     color: 'var(--flower-mint)',
     level: 1,
     repeat: 'twice',
-    who: 'Олег',
+    who: 'oleh',
   },
 ] as const;
 
@@ -42,7 +43,7 @@ const FEATURES = [
   { key: 'calendar', icon: CalendarDays },
 ] as const;
 
-/** Рядки біжучого рядка з перекладів (масив через returnObjects) */
+/** Marquee lines from the translations (an array via returnObjects) */
 function useMarqueeItems(): string[] {
   const { t } = useTranslation();
   const items: unknown = t('landing.marquee', { returnObjects: true });
@@ -71,6 +72,7 @@ function Hero({ user }: { user: User | null | undefined }): JSX.Element {
             </Link>
           ) : (
             <>
+              <LanguageSwitch />
               <Link to="/login" className={styles.navPill}>
                 {t('landing.nav.login')}
               </Link>
@@ -115,7 +117,7 @@ function PacketsSection(): JSX.Element {
                   repeat: t(`landing.repeat.${packet.repeat}`),
                 })}
               </span>
-              <span className={styles.packetWho}>→ {packet.who}</span>
+              <span className={styles.packetWho}>→ {t(`landing.people.${packet.who}`)}</span>
             </li>
           ))}
         </ul>
@@ -156,21 +158,21 @@ function CtaSection({ user }: { user: User | null | undefined }): JSX.Element {
             <span className={styles.previewCheck} />
             <span>
               <strong>{t('landing.packets.trash')}</strong>
-              <small>20:00 · Аня</small>
+              <small>{t('landing.demo.trash')}</small>
             </span>
           </div>
           <div className={styles.previewCard} style={{ rotate: '3deg', background: 'var(--lime)' }}>
             <span className={`${styles.previewCheck} ${styles.previewDone}`}>✓</span>
             <span>
               <strong>{t('landing.packets.dishes')}</strong>
-              <small>21:00 · Богдан</small>
+              <small>{t('landing.demo.dishes')}</small>
             </span>
           </div>
           <div className={styles.previewCard} style={{ rotate: '-2deg', background: 'var(--sky)' }}>
             <span className={styles.previewCheck} />
             <span>
               <strong>{t('landing.packets.bath')}</strong>
-              <small>сб, 12:00 · Марта</small>
+              <small>{t('landing.demo.bath')}</small>
             </span>
           </div>
         </div>

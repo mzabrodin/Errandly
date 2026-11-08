@@ -1,6 +1,4 @@
 import { clsx } from 'clsx';
-import { formatDistanceToNow } from 'date-fns';
-import { uk } from 'date-fns/locale';
 import {
   Bell,
   CalendarCheck2,
@@ -34,6 +32,8 @@ import {
   useUpdateSettings,
 } from '../../shared/api/settings';
 import type { Settings, User } from '../../shared/api/types';
+import { changeLocale, currentLocale, isLocale, type Locale } from '../../shared/i18n';
+import { formatRelative } from '../../shared/lib/dates';
 import { setPrefs, usePrefs } from '../../shared/lib/prefs';
 import { isValidPassword } from '../../shared/lib/validation';
 import { Button, ButtonLink } from '../../shared/ui/Button';
@@ -333,10 +333,7 @@ function CalendarStatus({ calendar }: { calendar: Settings['calendar'] }): JSX.E
               ? t('calendarSync.paused')
               : calendar.lastSyncedAt !== null && calendar.lastSyncedAt !== ''
                 ? t('settings.lastSync', {
-                    time: formatDistanceToNow(new Date(calendar.lastSyncedAt), {
-                      locale: uk,
-                      addSuffix: true,
-                    }),
+                    time: formatRelative(calendar.lastSyncedAt),
                   })
                 : t('settings.neverSynced')}
           </span>
@@ -480,19 +477,47 @@ function InterfaceSection(): JSX.Element {
           onChange={(checked) => setPrefs({ reduceMotion: checked })}
         />
       </div>
-      <div className={styles.row}>
-        <Field label={t('settings.language')} hint={t('settings.languageHint')}>
-          {(props) => (
-            <Select {...props} value="uk" onChange={() => {}}>
-              <option value="uk">Українська</option>
-              <option value="en" disabled>
-                English — {t('settings.soon')}
-              </option>
-            </Select>
-          )}
-        </Field>
-      </div>
+      <LanguageField />
     </Section>
+  );
+}
+
+// Language names are shown in their own language, so they are not translated
+const LANGUAGE_NAMES: Record<Locale, string> = { uk: 'Українська', en: 'English' };
+
+/** UI and email language; saved on the account so emails use it too */
+function LanguageField(): JSX.Element {
+  const { t } = useTranslation();
+  const updateProfile = useUpdateProfile();
+  const toast = useToast();
+
+  function select(value: string): void {
+    if (!isLocale(value)) return;
+    void changeLocale(value);
+    updateProfile.mutate(
+      { locale: value },
+      { onError: (error) => toast(errorMessage(error, t), 'error') },
+    );
+  }
+
+  return (
+    <div className={styles.row}>
+      <Field label={t('settings.language')} hint={t('settings.languageHint')}>
+        {(props) => (
+          <Select
+            {...props}
+            value={currentLocale()}
+            onChange={(event) => select(event.target.value)}
+          >
+            {Object.entries(LANGUAGE_NAMES).map(([value, name]) => (
+              <option key={value} value={value}>
+                {name}
+              </option>
+            ))}
+          </Select>
+        )}
+      </Field>
+    </div>
   );
 }
 
@@ -531,7 +556,7 @@ function GroupsSection(): JSX.Element {
   );
 }
 
-/** Групи, де користувач — останній адміністратор (з тіла помилки LAST_ADMIN) */
+/** Groups where the user is the last admin (from the LAST_ADMIN error body) */
 function lastAdminGroups(error: unknown): string[] {
   if (!isApiError(error, 'LAST_ADMIN')) return [];
   const details: object = error.details;
@@ -629,14 +654,14 @@ export function SettingsPage(): JSX.Element {
   const ready = Boolean(settings && user);
   const { hash } = useLocation();
 
-  // за прямим посиланням (/settings#calendar) браузер шукає якір ще під час
-  // завантаження — прокручуємо самі, коли розділи вже на сторінці
+  // On a direct link (/settings#calendar) the browser looks for the anchor while
+  // the page is still loading, so scroll manually once the sections are rendered
   useEffect(() => {
     if (!ready || hash === '') return;
     document.getElementById(hash.slice(1))?.scrollIntoView({ block: 'start' });
   }, [ready, hash]);
 
-  // на мобільному вкладки горизонтальні — тримаємо активну в полі зору
+  // On mobile the tabs are horizontal: keep the active one in view
   useEffect(() => {
     if (active === undefined) return;
     const nav = navRef.current;
@@ -645,7 +670,7 @@ export function SettingsPage(): JSX.Element {
     nav.scrollTo({ left: link.offsetLeft - 16, behavior: 'smooth' });
   }, [active]);
 
-  // повернення з OAuth-згоди Google
+  // Return from the Google OAuth consent screen
   useEffect(() => {
     if (params.get('calendar') === 'connected') {
       toast(t('settings.connectedToast'));
