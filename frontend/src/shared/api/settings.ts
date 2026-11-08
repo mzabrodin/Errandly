@@ -6,42 +6,52 @@ import {
   type UseQueryResult,
 } from '@tanstack/react-query';
 
-import { http } from './client';
-import type { Settings } from './types';
+import { api, unwrap } from './client';
+import type { CalendarStatus, Settings, SettingsPatch } from './types';
 
 const settingsKey = ['settings'] as const;
 
 export function useSettings(): UseQueryResult<Settings> {
   return useQuery({
     queryKey: settingsKey,
-    queryFn: () => http.get<Settings>('/me/settings'),
+    queryFn: () => unwrap(api.GET('/api/me/settings')),
   });
 }
 
-export function useUpdateSettings(): UseMutationResult<
-  Settings,
-  Error,
-  Partial<Pick<Settings, 'reminderMinutes' | 'notifications'>>
-> {
+export function useUpdateSettings(): UseMutationResult<Settings, Error, SettingsPatch> {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (patch: Partial<Pick<Settings, 'reminderMinutes' | 'notifications'>>) =>
-      http.patch<Settings>('/me/settings', patch),
+    mutationFn: (patch: SettingsPatch) => unwrap(api.PATCH('/api/me/settings', { body: patch })),
     onSuccess: (settings) => queryClient.setQueryData(settingsKey, settings),
   });
 }
 
 export function useConnectCalendar(): UseMutationResult<{ url: string }, Error, void> {
   return useMutation({
-    mutationFn: () => http.post<{ url: string }>('/me/calendar/connect'),
+    mutationFn: () => unwrap(api.POST('/api/me/calendar/connect')),
     onSuccess: ({ url }) => window.location.assign(url),
   });
 }
 
-export function useDisconnectCalendar(): UseMutationResult<Settings, Error, void> {
+/** Calendar endpoints answer with the calendar status only; the rest of the settings stays */
+function useCalendarMutation(
+  request: () => Promise<CalendarStatus>,
+): UseMutationResult<CalendarStatus, Error, void> {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: () => http.delete<Settings>('/me/calendar'),
-    onSuccess: (settings) => queryClient.setQueryData(settingsKey, settings),
+    mutationFn: request,
+    onSuccess: (calendar) =>
+      queryClient.setQueryData<Settings>(settingsKey, (current) =>
+        current ? { ...current, calendar } : current,
+      ),
   });
+}
+
+export function useDisconnectCalendar(): UseMutationResult<CalendarStatus, Error, void> {
+  return useCalendarMutation(() => unwrap(api.DELETE('/api/me/calendar')));
+}
+
+/** Syncs now and resumes a paused sync (FR-35) */
+export function useSyncCalendar(): UseMutationResult<CalendarStatus, Error, void> {
+  return useCalendarMutation(() => unwrap(api.POST('/api/me/calendar/sync')));
 }

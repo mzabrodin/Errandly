@@ -19,19 +19,15 @@ import { Link, useLocation, useNavigate, useSearchParams } from 'react-router';
 import { useSession } from '../../shared/api/auth';
 import { errorMessage, isApiError } from '../../shared/api/errors';
 import { useGroups } from '../../shared/api/groups';
-import {
-  useChangePassword,
-  useDeleteAccount,
-  useSyncCalendar,
-  useUpdateProfile,
-} from '../../shared/api/profile';
+import { useChangePassword, useDeleteAccount, useUpdateProfile } from '../../shared/api/profile';
 import {
   useConnectCalendar,
   useDisconnectCalendar,
   useSettings,
+  useSyncCalendar,
   useUpdateSettings,
 } from '../../shared/api/settings';
-import type { Settings, User } from '../../shared/api/types';
+import type { Settings, SettingsPatch, User } from '../../shared/api/types';
 import { changeLocale, currentLocale, isLocale, type Locale } from '../../shared/i18n';
 import { formatRelative } from '../../shared/lib/dates';
 import { setPrefs, usePrefs } from '../../shared/lib/prefs';
@@ -63,7 +59,13 @@ const SECTIONS = [
 ] as const;
 
 const SECTION_IDS = SECTIONS.map((section) => section.id);
-const REMINDER_OPTIONS = [15, 30, 60, 180, 1440];
+type ReminderMinutes = NonNullable<SettingsPatch['reminderMinutes']>;
+
+const REMINDER_OPTIONS: readonly ReminderMinutes[] = [15, 30, 60, 180, 1440];
+
+function toReminderMinutes(value: string): ReminderMinutes | undefined {
+  return REMINDER_OPTIONS.find((minutes) => String(minutes) === value);
+}
 const TIMEZONES = [
   'Europe/Kyiv',
   'Europe/Warsaw',
@@ -383,12 +385,14 @@ function CalendarSection({ settings }: { settings: Settings }): JSX.Element {
                 <Select
                   {...props}
                   value={settings.reminderMinutes}
-                  onChange={(event) =>
+                  onChange={(event) => {
+                    const reminderMinutes = toReminderMinutes(event.target.value);
+                    if (reminderMinutes === undefined) return;
                     update.mutate(
-                      { reminderMinutes: Number(event.target.value) },
+                      { reminderMinutes },
                       { onSuccess: () => toast(t('settings.saved')) },
-                    )
-                  }
+                    );
+                  }}
                 >
                   {REMINDER_OPTIONS.map((minutes) => (
                     <option key={minutes} value={minutes}>

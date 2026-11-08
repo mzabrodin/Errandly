@@ -6,7 +6,7 @@ import {
   type UseQueryResult,
 } from '@tanstack/react-query';
 
-import { http } from './client';
+import { api, unwrap } from './client';
 import type { Group, GroupRole, GroupSummary, Invite, InviteInfo } from './types';
 
 export const groupKeys = {
@@ -17,21 +17,21 @@ export const groupKeys = {
 export function useGroups(): UseQueryResult<GroupSummary[]> {
   return useQuery({
     queryKey: groupKeys.all,
-    queryFn: () => http.get<GroupSummary[]>('/groups'),
+    queryFn: () => unwrap(api.GET('/api/groups')),
   });
 }
 
 export function useGroup(groupId: string): UseQueryResult<Group> {
   return useQuery({
     queryKey: groupKeys.detail(groupId),
-    queryFn: () => http.get<Group>(`/groups/${groupId}`),
+    queryFn: () => unwrap(api.GET('/api/groups/{groupId}', { params: { path: { groupId } } })),
   });
 }
 
 export function useCreateGroup(): UseMutationResult<Group, Error, string> {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (name: string) => http.post<Group>('/groups', { name }),
+    mutationFn: (name: string) => unwrap(api.POST('/api/groups', { body: { name } })),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: groupKeys.all }),
   });
 }
@@ -40,14 +40,20 @@ export function useCreateInvite(
   groupId: string,
 ): UseMutationResult<Invite, Error, string | undefined> {
   return useMutation({
-    mutationFn: (email?: string) => http.post<Invite>(`/groups/${groupId}/invites`, { email }),
+    mutationFn: (email?: string) =>
+      unwrap(
+        api.POST('/api/groups/{groupId}/invites', {
+          params: { path: { groupId } },
+          body: email === undefined ? {} : { email },
+        }),
+      ),
   });
 }
 
 export function useInviteInfo(token: string, enabled: boolean): UseQueryResult<InviteInfo> {
   return useQuery({
     queryKey: ['invites', token],
-    queryFn: () => http.get<InviteInfo>(`/invites/${token}`),
+    queryFn: () => unwrap(api.GET('/api/invites/{token}', { params: { path: { token } } })),
     enabled,
     retry: false,
   });
@@ -56,7 +62,8 @@ export function useInviteInfo(token: string, enabled: boolean): UseQueryResult<I
 export function useAcceptInvite(): UseMutationResult<{ groupId: string }, Error, string> {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (token: string) => http.post<{ groupId: string }>(`/invites/${token}/accept`),
+    mutationFn: (token: string) =>
+      unwrap(api.POST('/api/invites/{token}/accept', { params: { path: { token } } })),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: groupKeys.all }),
   });
 }
@@ -78,7 +85,11 @@ function useGroupMutation<TInput>(
 
 export function useRemoveMember(groupId: string): UseMutationResult<unknown, Error, string> {
   return useGroupMutation(groupId, (userId: string) =>
-    http.delete(`/groups/${groupId}/members/${userId}`),
+    unwrap(
+      api.DELETE('/api/groups/{groupId}/members/{userId}', {
+        params: { path: { groupId, userId } },
+      }),
+    ),
   );
 }
 
@@ -87,24 +98,37 @@ export function useSetMemberRole(
   groupId: string,
 ): UseMutationResult<unknown, Error, { userId: string; role: GroupRole }> {
   return useGroupMutation(groupId, ({ userId, role }: { userId: string; role: GroupRole }) =>
-    http.patch(`/groups/${groupId}/members/${userId}`, { role }),
+    unwrap(
+      api.PATCH('/api/groups/{groupId}/members/{userId}', {
+        params: { path: { groupId, userId } },
+        body: { role },
+      }),
+    ),
   );
 }
 
 export function useLeaveGroup(groupId: string): UseMutationResult<unknown, Error, void> {
-  return useGroupMutation(groupId, () => http.post(`/groups/${groupId}/leave`));
+  return useGroupMutation(groupId, () =>
+    unwrap(api.POST('/api/groups/{groupId}/leave', { params: { path: { groupId } } })),
+  );
 }
 
 export function useAddAbsence(
   groupId: string,
 ): UseMutationResult<unknown, Error, { from: string; to: string }> {
   return useGroupMutation(groupId, (input: { from: string; to: string }) =>
-    http.post(`/groups/${groupId}/absences`, input),
+    unwrap(
+      api.POST('/api/groups/{groupId}/absences', { params: { path: { groupId } }, body: input }),
+    ),
   );
 }
 
 export function useDeleteAbsence(groupId: string): UseMutationResult<unknown, Error, string> {
   return useGroupMutation(groupId, (absenceId: string) =>
-    http.delete(`/groups/${groupId}/absences/${absenceId}`),
+    unwrap(
+      api.DELETE('/api/groups/{groupId}/absences/{absenceId}', {
+        params: { path: { groupId, absenceId } },
+      }),
+    ),
   );
 }

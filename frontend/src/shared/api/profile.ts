@@ -1,15 +1,13 @@
 import { useMutation, useQueryClient, type UseMutationResult } from '@tanstack/react-query';
 
 import { sessionKey } from './auth';
-import { http } from './client';
-import type { Settings, User } from './types';
-
-type ProfilePatch = Partial<Pick<User, 'name' | 'timezone' | 'locale'>>;
+import { api, http, unwrap } from './client';
+import type { ProfilePatch, User } from './types';
 
 export function useUpdateProfile(): UseMutationResult<User, Error, ProfilePatch> {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (patch: ProfilePatch) => http.patch<User>('/me', patch),
+    mutationFn: (patch: ProfilePatch) => unwrap(api.PATCH('/api/me', { body: patch })),
     onSuccess: (user) => {
       queryClient.setQueryData(sessionKey, user);
       // The name is shown in group member lists
@@ -25,26 +23,18 @@ export function useChangePassword(): UseMutationResult<
 > {
   return useMutation({
     mutationFn: (input: { currentPassword: string; newPassword: string }) =>
-      http.post<void>('/me/password', input),
+      unwrap(api.POST('/api/me/password', { body: input })),
   });
 }
 
 export function useDeleteAccount(): UseMutationResult<void, Error, void> {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: () => http.delete<void>('/me'),
+    mutationFn: () => unwrap(api.DELETE('/api/me')),
     onSuccess: () => {
       queryClient.clear();
       queryClient.setQueryData(sessionKey, null);
     },
-  });
-}
-
-export function useSyncCalendar(): UseMutationResult<Settings, Error, void> {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: () => http.post<Settings>('/me/calendar/sync'),
-    onSuccess: (settings) => queryClient.setQueryData(['settings'], settings),
   });
 }
 
@@ -71,5 +61,5 @@ export function useUploadAvatar(): UseMutationResult<User, Error, Blob> {
 }
 
 export function useRemoveAvatar(): UseMutationResult<User, Error, void> {
-  return useAvatarMutation(() => http.delete<User>('/me/avatar'));
+  return useAvatarMutation(() => unwrap(api.DELETE('/api/me/avatar')));
 }

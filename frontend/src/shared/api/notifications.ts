@@ -6,7 +6,7 @@ import {
   type UseQueryResult,
 } from '@tanstack/react-query';
 
-import { http } from './client';
+import { api, unwrap } from './client';
 import type { NotificationList } from './types';
 
 const notificationsKey = ['notifications'] as const;
@@ -15,7 +15,7 @@ const notificationsKey = ['notifications'] as const;
 export function useNotifications(): UseQueryResult<NotificationList> {
   return useQuery({
     queryKey: notificationsKey,
-    queryFn: () => http.get<NotificationList>('/notifications'),
+    queryFn: () => unwrap(api.GET('/api/notifications')),
     refetchInterval: 30_000,
     refetchOnWindowFocus: true,
   });
@@ -24,7 +24,8 @@ export function useNotifications(): UseQueryResult<NotificationList> {
 export function useMarkNotificationsRead(): UseMutationResult<void, Error, string[] | undefined> {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (ids?: string[]) => http.post<void>('/notifications/read', { ids }),
+    mutationFn: (ids?: string[]) =>
+      unwrap(api.POST('/api/notifications/read', { body: ids === undefined ? {} : { ids } })),
     // Optimistic: the badge disappears immediately
     onMutate: (ids) => {
       queryClient.setQueryData<NotificationList>(notificationsKey, (current) => {

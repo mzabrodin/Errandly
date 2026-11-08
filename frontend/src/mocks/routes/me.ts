@@ -87,7 +87,7 @@ const settingsHandlers = [
     settings.calendar.syncStatus = 'ok';
     settings.calendar.lastSyncedAt = new Date().toISOString();
     persist();
-    return HttpResponse.json(settings);
+    return HttpResponse.json(settings.calendar);
   }),
 ];
 
@@ -200,7 +200,7 @@ const calendarHandlers = [
       lastSyncedAt: null,
     };
     persist();
-    return HttpResponse.json(settings);
+    return HttpResponse.json(settings.calendar);
   }),
 ];
 
