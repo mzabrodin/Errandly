@@ -46,7 +46,7 @@ function useTaskRange(): { today: Date; from: string; to: string } {
   return range;
 }
 
-/** Фільтри списку живуть у query-параметрах (scope, status) */
+/** List filters live in query params (scope, status) */
 function useTaskFilters(): {
   scope: TaskScope;
   status: TaskStatus | null;
@@ -80,7 +80,7 @@ function useTaskFilters(): {
   return { scope, status, defaultScope, setFilter, update };
 }
 
-/** Прокрутка до блоку з підсвіткою; після зміни фільтрів блок з'являється не одразу — чекаємо кілька кадрів */
+/** Scrolls to a block and highlights it; after a filter change the block appears with a delay, so wait a few frames */
 function scrollToSection(id: 'today' | 'overdue'): void {
   let attempts = 0;
   const scroll = (): void => {
@@ -144,7 +144,7 @@ function TasksToolbar({
           { value: 'all', label: t('tasks.all') },
         ]}
       />
-      {/* oxlint-disable-next-line jsx-a11y/prefer-tag-over-role -- група кнопок-фільтрів, fieldset змінив би розмітку й стилі */}
+      {/* oxlint-disable-next-line jsx-a11y/prefer-tag-over-role -- a group of filter buttons; a fieldset would change the markup and styles */}
       <div className={styles.chips} role="group" aria-label={t('tasks.statusFilter')}>
         <button
           type="button"
@@ -252,7 +252,7 @@ function TaskSections({
   );
 }
 
-/** Над списком: «перші кроки» для нової групи або підсумок дня */
+/** Above the list: "first steps" for a new group, or the day summary */
 function TasksIntro({
   tasks,
   today,
@@ -294,10 +294,10 @@ export function TasksPage(): JSX.Element {
   const actions = useTaskActions();
   const onboarding = useOnboardingVisible(tasks?.length ?? 0);
 
-  /** Перехід з банера: показуємо свої задачі без фільтра статусу і прокручуємо до блоку */
+  /** Coming from the banner: show my tasks without a status filter and scroll to the block */
   const showSection = (id: 'today' | 'overdue'): void => {
     update((current) => {
-      // банер показує мої задачі — тож і список перемикаємо на «Мої»
+      // The banner shows my tasks, so switch the list to "Mine" as well
       current.set('scope', 'mine');
       current.delete('status');
     });

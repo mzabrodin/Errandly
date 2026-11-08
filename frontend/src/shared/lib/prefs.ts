@@ -1,6 +1,6 @@
 import { useSyncExternalStore } from 'react';
 
-// Налаштування інтерфейсу, які стосуються лише цього браузера
+// UI preferences that apply to this browser only
 export const THEMES = ['meadow', 'sakura', 'pixel', 'sunset'] as const;
 export type Theme = (typeof THEMES)[number];
 
@@ -45,7 +45,7 @@ export function setPrefs(patch: Partial<Prefs>): void {
   try {
     localStorage.setItem(KEY, JSON.stringify(current));
   } catch {
-    // лишиться в пам'яті до перезавантаження
+    // Stays in memory until reload
   }
   apply(current);
   listeners.forEach((listener) => listener());

@@ -1,6 +1,6 @@
 import type { KeyboardEvent } from 'react';
 
-/** Навігація стрілками між пунктами меню (WAI-ARIA menu pattern) */
+/** Arrow-key navigation between menu items (WAI-ARIA menu pattern) */
 export function handleMenuKeys(event: KeyboardEvent<HTMLElement>): void {
   const items = [
     ...event.currentTarget.querySelectorAll<HTMLElement>('[role="menuitem"]:not(:disabled)'),

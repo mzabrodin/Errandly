@@ -7,7 +7,7 @@ import { groupHandlers } from './routes/groups';
 import { meHandlers } from './routes/me';
 import { taskHandlers } from './routes/tasks';
 
-// Обробники мок-API, згруповані за розділами в ./routes
+// Mock API handlers, grouped by section in ./routes
 export const handlers = [
   http.all(`${API}/*`, async () => {
     await delay(250);

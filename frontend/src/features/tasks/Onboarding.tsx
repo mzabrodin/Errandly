@@ -10,7 +10,7 @@ import { useCurrentGroup } from '../groups/useCurrentGroup';
 import styles from './Onboarding.module.css';
 import { useTaskActions } from './taskActionsContext';
 
-/** Чекліст для швидкого старту (NFR-USE-01: група → запрошення → перша задача за 5 хв) */
+/** Quick-start checklist (NFR-USE-01: group → invite → first task within 5 min) */
 export function Onboarding({
   taskCount,
   onHide,

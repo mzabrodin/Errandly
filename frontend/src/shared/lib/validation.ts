@@ -1,4 +1,4 @@
-// Правила з FR-01: мінімум 8 символів, щонайменше одна літера та одна цифра
+// Rules from FR-01: at least 8 characters, at least one letter and one digit
 export interface PasswordRules {
   length: boolean;
   letter: boolean;

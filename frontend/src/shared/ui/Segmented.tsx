@@ -24,8 +24,8 @@ export function Segmented<T extends string | number>({
         <button
           key={option.value}
           type="button"
-          // кнопки з role="radio", щоб зберегти вигляд і поведінку кнопок (без нативних radio)
-          // oxlint-disable-next-line jsx-a11y/prefer-tag-over-role -- кастомний segmented control
+          // Buttons with role="radio" keep the look and behaviour of buttons (no native radios)
+          // oxlint-disable-next-line jsx-a11y/prefer-tag-over-role -- custom segmented control
           role="radio"
           aria-checked={option.value === value}
           className={styles.option}

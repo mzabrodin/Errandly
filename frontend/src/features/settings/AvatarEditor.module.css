@@ -7,7 +7,7 @@
 
 .photo {
   position: relative;
-  /* без цього кнопка вища за аватарку (місце під базову лінію) і затемнення з'їжджає */
+  /* without this the button is taller than the avatar (baseline space) and the overlay shifts */
   display: grid;
   line-height: 0;
   padding: 0;

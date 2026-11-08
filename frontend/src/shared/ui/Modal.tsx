@@ -32,7 +32,7 @@ export function Modal({
   }, [open]);
 
   return (
-    // клік по backdrop закриває модалку; з клавіатури — Escape через onCancel
+    // A click on the backdrop closes the modal; from the keyboard, Escape via onCancel
     // oxlint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-noninteractive-element-interactions -- backdrop click
     <dialog
       ref={ref}

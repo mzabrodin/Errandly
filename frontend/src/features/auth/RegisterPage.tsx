@@ -37,7 +37,7 @@ export function RegisterPage(): JSX.Element {
   const submit = (event: FormEvent) => {
     event.preventDefault();
     setSubmitted(true);
-    // помилка підсвічує лише своє поле, інші поля не очищаються (FR-03)
+    // An error highlights only its own field; other fields are not cleared (FR-03)
     const nextErrors: Errors = {
       name: form.name.trim() !== '' ? undefined : t('auth.errors.nameRequired'),
       email: isValidEmail(form.email) ? undefined : t('auth.errors.emailInvalid'),

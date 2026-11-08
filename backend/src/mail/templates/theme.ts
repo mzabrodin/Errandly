@@ -1,4 +1,4 @@
-// Палітра з дизайн-системи фронтенду (frontend/src/styles/tokens.css)
+// Palette from the frontend design system (frontend/src/styles/tokens.css)
 export const theme = {
   cream: '#faf7ea',
   creamDeep: '#f1ecd6',

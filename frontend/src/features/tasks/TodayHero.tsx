@@ -18,7 +18,7 @@ interface TodayHeroProps {
   onShowUnassigned: () => void;
 }
 
-/** Смужка прогресу за тиждень */
+/** Weekly progress bar */
 function WeekProgress({
   done,
   total,
@@ -35,7 +35,7 @@ function WeekProgress({
       <span className={styles.weekLabel}>{t('today.week')}</span>
       <div
         className={styles.bar}
-        // oxlint-disable-next-line jsx-a11y/prefer-tag-over-role -- кастомна смужка (span усередині), <progress> так не стилізується
+        // oxlint-disable-next-line jsx-a11y/prefer-tag-over-role -- a custom bar (span inside); <progress> cannot be styled like this
         role="progressbar"
         aria-valuemin={0}
         aria-valuemax={total}
@@ -56,7 +56,7 @@ function WeekProgress({
   );
 }
 
-/** Підсумок дня для поточного користувача: що на сьогодні і як іде тиждень */
+/** Day summary for the current user: what is due today and how the week is going */
 export function TodayHero({
   tasks,
   userId,
@@ -73,7 +73,7 @@ export function TodayHero({
     (task) => task.status === 'planned' && isSameDay(new Date(task.dueAt), today),
   ).length;
   const overdue = mine.filter((task) => task.status === 'overdue').length;
-  // адміністратору — задачі, які ніхто не отримав (FR-29)
+  // For admins: tasks nobody received (FR-29)
   const unassigned = isAdmin
     ? tasks.filter(
         (task) => (task.assigneeId === null || task.assigneeId === '') && task.status !== 'done',
@@ -87,7 +87,7 @@ export function TodayHero({
     return due >= weekFrom && due <= weekTo;
   });
   const weekDone = week.filter((task) => task.status === 'done').length;
-  // хвалимо лише коли справді нічого не висить: ні прострочених, ні незробленого за тиждень
+  // Praise only when nothing is pending: no overdue tasks and nothing left undone this week
   const allDone = overdue === 0 && week.length > 0 && weekDone === week.length;
 
   return (

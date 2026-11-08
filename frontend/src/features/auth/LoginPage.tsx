@@ -40,7 +40,7 @@ export function LoginPage(): JSX.Element {
 
   const serverError = (() => {
     if (!login.error) return null;
-    // загальне повідомлення, не уточнюючи, яке поле хибне (FR-05)
+    // Generic message that does not reveal which field is wrong (FR-05)
     if (isApiError(login.error, 'INVALID_CREDENTIALS')) return t('auth.errors.invalidCredentials');
     if (isApiError(login.error, 'ACCOUNT_LOCKED')) {
       const minutes = Math.ceil((login.error.details.retryAfterSeconds ?? 900) / 60);

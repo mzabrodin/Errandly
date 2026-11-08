@@ -12,7 +12,7 @@ import { Spinner } from '../../shared/ui/Spinner';
 import { useToast } from '../../shared/ui/Toast';
 import styles from './AvatarEditor.module.css';
 
-/** Фото профілю: завантажити, замінити або видалити (повертаються ініціали) */
+/** Profile photo: upload, replace or remove (initials come back) */
 export function AvatarEditor({
   user,
   children,
@@ -33,7 +33,7 @@ export function AvatarEditor({
 
   const onFile = async (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    // дозволяємо обрати той самий файл ще раз
+    // Allow picking the same file again
     event.target.value = '';
     if (!file) return;
     setPreparing(true);

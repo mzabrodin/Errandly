@@ -16,12 +16,12 @@ interface TasksAsideProps {
   userId: string;
 }
 
-/** Бічна колонка на широких екранах: хто що робить сьогодні + порада дня */
+/** Side column on wide screens: who does what today + tip of the day */
 export function TasksAside({ group, tasks, today, userId }: TasksAsideProps): JSX.Element {
   const { t } = useTranslation();
   const tips = toStringList(t('aside.tips', { returnObjects: true }));
-  // порада змінюється щодня, але не «стрибає» між рендерами
-  // нова порада при кожному відкритті сторінки + кнопка «ще одну»
+  // The tip changes daily but does not "jump" between renders
+  // A new tip on every page open + a "one more" button
   const [tipIndex, setTipIndex] = useState(() => Math.floor(Math.random() * tips.length));
   const tip = tips[tipIndex % tips.length];
   const nextTip = () =>

@@ -1,4 +1,4 @@
-// Декоративні елементи з референсів: астериск (blume), контурна квітка, хмари й пагорби (kummba)
+// Decorative elements from the references: asterisk (blume), outlined flower, clouds and hills (kummba)
 import { clsx } from 'clsx';
 import type { JSX } from 'react';
 
@@ -56,7 +56,7 @@ const SKY_CLOUDS = [
   { left: '86%', top: '46%', width: '7%', opacity: 0.8, duration: 17 },
 ];
 
-/** Хмари на небі: кожна окремо, з власними пропорціями (не розтягуються з контейнером) */
+/** Clouds in the sky: each one separate, with its own proportions (they do not stretch with the container) */
 export function Clouds({ className }: { className?: string }): JSX.Element {
   return (
     <div className={clsx(styles.clouds, className)} aria-hidden>
@@ -122,7 +122,7 @@ export function Marquee({ items }: { items: string[] }): JSX.Element {
   );
 }
 
-/** Пухка хмарка-стікер із контуром (замість еліпсів-градієнтів) */
+/** A puffy outlined cloud sticker (instead of gradient ellipses) */
 export function Cloud({
   className,
   size = 120,
@@ -147,7 +147,7 @@ export function Cloud({
   );
 }
 
-/** Усміхнена квітка з пакетиків насіння blume */
+/** A smiling flower from the blume seed packets */
 export function FlowerFace({
   className,
   size = 80,

@@ -11,8 +11,8 @@ export class ImageError extends Error {
 }
 
 /**
- * Обрізає фото по центру до квадрата й зменшує до 256×256 (WebP, якщо браузер уміє).
- * Так на сервер іде ~20–40 КБ замість кількох мегабайтів з телефона.
+ * Center-crops the photo to a square and scales it down to 256×256 (WebP if the browser supports it).
+ * This way ~20–40 KB goes to the server instead of several megabytes from a phone.
  */
 export async function prepareAvatar(file: File): Promise<Blob> {
   if (!file.type.startsWith('image/')) throw new ImageError('type');

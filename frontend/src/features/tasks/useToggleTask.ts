@@ -14,9 +14,9 @@ function withinUndoWindow(task: Task): boolean {
 }
 
 /**
- * Хто може змінити позначку виконання (FR-24):
- * позначити — лише виконавець; зняти — виконавець протягом 24 годин,
- * адміністратор групи — будь-коли (наприклад, якщо задачу насправді не зроблено).
+ * Who can change the completion mark (FR-24):
+ * mark: only the assignee; unmark: the assignee within 24 hours,
+ * a group admin at any time (e.g. if the task was not actually done).
  */
 export function canToggleTask(
   task: Task,
@@ -26,7 +26,7 @@ export function canToggleTask(
   return isAdmin || (isMine && withinUndoWindow(task));
 }
 
-/** Позначити / скасувати виконання з тостом про результат */
+/** Mark / unmark as done, with a result toast */
 export function useToggleTask(groupId: string): {
   toggle: (task: Task) => void;
   isPending: (taskId: string) => boolean;
@@ -45,7 +45,7 @@ export function useToggleTask(groupId: string): {
             toast(t('tasks.undoToast'));
             return;
           }
-          // позначка в один тап — тож даємо швидко відкотити випадковий клік
+          // Marking takes one tap, so offer a quick undo for accidental clicks
           toast(t('tasks.doneToast', { title: task.title }), {
             action: {
               label: t('common.undo'),

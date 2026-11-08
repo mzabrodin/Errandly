@@ -79,7 +79,7 @@
   background: var(--status-done);
 }
 
-/* записка-стікер на скотчі */
+/* a sticky note taped on */
 .note {
   position: relative;
   padding: 22px 18px 18px;

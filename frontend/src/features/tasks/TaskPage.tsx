@@ -109,13 +109,13 @@ function SeriesHistory({ task }: { task: Task }): JSX.Element | null {
   );
 }
 
-/** Шлях `from` зі стану навігації (його кладуть список, календар і головна) */
+/** The `from` path from navigation state (set by the list, the calendar and home) */
 function fromState(state: unknown): string | undefined {
   if (state === null || typeof state !== 'object' || !('from' in state)) return undefined;
   return typeof state.from === 'string' ? state.from : undefined;
 }
 
-/** Повертаємося туди, звідки відкрили задачу (список, календар, головна) */
+/** Go back to where the task was opened from (list, calendar, home) */
 function useBackLink(groupId: string): { backTo: string; backLabel: string } {
   const { t } = useTranslation();
   const location = useLocation();

@@ -32,7 +32,7 @@ export function InvitePage(): JSX.Element {
 
   if (sessionPending || info.isPending) return <PageSpinner label={t('common.loading')} />;
 
-  // прострочене або відкликане запрошення (FR-13)
+  // Expired or revoked invite (FR-13)
   if (info.error) {
     return (
       <div className={styles.card}>
@@ -51,7 +51,7 @@ export function InvitePage(): JSX.Element {
     );
   }
 
-  // уже учасник — просто відкриваємо групу без дубліката (FR-14)
+  // Already a member: just open the group, no duplicate (FR-14)
   if (info.data.alreadyMember) return <Navigate to={`/g/${info.data.groupId}/tasks`} replace />;
 
   return (
@@ -65,7 +65,7 @@ export function InvitePage(): JSX.Element {
       </p>
 
       {user && !user.emailVerified ? (
-        // без підтвердженого email приєднатися не можна (FR-04) — пояснюємо, як повернутися
+        // Joining requires a verified email (FR-04); explain how to come back
         <div className={styles.form}>
           <p>{t('invite.verifyFirst', { email: user.email })}</p>
           <Button
@@ -108,7 +108,7 @@ export function InvitePage(): JSX.Element {
           </Button>
         </div>
       ) : (
-        // гість: після входу чи реєстрації повертаємося сюди (FR-12)
+        // Guest: come back here after sign-in or registration (FR-12)
         <div className={styles.form}>
           <p>{t('invite.needAuth')}</p>
           <ButtonLink to={`/register?next=${next}`} size="lg" block>

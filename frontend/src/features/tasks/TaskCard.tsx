@@ -26,7 +26,7 @@ export function DifficultyDots({ value }: { value: number }): JSX.Element {
   );
 }
 
-// для запланованих окремого стилю немає
+// Planned tasks have no separate style
 const statusClass: Record<TaskStatus, string | undefined> = {
   planned: undefined,
   done: styles.done,

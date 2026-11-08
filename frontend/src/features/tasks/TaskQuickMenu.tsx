@@ -37,7 +37,7 @@ interface TaskQuickMenuProps {
   children: (props: QuickMenuTriggerProps) => ReactNode;
 }
 
-/** Позиціонування меню біля тригера з урахуванням країв екрана */
+/** Positions the menu next to the trigger, respecting the screen edges */
 function placeMenu(
   menu: HTMLElement,
   trigger: HTMLElement,
@@ -47,13 +47,13 @@ function placeMenu(
   let left: number;
   let top: number;
   if (point) {
-    // мишею/пальцем — відкриваємо біля точки кліку; біля краю розвертаємо вліво/вгору
+    // Mouse/touch: open at the click point; near an edge, flip left/up
     left = point.x + GAP;
     if (left + width > window.innerWidth - EDGE) left = point.x - width - GAP;
     top = point.y + GAP;
     if (top + height > window.innerHeight - EDGE) top = point.y - height - GAP;
   } else {
-    // з клавіатури — під «⋯» (або під лівим краєм чипа в календарі)
+    // Keyboard: below the "⋯" (or below the chip's left edge in the calendar)
     const hint = trigger.querySelector<HTMLElement>('[data-menu-anchor]');
     const anchor = (hint ?? trigger).getBoundingClientRect();
     left = hint ? anchor.right - width : anchor.left;
@@ -107,9 +107,9 @@ interface QuickMenuItemsProps {
   task: Task;
   canToggle: boolean;
   isAdmin: boolean;
-  /** Мутація живе в TaskQuickMenu: меню після кліку розмонтовується, а тост має дочекатися відповіді */
+  /** The mutation lives in TaskQuickMenu: the menu unmounts after a click, but the toast must wait for the response */
   toggle: (task: Task) => void;
-  /** Закриває меню й виконує дію */
+  /** Closes the menu and runs the action */
   run: (action: () => void) => () => void;
 }
 
@@ -191,9 +191,9 @@ function QuickMenuItems({
 }
 
 /**
- * Швидке меню задачі: клік по картці (у списку чи календарі) → основні дії,
- * а сторінка з деталями — окремим пунктом. Popover живе в top layer,
- * тож його не обрізають контейнери з overflow: hidden.
+ * Quick task menu: clicking a card (in the list or calendar) → main actions,
+ * with the details page as a separate item. The popover lives in the top layer,
+ * so containers with overflow: hidden do not clip it.
  */
 export function TaskQuickMenu({ task, children }: TaskQuickMenuProps): JSX.Element {
   const navigate = useNavigate();
@@ -221,11 +221,11 @@ export function TaskQuickMenu({ task, children }: TaskQuickMenuProps): JSX.Eleme
       void navigate(`/g/${group.id}/tasks/${task.id}`);
       return;
     }
-    // клік по тригеру відкритого меню: light dismiss уже закрив його на pointerdown
-    // oxlint-disable-next-line react/purity -- обробник події, не рендер
+    // Click on the trigger of an open menu: light dismiss already closed it on pointerdown
+    // oxlint-disable-next-line react/purity -- event handler, not render
     if (performance.now() - closedAt.current < 250) return;
     triggerRef.current = event.currentTarget;
-    // detail === 0 — активація з клавіатури: координат кліку немає
+    // detail === 0 means keyboard activation: there are no click coordinates
     clickPoint.current = event.detail > 0 ? { x: event.clientX, y: event.clientY } : null;
     setOpen(true);
   };
@@ -234,12 +234,12 @@ export function TaskQuickMenu({ task, children }: TaskQuickMenuProps): JSX.Eleme
     const menu = menuRef.current;
     const trigger = triggerRef.current;
     if (!open || !menu || !trigger) return;
-    // показуємо вже з вмістом і одразу ставимо на місце — без кадру в центрі екрана
+    // Show it with content and position it at once, without a frame in the centre of the screen
     if (!menu.matches(':popover-open')) menu.showPopover();
     placeMenu(menu, trigger, clickPoint.current);
     menu.querySelector<HTMLElement>('[role="menuitem"]')?.focus({ preventScroll: true });
-    // ref-и стабільні, тож у залежностях вони нічого не змінюють; потрібні лінтеру,
-    // бо обробник із ref-ами передається в render-prop
+    // Refs are stable, so they change nothing in the dependencies; the linter needs them
+    // because the handler using the refs is passed to a render prop
   }, [open, menuRef, triggerRef, clickPoint]);
 
   useEffect(() => {
@@ -267,14 +267,14 @@ export function TaskQuickMenu({ task, children }: TaskQuickMenuProps): JSX.Eleme
 
   return (
     <>
-      {/* oxlint-disable-next-line react/refs -- ref читається лише в обробнику кліку */}
+      {/* oxlint-disable-next-line react/refs -- the ref is read only in the click handler */}
       {children({
         onClick: onTriggerClick,
         'aria-haspopup': 'menu',
         'aria-expanded': open,
         'aria-controls': id,
       })}
-      {/* oxlint-disable-next-line jsx-a11y/interactive-supports-focus -- фокус керований: при відкритті переходить на перший пункт меню (WAI-ARIA menu) */}
+      {/* oxlint-disable-next-line jsx-a11y/interactive-supports-focus -- focus is managed: on open it moves to the first menu item (WAI-ARIA menu) */}
       <div
         id={id}
         ref={menuRef}

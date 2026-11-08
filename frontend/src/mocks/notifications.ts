@@ -3,7 +3,7 @@ import { computeStatus, db, id } from './db';
 
 type Payload = Pick<AppNotification, 'groupId' | 'taskId' | 'data'>;
 
-/** Створює сповіщення в «вхідних» користувача */
+/** Creates a notification in the user's inbox */
 export function pushNotification(
   userId: string | null,
   type: NotificationType,
@@ -21,8 +21,8 @@ export function pushNotification(
 }
 
 /**
- * На сервері прострочення фіксує фоновий процес (FR-25). У моках — під час
- * запиту сповіщень: по одному на кожну прострочену задачу користувача.
+ * On the server, a background job detects overdue tasks (FR-25). With mocks this happens
+ * when notifications are requested: one per overdue task of the user.
  */
 export function syncOverdueNotifications(userId: string): void {
   for (const task of db.tasks) {

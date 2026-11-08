@@ -26,7 +26,7 @@ interface ToastItem {
   action?: ToastAction;
 }
 
-/** Другий аргумент — тон або опції з дією (наприклад, «Скасувати») */
+/** The second argument is a tone or options with an action (e.g. "Undo") */
 type Notify = (message: ReactNode, options?: Tone | { tone?: Tone; action?: ToastAction }) => void;
 
 const DURATION_MS = 4000;
@@ -56,8 +56,8 @@ export function ToastProvider({ children }: { children: ReactNode }): JSX.Elemen
   const value = useMemo(() => notify, [notify]);
   const regionRef = useRef<HTMLDivElement>(null);
 
-  // Модалки (<dialog>) живуть у top layer браузера, над будь-яким z-index.
-  // Тому область тостів — popover: повторний показ піднімає її над відкритим діалогом.
+  // Modals (<dialog>) live in the browser's top layer, above any z-index.
+  // So the toast area is a popover: showing it again lifts it above an open dialog.
   useEffect(() => {
     const region = regionRef.current;
     if (!region || typeof region.showPopover !== 'function') return;

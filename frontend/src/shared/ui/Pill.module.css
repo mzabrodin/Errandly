@@ -12,7 +12,7 @@
   white-space: nowrap;
 }
 
-/* піксельний шрифт — лише для цифр: кирилиця в ньому погано читається */
+/* pixel font for digits only: Cyrillic is hard to read in it */
 .pixel {
   font-family: var(--font-pixel);
   font-weight: 500;

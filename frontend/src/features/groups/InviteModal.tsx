@@ -36,7 +36,7 @@ export function InviteModal({
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch {
-      // буфер обміну недоступний — посилання можна виділити вручну
+      // Clipboard unavailable: the link can be selected by hand
     }
   };
 

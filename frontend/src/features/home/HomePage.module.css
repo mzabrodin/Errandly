@@ -4,7 +4,7 @@
   gap: 36px;
 }
 
-/* ---------- небо ---------- */
+/* ---------- sky ---------- */
 .hero {
   position: relative;
   min-height: 300px;
@@ -86,7 +86,7 @@
   animation: sway 3.5s ease-in-out infinite;
 }
 
-/* ---------- наступна задача ---------- */
+/* ---------- next task ---------- */
 .label {
   margin-bottom: 14px;
   font-size: 22px;
@@ -166,7 +166,7 @@
   font-weight: 600;
 }
 
-/* ---------- групи-пакетики ---------- */
+/* ---------- group packets ---------- */
 .groups {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));

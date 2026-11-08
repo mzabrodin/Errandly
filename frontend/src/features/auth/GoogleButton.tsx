@@ -28,13 +28,13 @@ function GoogleIcon(): JSX.Element {
   );
 }
 
-/** Вхід через Google OAuth 2.0 (FR-07) */
+/** Sign-in with Google OAuth 2.0 (FR-07) */
 export function GoogleButton({ next }: { next: string }): JSX.Element {
   const { t } = useTranslation();
 
   const start = async () => {
     if (mocksEnabled) {
-      // service worker не перехоплює навігацію, тож для моків імітуємо редірект вручну
+      // The service worker does not intercept navigation, so with mocks the redirect is simulated by hand
       await fetch(googleAuthUrl, { redirect: 'manual' });
       window.location.assign(next);
       return;

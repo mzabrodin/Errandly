@@ -1,12 +1,12 @@
-// Запрошення, яке гість відкрив до підтвердження email. Лист підтвердження
-// відкривається в новій вкладці, тому зберігаємо в localStorage, а не sessionStorage.
+// An invite the guest opened before verifying their email. The verification email
+// opens in a new tab, so it is kept in localStorage rather than sessionStorage.
 const KEY = 'errandly-pending-invite';
 
 export function rememberInvite(token: string): void {
   try {
     localStorage.setItem(KEY, token);
   } catch {
-    // не критично: користувач просто відкриє посилання ще раз
+    // Not critical: the user can just open the link again
   }
 }
 
@@ -22,6 +22,6 @@ export function forgetInvite(): void {
   try {
     localStorage.removeItem(KEY);
   } catch {
-    // ігноруємо
+    // Ignore
   }
 }

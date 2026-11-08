@@ -15,7 +15,7 @@ export interface ArrangedTasks {
   days: { day: Date; items: Task[] }[];
 }
 
-/** Розкладає задачі на «прострочені» та «за днями» відповідно до фільтрів (FR-23) */
+/** Splits tasks into "overdue" and "by day" according to the filters (FR-23) */
 export function arrangeTasks(
   tasks: Task[],
   filters: TaskFilters,

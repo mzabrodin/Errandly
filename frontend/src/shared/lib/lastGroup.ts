@@ -12,6 +12,6 @@ export function setLastGroupId(groupId: string): void {
   try {
     localStorage.setItem(KEY, groupId);
   } catch {
-    // не критично
+    // Not critical
   }
 }

@@ -9,7 +9,7 @@
   padding: 0 16px;
 }
 
-/* ---------- hero: небо, хмари, пагорби ---------- */
+/* ---------- hero: sky, clouds, hills ---------- */
 .hero {
   position: relative;
   min-height: min(760px, 92dvh);
@@ -120,7 +120,7 @@
   transform: rotate(14deg);
 }
 
-/* ---------- пакетики-задачі ---------- */
+/* ---------- task packets ---------- */
 .packets {
   padding: 72px 0;
   border-bottom: var(--border);
@@ -230,7 +230,7 @@
   font-weight: 700;
 }
 
-/* ---------- текст у хмарці на траві ---------- */
+/* ---------- text in a cloud on the grass ---------- */
 .grass {
   padding: 80px 16px;
   border-bottom: var(--border);
@@ -253,7 +253,7 @@
   line-height: 1.6;
 }
 
-/* ---------- як це працює ---------- */
+/* ---------- how it works ---------- */
 .how {
   padding: 72px 0;
   border-bottom: var(--border);

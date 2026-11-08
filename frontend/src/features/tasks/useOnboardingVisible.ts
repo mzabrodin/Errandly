@@ -12,7 +12,7 @@ function isHidden(groupId: string): boolean {
   }
 }
 
-/** Чи показувати «перші кроки»: адміну нової групи, поки не запрошено людей або немає задач */
+/** Whether to show "first steps": to the admin of a new group while nobody is invited or there are no tasks */
 export function useOnboardingVisible(taskCount: number): {
   visible: boolean;
   hide: () => void;
@@ -24,7 +24,7 @@ export function useOnboardingVisible(taskCount: number): {
     try {
       localStorage.setItem(storageKey(group.id), '1');
     } catch {
-      // не критично
+      // Not critical
     }
     setHidden(true);
   };

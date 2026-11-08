@@ -46,7 +46,7 @@ export function initialState(task: Task | null, defaultDay?: Date): FormState {
       assigneeId: task.manuallyAssigned && task.assigneeId !== null ? task.assigneeId : '',
     };
   }
-  // день із календаря або завтра; час — 19:00 (або найближча година, якщо сьогодні вже пізно)
+  // Day from the calendar or tomorrow; time 19:00 (or the next hour if it is already late today)
   let tomorrowEvening = setMinutes(
     setHours(startOfHour(defaultDay ?? addDays(new Date(), 1)), 19),
     0,
@@ -83,7 +83,7 @@ export function toTaskInput(state: FormState): TaskInput {
   };
 }
 
-/** Перевірка форми; dueChanged — чи змінювали термін (у минулому не можна ставити лише новий) */
+/** Form validation; dueChanged tells whether the due date was changed (only a new one cannot be in the past) */
 export function validateForm(state: FormState, dueChanged: boolean, t: TFunction): Errors {
   const next: Errors = {};
   const title = state.title.trim();
@@ -99,7 +99,7 @@ export function validateForm(state: FormState, dueChanged: boolean, t: TFunction
   return next;
 }
 
-/** Помилка конкретного поля з відповіді сервера */
+/** Error for a specific field from the server response */
 export function serverFieldError(error: unknown, field: string, t: TFunction): string | undefined {
   const code = error instanceof ApiError ? error.details.fields?.[field] : undefined;
   if (code === 'inPast') return t('taskForm.errors.dueInPast');

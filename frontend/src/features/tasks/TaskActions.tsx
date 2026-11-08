@@ -11,7 +11,7 @@ interface FormState {
   defaultDay?: Date | undefined;
 }
 
-/** Спільні модалки дій із задачами для всіх сторінок групи (одна копія замість модалки на кожну картку) */
+/** Shared task-action modals for all group pages (one copy instead of a modal per card) */
 export function TaskActionsProvider({ children }: { children: ReactNode }): JSX.Element {
   const [form, setForm] = useState<FormState>({ open: false, task: null });
   const [reassigning, setReassigning] = useState<Task | null>(null);

@@ -14,7 +14,7 @@ import { useToast } from '../../shared/ui/Toast';
 import { useCurrentGroup } from '../groups/useCurrentGroup';
 import styles from './TaskActionModals.module.css';
 
-/** Ручна зміна виконавця адміністратором (FR-30) */
+/** Manual reassignment by an admin (FR-30) */
 export function ReassignModal({
   task,
   onClose,
@@ -73,7 +73,7 @@ export function ReassignModal({
   );
 }
 
-/** Видалення задачі; для повторюваної — вибір «лише цю / всю серію» (FR-22) */
+/** Task deletion; for a recurring task, choose "this one / the whole series" (FR-22) */
 export function DeleteTaskModal({
   task,
   onClose,

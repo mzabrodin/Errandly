@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { ButtonLink } from '../shared/ui/Button';
 import styles from './ForbiddenView.module.css';
 
-/** «Немає доступу» для чужих груп (FR-40) */
+/** "No access" for other people's groups (FR-40) */
 export function ForbiddenView(): JSX.Element {
   const { t } = useTranslation();
   return (
