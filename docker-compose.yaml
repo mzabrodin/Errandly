@@ -6,6 +6,9 @@
 #   docker compose down                 stop, data is kept
 #   docker compose down -v              stop and delete the database
 #
+# The one-shot `migrate` service applies pending migrations before the backend starts.
+# Demo data is not loaded here: npm run db:seed works only outside production.
+#
 # Ports are bound to 127.0.0.1, so the services are reachable only from this machine.
 # Networks: frontend (nginx -> backend), backend (backend -> postgresql, mailpit);
 # nginx cannot reach the database or Mailpit.
@@ -17,6 +20,12 @@ x-logging: &default-logging
   options:
     max-size: '10m'
     max-file: '3'
+
+x-database-url: &database-url postgresql://${POSTGRES_USER:-errandly}:${POSTGRES_PASSWORD:-errandly}@postgresql:5432/${POSTGRES_DB:-errandly}
+
+x-backend-build: &backend-build
+  context: .
+  dockerfile: backend/Dockerfile
 
 x-service: &service
   restart: unless-stopped
@@ -55,18 +64,30 @@ services:
       - '127.0.0.1:${MAILPIT_UI_PORT:-8025}:8025'
     networks: [backend]
 
+  migrate:
+    <<: *service
+    restart: 'no'
+    image: errandly/backend:local
+    build: *backend-build
+    command: ['node', 'backend/dist/db/migrate.js']
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: *database-url
+    networks: [backend]
+    depends_on:
+      postgresql:
+        condition: service_healthy
+
   backend:
     <<: *service
     image: errandly/backend:local
-    build:
-      context: .
-      dockerfile: backend/Dockerfile
+    build: *backend-build
     environment:
       NODE_ENV: production
       PORT: 3000
       LOG_LEVEL: ${LOG_LEVEL:-info}
       APP_URL: http://localhost:${APP_PORT:-8080}
-      DATABASE_URL: postgresql://${POSTGRES_USER:-errandly}:${POSTGRES_PASSWORD:-errandly}@postgresql:5432/${POSTGRES_DB:-errandly}
+      DATABASE_URL: *database-url
       # Mailpit unless .env points at a real SMTP server
       SMTP_HOST: ${SMTP_HOST:-mailpit}
       SMTP_PORT: ${SMTP_PORT:-1025}
@@ -85,8 +106,8 @@ services:
       start_period: 20s
       retries: 5
     depends_on:
-      postgresql:
-        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
       mailpit:
         condition: service_started
 
