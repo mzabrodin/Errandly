@@ -6,7 +6,7 @@ const ENTITIES: Record<string, string> = {
   "'": '&#39;',
 };
 
-/** Екранування користувацьких даних (імена, назви задач) перед вставкою в HTML */
+/** Escapes user data (names, task titles) before inserting it into HTML */
 export function escapeHtml(value: string | number): string {
   return String(value).replace(/[&<>"']/g, (char) => ENTITIES[char] ?? char);
 }

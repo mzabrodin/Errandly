@@ -3,7 +3,7 @@ import { HttpResponse } from 'msw';
 import type { Group } from '../../shared/api/types';
 import { autoAssign, db, isCompleted, type Db } from '../db';
 
-// Спільні помічники обробників мок-API
+// Shared helpers for the mock API handlers
 
 export const API = '/api';
 
@@ -26,7 +26,7 @@ export function emptyResponse(status = 204): Response {
   return new HttpResponse(null, { status });
 }
 
-/** Дані моків узгоджені між собою; відсутній запис — помилка в самих моках */
+/** Mock data is consistent; a missing record is a bug in the mocks themselves */
 export function must<T>(value: T | undefined, what: string): T {
   if (value === undefined) throw new Error(`[mock] ${what} not found`);
   return value;
@@ -40,7 +40,7 @@ export function membership(groupId: string, userId: string): DbMembershipRecord 
   return db.memberships.find((item) => item.groupId === groupId && item.userId === userId);
 }
 
-/** Повертає учасника або Response з 401/403 (FR-40, NFR-SEC-04) */
+/** Returns the member, or a Response with 401/403 (FR-40, NFR-SEC-04) */
 export function authorize(
   groupId: string,
   adminOnly = false,
@@ -92,7 +92,7 @@ export function groupDto(groupId: string, userId: string): Group {
   };
 }
 
-/** Перерозподіляє невиконані майбутні задачі учасника (FR-15) */
+/** Reassigns the member's unfinished future tasks (FR-15) */
 export function redistributeOpenTasks(groupId: string, userId: string): void {
   const open = db.tasks.filter(
     (task) =>

@@ -32,7 +32,7 @@ export function CreateGroupPage(): JSX.Element {
     create.mutate(name.trim(), {
       onSuccess: (group) => {
         toast(t('groups.created'));
-        // одразу ведемо до запрошення співмешканців (NFR-USE-01)
+        // Go straight to inviting flatmates (NFR-USE-01)
         void navigate(`/g/${group.id}/members?invite=1`);
       },
     });
@@ -59,7 +59,7 @@ export function CreateGroupPage(): JSX.Element {
                 placeholder={t('groups.namePlaceholder')}
                 value={name}
                 onChange={(event) => setName(event.target.value)}
-                // oxlint-disable-next-line jsx-a11y/no-autofocus -- єдине поле форми, фокус очікуваний
+                // oxlint-disable-next-line jsx-a11y/no-autofocus -- the only form field, focus is expected
                 autoFocus
               />
             )}

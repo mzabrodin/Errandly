@@ -47,7 +47,7 @@ function validateTask(input: TaskInput, previousDueAt?: string): Record<string, 
   return Object.keys(fields).length > 0 ? fields : null;
 }
 
-/** Призначення задачі: лист (якщо увімкнено) + сповіщення в сервісі новому і попередньому виконавцю */
+/** Task assignment: an email (if enabled) + in-app notifications to the new and previous assignee */
 function onAssigned(
   task: DbTaskRecord,
   actorId: string,
@@ -94,7 +94,7 @@ function seriesInput(groupId: string, input: TaskInput): SeriesInput {
   };
 }
 
-/** Перебудовує майбутні невиконані екземпляри серії; повертає перший новий */
+/** Rebuilds the series' future unfinished instances; returns the first new one */
 function rebuildSeries(task: DbTaskRecord, input: TaskInput): DbTaskRecord {
   const now = Date.now();
   db.tasks = db.tasks.filter(
@@ -225,7 +225,7 @@ const taskStateHandlers = [
     if (!task) return error(404, 'NOT_FOUND');
     const auth = authorize(task.groupId);
     if (auth instanceof Response) return auth;
-    // адміністратор може зняти позначку будь-коли, виконавець — протягом 24 годин
+    // An admin can unmark at any time, the assignee within 24 hours
     if (auth.member.role !== 'admin') {
       if (task.assigneeId !== auth.user.id) return error(403, 'NOT_ASSIGNEE');
       if (

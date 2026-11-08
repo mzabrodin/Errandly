@@ -37,8 +37,8 @@ const sections = [
 ] as const;
 
 /**
- * Група для навігації в шапці: з адреси, інакше остання відкрита, інакше перша.
- * Без запасного варіанту на /settings чи /home одразу після входу пропадали «Задачі», «Календар»…
+ * Group for the header navigation: from the URL, else the last opened one, else the first.
+ * Without this fallback, "Tasks", "Calendar"… disappeared on /settings or /home right after sign-in.
  */
 function useActiveGroupId(): string | null {
   const match = useMatch('/g/:groupId/*');
@@ -54,7 +54,7 @@ function useActiveGroupId(): string | null {
   return groups?.[0]?.id ?? null;
 }
 
-/** Кнопка-перемикач груп у шапці */
+/** Group switcher button in the header */
 function groupSwitcherTrigger(label: string, name: string) {
   return function GroupSwitcherTrigger(props: MenuTriggerProps): JSX.Element {
     return (
@@ -66,7 +66,7 @@ function groupSwitcherTrigger(label: string, name: string) {
   };
 }
 
-/** Кнопка з аватаркою, що відкриває меню користувача */
+/** Avatar button that opens the user menu */
 function userMenuTrigger(label: string, user: { name: string; avatarUrl: string | null }) {
   return function UserMenuTrigger(props: MenuTriggerProps): JSX.Element {
     return (

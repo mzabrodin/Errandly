@@ -19,7 +19,7 @@ export class ApiError extends Error {
     this.body = body;
   }
 
-  /** Тіло помилки у форматі бекенду (порожній об'єкт, якщо тіла немає) */
+  /** Error body in the backend format (an empty object if there is no body) */
   get details(): ApiErrorBody {
     return this.body !== null && typeof this.body === 'object' ? this.body : {};
   }
@@ -66,10 +66,10 @@ export async function unwrap<T, E>(request: Promise<ApiResult<T, E>>): Promise<T
   return result.data;
 }
 
-// Нетипізований клієнт для ендпоінтів, яких ще немає в openapi.json (контракт — frontend/API.md).
-// Коли бекенд їх реалізує, запити переїжджають на типізований `api`.
+// Untyped client for endpoints that are not in openapi.json yet (contract: frontend/API.md).
+// Once the backend implements them, the requests move to the typed `api`.
 async function httpRequest<T>(path: string, init: RequestInit = {}): Promise<T> {
-  // для FormData браузер сам ставить multipart/form-data з boundary
+  // For FormData the browser sets multipart/form-data with a boundary itself
   const isForm = init.body instanceof FormData;
   const headers = new Headers(init.headers);
   if (!isForm && !headers.has('Content-Type')) headers.set('Content-Type', 'application/json');
@@ -85,8 +85,8 @@ async function httpRequest<T>(path: string, init: RequestInit = {}): Promise<T> 
     throw new ApiError(response.status, body);
   }
 
-  // нетипізований шлях: форму відповіді гарантує контракт у frontend/API.md
-  // oxlint-disable-next-line typescript/no-unsafe-type-assertion -- generic-обгортка над fetch
+  // Untyped path: the response shape is guaranteed by the contract in frontend/API.md
+  // oxlint-disable-next-line typescript/no-unsafe-type-assertion -- generic wrapper over fetch
   return body as T;
 }
 

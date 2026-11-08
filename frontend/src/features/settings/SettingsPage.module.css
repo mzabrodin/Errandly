@@ -55,7 +55,7 @@
   padding: 24px;
 }
 
-/* якір з поправкою на липку шапку */
+/* anchor offset for the sticky header */
 .anchor {
   position: absolute;
   top: calc(-1 * var(--header-h) - 20px);
@@ -280,7 +280,7 @@
     grid-template-columns: minmax(0, 1fr);
   }
 
-  /* на вузьких екранах — горизонтальні вкладки, що прокручуються */
+  /* on narrow screens: horizontally scrolling tabs */
   .nav {
     position: sticky;
     z-index: 5;

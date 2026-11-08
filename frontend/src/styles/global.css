@@ -64,7 +64,7 @@ textarea {
   border: 0;
 }
 
-/* сітка «зошита» з референсів */
+/* "notebook" grid from the references */
 .grid-paper {
   background-color: var(--cream);
   background-image:
@@ -73,7 +73,7 @@ textarea {
   background-size: 32px 32px;
 }
 
-/* «Менше анімацій» у налаштуваннях працює так само, як системне prefers-reduced-motion */
+/* "Reduce motion" in settings works the same as the system prefers-reduced-motion */
 html[data-reduce-motion='true'] *,
 html[data-reduce-motion='true'] *::before,
 html[data-reduce-motion='true'] *::after {

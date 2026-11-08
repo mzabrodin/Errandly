@@ -19,7 +19,7 @@
 }
 
 .mark {
-  /* маркерне виділення, як у «the community» з референсу */
+  /* marker highlight, like "the community" in the reference */
   padding: 0 0.06em;
   background: linear-gradient(transparent 56%, var(--lime) 56%, var(--lime) 92%, transparent 92%);
   box-decoration-break: clone;

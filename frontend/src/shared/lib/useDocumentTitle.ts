@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 
-/** Заголовок вкладки браузера: «Задачі · Errandly» */
+/** Browser tab title, e.g. "Tasks · Errandly" */
 export function useDocumentTitle(title: string | null | undefined): void {
   useEffect(() => {
     if ((title ?? '') === '') return undefined;

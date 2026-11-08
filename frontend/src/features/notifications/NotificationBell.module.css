@@ -19,7 +19,7 @@
   background: var(--lime);
 }
 
-/* дзвіночок легенько хитається, коли є непрочитане */
+/* the bell wiggles gently when there is something unread */
 .bellActive svg {
   transform-origin: 50% 10%;
   animation: ring 4s ease-in-out infinite;

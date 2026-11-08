@@ -39,7 +39,7 @@ import styles from './CalendarPage.module.css';
 type View = 'week' | 'month';
 const MONTH_CELL_LIMIT = 3;
 
-// для запланованих окремого стилю немає
+// Planned tasks have no separate style
 const statusClass: Record<TaskStatus, string | undefined> = {
   planned: undefined,
   done: styles.done,
@@ -104,7 +104,7 @@ function awayOn(
   });
 }
 
-/** Хто не вдома цього дня (FR-17): у цей час задачі їм не призначаються */
+/** Who is away on this day (FR-17): no tasks are assigned to them then */
 function AwayList({
   members,
   day,
@@ -149,7 +149,7 @@ function AwayList({
   );
 }
 
-/** Адміністратор може додати задачу на конкретний день (минулі дні — ні) */
+/** An admin can add a task on a specific day (not on past days) */
 function AddDayButton({
   day,
   todayStart,
@@ -175,7 +175,7 @@ function AddDayButton({
   ) : null;
 }
 
-/** Колір задачі — колір виконавця; без виконавця — нейтральний */
+/** Task colour is the assignee's colour; neutral when unassigned */
 function useTaskColor(): (task: Task) => string {
   const { membersById } = useCurrentGroup();
   return (task) => {
@@ -374,7 +374,7 @@ function CalendarLegend({ members }: { members: Member[] }): JSX.Element {
   );
 }
 
-/** Календарний вигляд задач групи; кожен виконавець — своїм кольором (FR-37) */
+/** Calendar view of the group's tasks; each assignee has their own colour (FR-37) */
 export function CalendarPage(): JSX.Element {
   const { t } = useTranslation();
   const { group } = useCurrentGroup();
@@ -402,7 +402,7 @@ export function CalendarPage(): JSX.Element {
       view === 'week' ? addWeeks(current, direction) : addMonths(current, direction),
     );
 
-  // тиждень — рівно 7 днів від range.from
+  // A week is exactly 7 days from range.from
   const title =
     view === 'week'
       ? `${formatDate(range.from, 'd MMM')} — ${formatDate(addDays(range.from, 6), 'd MMM yyyy')}`

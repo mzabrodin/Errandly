@@ -90,7 +90,7 @@ button.summaryOverdue:hover {
 .bar span {
   display: block;
   height: 100%;
-  /* тінь замість border-right: на 100% її обрізає контейнер, і смужка доходить до краю */
+  /* shadow instead of border-right: at 100% the container clips it, so the bar reaches the edge */
   box-shadow: 1.5px 0 0 var(--ink);
   background: repeating-linear-gradient(-45deg, var(--lime) 0 8px, var(--accent-deep) 8px 16px);
   transition: width 0.4s ease;

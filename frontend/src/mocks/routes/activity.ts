@@ -4,10 +4,10 @@ import { computeStatus, DAY_MS, db, isCompleted, persist } from '../db';
 import { syncOverdueNotifications } from '../notifications';
 import { API, authorize, currentUser, emptyResponse, error, type GroupParams } from './common';
 
-// Сповіщення в сервісі та статистика групи
+// In-app notifications and group statistics
 
 export const activityHandlers = [
-  // ---------- сповіщення в сервісі ----------
+  // ---------- in-app notifications ----------
   http.get(`${API}/notifications`, () => {
     const user = currentUser();
     if (!user) return error(401, 'UNAUTHENTICATED');
@@ -36,7 +36,7 @@ export const activityHandlers = [
     return emptyResponse();
   }),
 
-  // ---------- статистика ----------
+  // ---------- statistics ----------
   http.get<GroupParams>(`${API}/groups/:groupId/stats`, ({ params, request }) => {
     const { groupId } = params;
     const auth = authorize(groupId);

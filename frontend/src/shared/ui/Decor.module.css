@@ -12,7 +12,7 @@
   animation: cloud-drift 24s ease-in-out infinite;
 }
 
-/* хмари повільно пливуть туди-назад і трохи гойдаються */
+/* clouds drift back and forth slowly and sway a little */
 @keyframes cloud-drift {
   0%,
   100% {
@@ -66,7 +66,7 @@
   }
 }
 
-/* однакова товщина контуру незалежно від розміру (у px екрана, а не одиницях viewBox) */
+/* the same outline width at any size (in screen px, not viewBox units) */
 .stroke * {
   vector-effect: non-scaling-stroke;
 }

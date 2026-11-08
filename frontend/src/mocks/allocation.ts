@@ -1,6 +1,6 @@
 import { toDateInputValue } from '../shared/lib/dates';
 
-// Алгоритм автоматичного розподілу (FR-27, FR-28, FR-17) — дзеркалить серверну логіку для моків
+// Automatic assignment algorithm (FR-27, FR-28, FR-17); mirrors the server logic for the mocks
 
 export interface AllocationMember {
   userId: string;
@@ -18,7 +18,7 @@ export interface AllocationTask {
 const DAY_MS = 24 * 60 * 60 * 1000;
 export const LOAD_WINDOW_DAYS = 28;
 
-// дата терміну в локальному часовому поясі, як її бачить користувач (NFR-COMP-03)
+// Due date in the local time zone, as the user sees it (NFR-COMP-03)
 export function isAbsent(member: AllocationMember, dueAt: string): boolean {
   const day = toDateInputValue(new Date(dueAt));
   return member.absences.some((absence) => absence.from <= day && day <= absence.to);
@@ -46,7 +46,7 @@ function lastTimeDidSeries(userId: string, seriesId: string, tasks: AllocationTa
     .reduce((latest, task) => Math.max(latest, new Date(task.dueAt).getTime()), -Infinity);
 }
 
-/** Повертає userId виконавця або null, якщо доступних учасників немає (FR-29) */
+/** Returns the assignee's userId, or null if no member is available (FR-29) */
 export function pickAssignee(
   members: AllocationMember[],
   tasks: AllocationTask[],
@@ -63,7 +63,7 @@ export function pickAssignee(
 
   if (candidates.length === 0) return null;
 
-  // менше навантаження → давніше виконував цю серію → за алфавітом
+  // Lower workload → did this series longest ago → alphabetical
   const [best] = candidates.toSorted((a, b) => {
     if (a.load !== b.load) return a.load - b.load;
     if (a.lastDid !== b.lastDid) return a.lastDid - b.lastDid;

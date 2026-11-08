@@ -19,7 +19,7 @@
   pointer-events: none;
 }
 
-/* закрита popover-область не повинна займати місце; без підтримки popover лишається звичайним fixed-блоком */
+/* a closed popover area must not take up space; without popover support it stays a plain fixed block */
 @supports selector(:popover-open) {
   .region:not(:popover-open) {
     display: none;

@@ -63,7 +63,7 @@
   color: var(--ink-soft);
 }
 
-/* ---------- відсутності ---------- */
+/* ---------- absences ---------- */
 .away {
   display: flex;
   flex-direction: column;
@@ -107,7 +107,7 @@
   padding: 1px 4px 1px 1px;
 }
 
-/* ---------- тиждень ---------- */
+/* ---------- week ---------- */
 .week {
   display: grid;
   grid-template-columns: repeat(7, minmax(0, 1fr));
@@ -154,7 +154,7 @@
   color: var(--ink);
 }
 
-/* сьогодні: насичений лаймовий фон, смужка зверху й наліпка «сьогодні» */
+/* today: saturated lime background, a top stripe and a "today" sticker */
 .today {
   position: relative;
   background:
@@ -276,7 +276,7 @@
   background: var(--paper);
 }
 
-/* ---------- місяць ---------- */
+/* ---------- month ---------- */
 .month {
   display: grid;
   grid-template-columns: repeat(7, minmax(0, 1fr));
@@ -427,7 +427,7 @@
   }
 }
 
-/* «+» додати задачу на день */
+/* "+" adds a task on that day */
 .addDay {
   display: grid;
   place-items: center;

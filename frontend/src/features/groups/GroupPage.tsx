@@ -42,7 +42,7 @@ function currentAbsence(member: Member): Member['absences'][number] | undefined 
   return member.absences.find((absence) => absence.from <= today && today <= absence.to);
 }
 
-/** Кнопка «…» з діями над учасником */
+/** "…" button with actions on a member */
 function memberActionsTrigger(label: string) {
   return function MemberActionsTrigger(props: MenuTriggerProps): JSX.Element {
     return (

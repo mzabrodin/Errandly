@@ -11,7 +11,7 @@ import type { NotificationList } from './types';
 
 const notificationsKey = ['notifications'] as const;
 
-/** Сповіщення в сервісі; оновлюються раз на 30 с і при поверненні у вкладку */
+/** In-app notifications; refreshed every 30 s and when returning to the tab */
 export function useNotifications(): UseQueryResult<NotificationList> {
   return useQuery({
     queryKey: notificationsKey,
@@ -25,7 +25,7 @@ export function useMarkNotificationsRead(): UseMutationResult<void, Error, strin
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (ids?: string[]) => http.post<void>('/notifications/read', { ids }),
-    // оптимістично: бейдж зникає одразу
+    // Optimistic: the badge disappears immediately
     onMutate: (ids) => {
       queryClient.setQueryData<NotificationList>(notificationsKey, (current) => {
         if (!current) return current;
@@ -39,7 +39,7 @@ export function useMarkNotificationsRead(): UseMutationResult<void, Error, strin
   });
 }
 
-/** Після дій, що породжують сповіщення (нова задача, нова група), — оновлюємо список */
+/** After actions that create notifications (new task, new group), refresh the list */
 export function useRefreshNotifications(): () => Promise<void> {
   const queryClient = useQueryClient();
   return () => queryClient.invalidateQueries({ queryKey: notificationsKey });

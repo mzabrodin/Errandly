@@ -21,7 +21,7 @@ interface Totals {
   difficulty: number;
 }
 
-/** Рядок статистики разом з учасником, якому він належить */
+/** A stats row together with the member it belongs to */
 interface Row {
   item: MemberStats;
   member: Member;
@@ -51,7 +51,7 @@ function TotalsCard({ totals, rows }: { totals: Totals; rows: Row[] }): JSX.Elem
       </dl>
       <div className={styles.shareBlock}>
         <span className={styles.shareLabel}>{t('stats.share')}</span>
-        {/* oxlint-disable-next-line jsx-a11y/prefer-tag-over-role -- смуга зі span-сегментів, <img> тут не підходить */}
+        {/* oxlint-disable-next-line jsx-a11y/prefer-tag-over-role -- a bar of span segments, <img> does not fit here */}
         <div className={styles.shareBar} role="img" aria-label={t('stats.share')}>
           {rows.map(({ item, member }) => {
             const share = totals.difficulty !== 0 ? (item.difficulty / totals.difficulty) * 100 : 0;
@@ -124,7 +124,7 @@ function MemberStatsCard({
   );
 }
 
-/** Статистика групи за тиждень / місяць (FR-39) */
+/** Group statistics for a week / month (FR-39) */
 export function StatsPage(): JSX.Element {
   const { t } = useTranslation();
   const { group, me, membersById } = useCurrentGroup();
@@ -181,7 +181,7 @@ export function StatsPage(): JSX.Element {
           <ul className={styles.members}>
             {rows.map((row, index) => {
               const second = rows[1];
-              // стікер лише за явного лідерства, без нічиїх
+              // Sticker only for a clear leader, not on a tie
               const topContributor =
                 index === 0 &&
                 row.item.difficulty > 0 &&

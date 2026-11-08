@@ -82,7 +82,7 @@ export function useRemoveMember(groupId: string): UseMutationResult<unknown, Err
   );
 }
 
-/** Передача / зняття прав адміністратора (FR-16) */
+/** Grant / revoke admin rights (FR-16) */
 export function useSetMemberRole(
   groupId: string,
 ): UseMutationResult<unknown, Error, { userId: string; role: GroupRole }> {

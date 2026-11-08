@@ -10,7 +10,7 @@ import type {
 import { toDateInputValue } from '../shared/lib/dates';
 import { pickAssignee, type AllocationMember } from './allocation';
 
-// In-memory «бекенд» для розробки без сервера. Стан зберігається в localStorage.
+// In-memory "backend" for development without a server. State is kept in localStorage.
 
 interface DbUser extends User {
   password: string;
@@ -57,7 +57,7 @@ export interface Db {
 }
 
 const STORAGE_KEY = 'errandly-mock-db';
-const DB_VERSION = 3;
+const DB_VERSION = 4;
 const DAY_MS = 24 * 60 * 60 * 1000;
 export const HORIZON_DAYS = 28;
 
@@ -76,7 +76,7 @@ export function id(prefix: string): string {
   return `${prefix}-${Math.random().toString(36).slice(2, 10)}`;
 }
 
-/** Колір учасника за порядковим номером у групі (по колу) */
+/** Member colour by position in the group (cycling) */
 export function memberColor(index: number): string {
   return MEMBER_COLORS[index % MEMBER_COLORS.length] ?? '#e6f36b';
 }
@@ -114,7 +114,7 @@ function defaultSettings(): Settings {
   };
 }
 
-/** Дати екземплярів серії від першого терміну до горизонту (FR-21) */
+/** Dates of the series instances from the first due date to the horizon (FR-21) */
 export function occurrences(recurrence: Recurrence, firstDueAt: Date, until: Date): Date[] {
   if (recurrence.type === 'once') return [firstDueAt];
 
@@ -174,7 +174,7 @@ export interface SeriesInput {
   assigneeId: string | null;
 }
 
-/** Створює екземпляри серії й одразу розподіляє їх. Повертає створені задачі */
+/** Creates the series instances and assigns them right away. Returns the created tasks */
 export function createSeries(db: Db, input: SeriesInput, seriesId = id('series')): DbTask[] {
   const until = new Date(Date.now() + HORIZON_DAYS * DAY_MS);
   const created: DbTask[] = [];
@@ -209,10 +209,10 @@ function at(daysFromToday: number, hour: number): Date {
 }
 
 const SEED_PEOPLE = [
-  { id: 'u-anya', name: 'Аня Коваль', email: 'anya@errandly.dev' },
-  { id: 'u-bohdan', name: 'Богдан Мельник', email: 'bohdan@errandly.dev' },
-  { id: 'u-marta', name: 'Марта Шевчук', email: 'marta@errandly.dev' },
-  { id: 'u-oleh', name: 'Олег Бондар', email: 'oleh@errandly.dev' },
+  { id: 'u-anya', name: 'Anya Koval', email: 'anya@errandly.dev' },
+  { id: 'u-bohdan', name: 'Bohdan Melnyk', email: 'bohdan@errandly.dev' },
+  { id: 'u-marta', name: 'Marta Shevchuk', email: 'marta@errandly.dev' },
+  { id: 'u-oleh', name: 'Oleh Bondar', email: 'oleh@errandly.dev' },
 ];
 
 function seedUsers(db: Db): void {
@@ -221,6 +221,7 @@ function seedUsers(db: Db): void {
       ...person,
       emailVerified: true,
       timezone: 'Europe/Kyiv',
+      locale: 'uk',
       password: 'Pass1234',
       failedLogins: 0,
       lockedUntil: null,
@@ -240,10 +241,7 @@ function seedUsers(db: Db): void {
 }
 
 function seedGroups(db: Db): void {
-  db.groups.push(
-    { id: 'g-room12', name: 'Кімната 12' },
-    { id: 'g-podil', name: 'Квартира на Подолі' },
-  );
+  db.groups.push({ id: 'g-room12', name: 'Room 12' }, { id: 'g-podil', name: 'Podil Flat' });
   SEED_PEOPLE.forEach((person, index) =>
     db.memberships.push({
       groupId: 'g-room12',
@@ -283,40 +281,40 @@ function seedGroups(db: Db): void {
   });
 }
 
-// дати рахуються від моменту сідування, тому це функція, а не константа
+// Dates are relative to the seeding moment, so this is a function, not a constant
 function seedSeries(): Omit<SeriesInput, 'groupId' | 'assigneeId'>[] {
   return [
     {
-      title: 'Винести сміття',
-      description: 'Сортоване — у жовті баки біля під’їзду',
+      title: 'Take out the trash',
+      description: 'Recycling goes in the yellow bins by the entrance',
       firstDueAt: at(-14, 20),
       difficulty: 2,
       recurrence: { type: 'weekly', weekdays: [1, 4] },
     },
     {
-      title: 'Помити посуд',
+      title: 'Wash the dishes',
       description: '',
       firstDueAt: at(-14, 21),
       difficulty: 1,
       recurrence: { type: 'daily' },
     },
     {
-      title: 'Прибрати ванну',
-      description: 'Раковина, дзеркало, підлога',
+      title: 'Clean the bathroom',
+      description: 'Sink, mirror, floor',
       firstDueAt: at(-14, 12),
       difficulty: 4,
       recurrence: { type: 'weekly', weekdays: [6] },
     },
     {
-      title: 'Пропилососити кімнату',
+      title: 'Vacuum the room',
       description: '',
       firstDueAt: at(-14, 18),
       difficulty: 3,
       recurrence: { type: 'weekly', weekdays: [3] },
     },
     {
-      title: 'Полити вазони',
-      description: 'Монстеру — тільки якщо земля суха',
+      title: 'Water the plants',
+      description: 'The monstera only if the soil is dry',
       firstDueAt: at(-14, 9),
       difficulty: 1,
       recurrence: { type: 'weekly', weekdays: [2, 5] },
@@ -325,7 +323,7 @@ function seedSeries(): Omit<SeriesInput, 'groupId' | 'assigneeId'>[] {
 }
 
 function seedTasks(db: Db): void {
-  // спершу створюємо екземпляри без виконавців, потім розподіляємо в хронологічному порядку
+  // Create instances without assignees first, then assign them in chronological order
   for (const item of seedSeries()) {
     createSeries(db, { ...item, groupId: 'g-room12', assigneeId: 'pending' });
   }
@@ -337,8 +335,8 @@ function seedTasks(db: Db): void {
   }
   createSeries(db, {
     groupId: 'g-room12',
-    title: 'Купити побутову хімію',
-    description: 'Засіб для посуду, губки, пакети для сміття',
+    title: 'Buy cleaning supplies',
+    description: 'Dish soap, sponges, trash bags',
     firstDueAt: at(2, 19),
     difficulty: 2,
     recurrence: { type: 'once' },
@@ -346,7 +344,7 @@ function seedTasks(db: Db): void {
   });
   createSeries(db, {
     groupId: 'g-podil',
-    title: 'Оплатити комуналку',
+    title: 'Pay the utility bills',
     description: '',
     firstDueAt: at(5, 12),
     difficulty: 2,
@@ -354,7 +352,7 @@ function seedTasks(db: Db): void {
     assigneeId: null,
   });
 
-  // історія: більшість минулих задач виконано, кілька — прострочено
+  // History: most past tasks are done, a few are overdue
   let counter = 0;
   for (const task of db.tasks) {
     const due = new Date(task.dueAt).getTime();
@@ -399,7 +397,7 @@ function hoursAgo(hours: number): string {
   return new Date(Date.now() - hours * 3_600_000).toISOString();
 }
 
-/** Кілька демо-сповіщень, щоб дзвіночок не був порожнім */
+/** A few demo notifications so the bell is not empty */
 function seedNotifications(target: Db): void {
   const room = target.groups.find((group) => group.id === 'g-room12');
   if (!room) return;
@@ -424,7 +422,7 @@ function seedNotifications(target: Db): void {
       createdAt: hoursAgo(24 * 13),
       read: true,
       taskId: null,
-      data: { groupName: room.name, actorName: 'Олег Бондар' },
+      data: { groupName: room.name, actorName: 'Oleh Bondar' },
     },
     ...(nextAnyaTask
       ? [
@@ -445,10 +443,10 @@ function seedNotifications(target: Db): void {
   );
 }
 
-/** Знімок бази з localStorage. Сповіщення з'явилися пізніше, тож у старих знімках їх може не бути */
+/** Database snapshot from localStorage. Notifications were added later, so older snapshots may lack them */
 type StoredDb = Omit<Db, 'notifications'> & { notifications?: Db['notifications'] };
 
-// перевіряємо лише версію схеми: структуру знімка гарантує DB_VERSION (пишемо його самі в persist)
+// Only the schema version is checked: DB_VERSION guarantees the snapshot shape (we write it ourselves in persist)
 function isStoredDb(value: unknown): value is StoredDb {
   return (
     typeof value === 'object' &&
@@ -466,14 +464,14 @@ function load(): Db {
       if (isStoredDb(parsed)) {
         const { notifications } = parsed;
         if (notifications) return { ...parsed, notifications };
-        // міграція без скидання даних: сповіщення з'явилися пізніше
+        // Migration without a data reset: notifications were added later
         const migrated: Db = { ...parsed, notifications: [] };
         seedNotifications(migrated);
         return migrated;
       }
     }
   } catch {
-    // сховище недоступне — працюємо лише в пам'яті
+    // Storage unavailable: work in memory only
   }
   return seed();
 }
@@ -484,7 +482,7 @@ export function persist(): void {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(db));
   } catch {
-    // ігноруємо: стан лишиться в пам'яті до перезавантаження
+    // Ignore: state stays in memory until reload
   }
 }
 
@@ -499,6 +497,7 @@ export function publicUser({
   email,
   emailVerified,
   timezone,
+  locale,
   avatarUrl,
 }: DbUser): User {
   return {
@@ -507,6 +506,7 @@ export function publicUser({
     email,
     emailVerified,
     timezone,
+    locale,
     avatarUrl: avatarUrl ?? null,
   };
 }
@@ -514,7 +514,7 @@ export function publicUser({
 export function defaultSettingsFor(userId: string): Settings {
   const defaults = defaultSettings();
   const current = db.settings[userId] ?? defaults;
-  // доповнюємо збережені раніше налаштування новими полями (без скидання)
+  // Fill previously saved settings with new fields (without a reset)
   current.calendar = { ...defaults.calendar, ...current.calendar };
   current.notifications = {
     ...defaults.notifications,

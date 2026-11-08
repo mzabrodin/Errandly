@@ -11,7 +11,7 @@ interface CurrentGroup {
   membersById: Map<string, Member>;
 }
 
-/** Поточна група (завантажує GroupLayout) і зручні похідні дані */
+/** Current group (loaded by GroupLayout) and handy derived data */
 export function useCurrentGroup(): CurrentGroup {
   const group = useContext(GroupContext);
   const { data: user } = useSession();

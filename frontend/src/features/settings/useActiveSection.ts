@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
 
 /**
- * Scroll-spy: який розділ зараз «під шапкою». Активний — останній розділ,
- * верх якого вже проскролили до лінії трохи нижче липкої шапки.
+ * Scroll-spy: which section is currently "under the header". The active one is the last section
+ * whose top has scrolled past a line just below the sticky header.
  */
 export function useActiveSection(ids: readonly string[], ready: boolean): string | undefined {
   const [active, setActive] = useState(ids[0]);
@@ -16,7 +16,7 @@ export function useActiveSection(ids: readonly string[], ready: boolean): string
         getComputedStyle(document.documentElement).getPropertyValue('--header-h'),
       );
       const line = (Number.isNaN(header) ? 68 : header) + 120;
-      // біля самого низу сторінки — останній розділ (він може бути коротким)
+      // At the very bottom of the page: the last section (it may be short)
       const atBottom =
         window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 4;
       let current = ids[0];

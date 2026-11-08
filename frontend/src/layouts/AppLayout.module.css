@@ -1,6 +1,6 @@
 .shell {
   min-height: 100dvh;
-  /* ледь помітна сітка зошита */
+  /* a faint notebook grid */
   background-color: var(--cream);
   background-image:
     linear-gradient(var(--grid-line) 1px, transparent 1px),
@@ -28,7 +28,7 @@
 }
 
 .logo {
-  /* разом із gap дає ті самі ~24px, що й від перемикача групи до першого пункту меню */
+  /* together with gap gives the same ~24px as from the group switcher to the first menu item */
   margin-right: 12px;
   text-decoration: none;
 }
@@ -195,7 +195,7 @@
 }
 
 @media (max-width: 420px) {
-  /* логотип лишається — це вхід на головну; лише стискаємо сусідів */
+  /* the logo stays, it is the way home; only its neighbours shrink */
   .logo span {
     font-size: 16px !important;
   }

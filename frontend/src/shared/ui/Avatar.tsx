@@ -3,7 +3,7 @@ import { useState, type JSX } from 'react';
 
 import styles from './Avatar.module.css';
 
-// у маленькому колі дві широкі літери не вміщаються — показуємо одну
+// Two wide letters do not fit in a small circle, so show one
 const SINGLE_LETTER_BELOW = 30;
 
 function initials(name: string, count: number) {
@@ -31,7 +31,7 @@ export function Avatar({
   className,
 }: AvatarProps): JSX.Element {
   const single = size < SINGLE_LETTER_BELOW;
-  // якщо фото не завантажилось — показуємо ініціали
+  // If the photo fails to load, show the initials
   const [failedSrc, setFailedSrc] = useState<string | null>(null);
   const imageSrc =
     src !== undefined && src !== null && src !== '' && failedSrc !== src ? src : null;

@@ -1,6 +1,6 @@
 import { useSearchParams } from 'react-router';
 
-/** Безпечна адреса для повернення після входу: лише внутрішні шляхи */
+/** Safe return address after sign-in: internal paths only */
 export function useNextPath(fallback = '/app'): string {
   const [params] = useSearchParams();
   const next = params.get('next');

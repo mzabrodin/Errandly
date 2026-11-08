@@ -6,10 +6,10 @@ import { useTranslation } from 'react-i18next';
 import { checkPassword, type PasswordRules as Rules } from '../../shared/lib/validation';
 import styles from './auth.module.css';
 
-// у тому ж порядку, що й поля checkPassword
+// Same order as the checkPassword fields
 const RULE_KEYS: readonly (keyof Rules)[] = ['length', 'letter', 'digit'];
 
-/** Показує, яке саме правило порушено (FR-03) */
+/** Shows exactly which rule is violated (FR-03) */
 export function PasswordRules({
   password,
   showErrors,

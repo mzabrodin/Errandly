@@ -2,15 +2,15 @@ import { useLayoutEffect, type JSX } from 'react';
 import { Outlet, useLocation } from 'react-router';
 
 /**
- * Нова сторінка — з початку. Реагуємо лише на зміну шляху: фільтри в
- * search-параметрах і якорі (#розділ) не скидають прокрутку.
+ * A new page starts at the top. Reacts only to path changes: filters in
+ * search params and anchors (#section) do not reset the scroll.
  */
 export function ScrollToTop(): JSX.Element {
   const { pathname, hash } = useLocation();
 
   useLayoutEffect(() => {
     if (hash === '') window.scrollTo(0, 0);
-    // хеш навмисно не в залежностях: перехід за якорем на тій самій сторінці не скидає скрол
+    // The hash is deliberately not a dependency: following an anchor on the same page keeps the scroll
     // oxlint-disable-next-line react-hooks/exhaustive-deps
   }, [pathname]);
 

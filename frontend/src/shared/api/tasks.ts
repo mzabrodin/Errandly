@@ -23,7 +23,7 @@ export function useTask(groupId: string, taskId: string): UseQueryResult<Task> {
   });
 }
 
-/** Усі екземпляри серії — для історії виконання на сторінці задачі */
+/** All instances of a series, for the completion history on the task page */
 export function useSeries(groupId: string, seriesId: string | undefined): UseQueryResult<Task[]> {
   return useQuery({
     queryKey: taskKeys.series(groupId, seriesId ?? ''),

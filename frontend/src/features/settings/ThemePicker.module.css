@@ -38,7 +38,7 @@
   font-size: 14px;
 }
 
-/* превʼю малюємо прямими кольорами теми, незалежно від поточної */
+/* previews use the theme's own colours, independent of the current theme */
 .preview {
   position: relative;
   display: block;

@@ -50,7 +50,7 @@ export function TaskFormModal({
   ) : null;
 }
 
-/** Збереження форми: редагування або створення з тостом про результат */
+/** Saves the form: edit or create, with a result toast */
 function useSaveTask(
   task: Task | null,
   onClose: () => void,
@@ -112,13 +112,13 @@ function TaskForm({
   const [minDue] = useState(() => toLocalInputValue(new Date()));
   const isEdit = task !== null;
   const recurring = task !== null && task.recurrence.type !== 'once';
-  // змінити повторюваність можна лише для всієї серії
+  // Recurrence can only be changed for the whole series
   const recurrenceLocked = isEdit && (!recurring || scope === 'one');
 
   const set: SetField = (key, value) => setState((current) => ({ ...current, [key]: value }));
   const [weekdaysTouched, setWeekdaysTouched] = useState(false);
 
-  // у минулому не можна ставити лише новий термін; прострочену задачу редагувати можна
+  // Only a new due date cannot be in the past; an overdue task can still be edited
   const dueChanged = !isEdit || state.dueAt !== toLocalInputValue(new Date(task.dueAt));
 
   const submit = (event: FormEvent): void => {
@@ -174,7 +174,7 @@ function TaskForm({
                   setState((current) => ({
                     ...current,
                     dueAt: value,
-                    // поки дні тижня не обирали вручну — підлаштовуємо під дату
+                    // Until weekdays are picked by hand, follow the date
                     weekdays:
                       weekdaysTouched || value === ''
                         ? current.weekdays
@@ -257,7 +257,7 @@ function TitleDescriptionFields({
             placeholder={t('taskForm.namePlaceholder')}
             value={state.title}
             onChange={(event) => set('title', event.target.value)}
-            // oxlint-disable-next-line jsx-a11y/no-autofocus -- перше поле щойно відкритої модалки
+            // oxlint-disable-next-line jsx-a11y/no-autofocus -- the first field of a freshly opened modal
             autoFocus
           />
         )}

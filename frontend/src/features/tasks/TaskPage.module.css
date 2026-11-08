@@ -241,7 +241,7 @@
   }
 }
 
-/* хмарка-стікер повільно пливе */
+/* the cloud sticker drifts slowly */
 .cloud {
   animation: cloud-float 9s ease-in-out infinite;
 }

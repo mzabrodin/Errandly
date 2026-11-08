@@ -2,7 +2,7 @@ import type { TFunction } from 'i18next';
 
 import { ApiError } from './client';
 
-/** Зрозуміле повідомлення без технічних подробиць (NFR-REL-07) */
+/** A clear message without technical details (NFR-REL-07) */
 export function errorMessage(error: unknown, t: TFunction): string {
   if (error instanceof ApiError) {
     if (error.status === 403) return t('errors.forbidden');

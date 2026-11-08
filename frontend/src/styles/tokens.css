@@ -1,5 +1,5 @@
 :root {
-  /* палітра: кремовий папір і темне чорнило (blume), небо й трава (kummba) */
+  /* palette: cream paper and dark ink (blume), sky and grass (kummba) */
   --cream: #faf7ea;
   --cream-deep: #f1ecd6;
   --paper: #ffffff;
@@ -18,7 +18,7 @@
   --coral: #ff8f78;
   --danger: #c2391f;
 
-  /* небо, пагорби, декор */
+  /* sky, hills, decor */
   --sky-top: #8ec3ea;
   --sky-bottom: #e4f1fb;
   --hill-light: #6ba539;
@@ -29,7 +29,7 @@
   --flower-alt: #f6b6cf;
   --flower-mint: #9ee0c0;
 
-  /* похідні відтінки */
+  /* derived shades */
   --accent-soft: #f4fbbf;
   --accent-faint: #fbfde6;
   --accent-deep: #d6e85a;
@@ -38,7 +38,7 @@
   --grid-line: #f0ead3;
   --header-bg: rgb(250 247 234 / 0.92);
 
-  /* статуси задач */
+  /* task statuses */
   --status-planned: var(--sky);
   --status-done: #cfe8a9;
   --status-overdue: #ffd2c7;
@@ -61,10 +61,10 @@
   --bottom-nav-h: 64px;
 }
 
-/* ---------- теми ---------- */
-/* Кожна тема — лише інший набір токенів; розмітка й компоненти ті самі. */
+/* ---------- themes ---------- */
+/* Each theme is just another set of tokens; markup and components stay the same. */
 
-/* Сакура: пудрово-рожева, як «pretty little marketer» з референсу */
+/* Sakura: powder pink, like "pretty little marketer" in the reference */
 :root[data-theme='sakura'] {
   --cream: #fdf4f2;
   --cream-deep: #f7e3e3;
@@ -95,7 +95,7 @@
   --shadow-pop: 4px 4px 0 var(--ink);
 }
 
-/* Піксель: гарячий рожевий і неон, як dino lab — з майже квадратними кутами */
+/* Pixel: hot pink and neon, like dino lab, with almost square corners */
 :root[data-theme='pixel'] {
   --cream: #f1f1ef;
   --cream-deep: #e2e2df;
@@ -132,7 +132,7 @@
   --shadow-pop: 5px 5px 0 var(--ink);
 }
 
-/* Захід сонця: персикове небо, фіолетові пагорби */
+/* Sunset: peach sky, purple hills */
 :root[data-theme='sunset'] {
   --cream: #fff4ea;
   --cream-deep: #fbe3cf;

@@ -6,7 +6,7 @@ import { useTranslation } from 'react-i18next';
 import { setPrefs, THEMES, usePrefs, type Theme } from '../../shared/lib/prefs';
 import styles from './ThemePicker.module.css';
 
-/** Міні-превʼю теми: небо, хмарка, пагорби й плашка акценту в її кольорах */
+/** Mini theme preview: sky, cloud, hills and an accent chip in its colours */
 function Preview({ theme }: { theme: Theme }): JSX.Element {
   return (
     <span className={styles.preview} data-theme-preview={theme} aria-hidden>
@@ -29,7 +29,7 @@ export function ThemePicker(): JSX.Element {
         <button
           key={option}
           type="button"
-          // oxlint-disable-next-line jsx-a11y/prefer-tag-over-role -- картка-кнопка з превʼю, а не нативний radio
+          // oxlint-disable-next-line jsx-a11y/prefer-tag-over-role -- a card button with a preview, not a native radio
           role="radio"
           aria-checked={theme === option}
           className={clsx(styles.option, theme === option && styles.selected)}
