@@ -21,3 +21,8 @@ npm-debug.log*
 .idea/
 .vscode/*
 !.vscode/extensions.json
+
+*.md
+!README.md
+
+docs/*
