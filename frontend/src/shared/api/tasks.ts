@@ -6,7 +6,7 @@ import {
   type UseQueryResult,
 } from '@tanstack/react-query';
 
-import { http } from './client';
+import { api, unwrap } from './client';
 import type { EditScope, Task, TaskInput } from './types';
 
 export const taskKeys = {
@@ -19,7 +19,7 @@ export const taskKeys = {
 export function useTask(groupId: string, taskId: string): UseQueryResult<Task> {
   return useQuery({
     queryKey: taskKeys.detail(groupId, taskId),
-    queryFn: () => http.get<Task>(`/tasks/${taskId}`),
+    queryFn: () => unwrap(api.GET('/api/tasks/{taskId}', { params: { path: { taskId } } })),
   });
 }
 
@@ -28,7 +28,11 @@ export function useSeries(groupId: string, seriesId: string | undefined): UseQue
   return useQuery({
     queryKey: taskKeys.series(groupId, seriesId ?? ''),
     queryFn: () =>
-      http.get<Task[]>(`/groups/${groupId}/tasks?seriesId=${encodeURIComponent(seriesId ?? '')}`),
+      unwrap(
+        api.GET('/api/groups/{groupId}/tasks', {
+          params: { path: { groupId }, query: { seriesId: seriesId ?? '' } },
+        }),
+      ),
     enabled: Boolean(seriesId),
   });
 }
@@ -37,8 +41,10 @@ export function useTasks(groupId: string, from: string, to: string): UseQueryRes
   return useQuery({
     queryKey: taskKeys.range(groupId, from, to),
     queryFn: () =>
-      http.get<Task[]>(
-        `/groups/${groupId}/tasks?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`,
+      unwrap(
+        api.GET('/api/groups/{groupId}/tasks', {
+          params: { path: { groupId }, query: { from, to } },
+        }),
       ),
   });
 }
@@ -59,7 +65,7 @@ function useTaskMutation<TInput, TResult = unknown>(
 
 export function useCreateTask(groupId: string): UseMutationResult<Task, Error, TaskInput> {
   return useTaskMutation(groupId, (input: TaskInput) =>
-    http.post<Task>(`/groups/${groupId}/tasks`, input),
+    unwrap(api.POST('/api/groups/{groupId}/tasks', { params: { path: { groupId } }, body: input })),
   );
 }
 
@@ -69,7 +75,12 @@ export function useUpdateTask(
   return useTaskMutation(
     groupId,
     ({ id, scope, ...input }: TaskInput & { id: string; scope: EditScope }) =>
-      http.patch<Task>(`/tasks/${id}?scope=${scope}`, input),
+      unwrap(
+        api.PATCH('/api/tasks/{taskId}', {
+          params: { path: { taskId: id }, query: { scope } },
+          body: input,
+        }),
+      ),
   );
 }
 
@@ -77,7 +88,9 @@ export function useDeleteTask(
   groupId: string,
 ): UseMutationResult<unknown, Error, { id: string; scope: EditScope }> {
   return useTaskMutation(groupId, ({ id, scope }: { id: string; scope: EditScope }) =>
-    http.delete(`/tasks/${id}?scope=${scope}`),
+    unwrap(
+      api.DELETE('/api/tasks/{taskId}', { params: { path: { taskId: id }, query: { scope } } }),
+    ),
   );
 }
 
@@ -85,7 +98,11 @@ export function useCompleteTask(
   groupId: string,
 ): UseMutationResult<Task, Error, { id: string; done: boolean }> {
   return useTaskMutation(groupId, ({ id, done }: { id: string; done: boolean }) =>
-    done ? http.post<Task>(`/tasks/${id}/complete`) : http.delete<Task>(`/tasks/${id}/complete`),
+    unwrap(
+      done
+        ? api.POST('/api/tasks/{taskId}/complete', { params: { path: { taskId: id } } })
+        : api.DELETE('/api/tasks/{taskId}/complete', { params: { path: { taskId: id } } }),
+    ),
   );
 }
 
@@ -93,6 +110,11 @@ export function useReassignTask(
   groupId: string,
 ): UseMutationResult<Task, Error, { id: string; assigneeId: string }> {
   return useTaskMutation(groupId, ({ id, assigneeId }: { id: string; assigneeId: string }) =>
-    http.patch<Task>(`/tasks/${id}/assignee`, { assigneeId }),
+    unwrap(
+      api.PATCH('/api/tasks/{taskId}/assignee', {
+        params: { path: { taskId: id } },
+        body: { assigneeId },
+      }),
+    ),
   );
 }

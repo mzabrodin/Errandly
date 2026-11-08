@@ -20,13 +20,928 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/me": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Deletes the account and ends the session; open tasks are redistributed.
+         *     Errors: 409 LAST_ADMIN (+groups: names of groups where the user is the only admin).
+         */
+        delete: operations["MeController_deleteAccount"];
+        options?: never;
+        head?: never;
+        /** Updates name, time zone or language. Errors: 400 VALIDATION (name required/tooLong, timezone invalid, locale invalid). */
+        patch: operations["MeController_updateProfile"];
+        trace?: never;
+    };
+    "/api/me/avatar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Uploads an avatar image (field `file`). Errors: 400 VALIDATION (file type), 413 FILE_TOO_LARGE. */
+        post: operations["MeController_uploadAvatar"];
+        /** Removes the avatar. */
+        delete: operations["MeController_deleteAvatar"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/auth/me": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The signed-in user. 401 UNAUTHENTICATED means "signed out". */
+        get: operations["AuthController_me"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/auth/register": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Creates an account, signs it in and sends the verifyEmail email.
+         *     Errors: 400 VALIDATION (name required, email invalid, password weak), 409 EMAIL_TAKEN.
+         */
+        post: operations["AuthController_register"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/auth/login": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Signs in with email and password. The 5th failure in a row locks the account for 15 minutes.
+         *     Errors: 401 INVALID_CREDENTIALS, 423 ACCOUNT_LOCKED (+retryAfterSeconds).
+         */
+        post: operations["AuthController_login"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/auth/logout": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Ends the session and clears the cookie. */
+        post: operations["AuthController_logout"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/auth/google": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Redirects to Google sign-in, then back to `next`. A separate flow from the calendar connection. */
+        get: operations["AuthController_google"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/auth/forgot-password": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Sends a reset link (valid 1 hour, single use) if the account exists; always answers 204. */
+        post: operations["AuthController_forgotPassword"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/auth/reset-password": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Sets a new password from a reset link. Errors: 400 TOKEN_INVALID, 400 VALIDATION (password weak). */
+        post: operations["AuthController_resetPassword"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/auth/verify-email": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Confirms the email from the link. Errors: 400 TOKEN_INVALID. */
+        post: operations["AuthController_verifyEmail"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/auth/verify-email/resend": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Sends the verification email again. */
+        post: operations["AuthController_resendVerification"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/me/password": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Changes the password. Errors: 400 WRONG_PASSWORD, 400 VALIDATION (newPassword weak). */
+        post: operations["AccountController_changePassword"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/groups": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Groups of the signed-in user. */
+        get: operations["GroupsController_list"];
+        put?: never;
+        /**
+         * Creates a group with the caller as its admin.
+         *     Errors: 403 EMAIL_NOT_VERIFIED, 400 VALIDATION (name required/tooLong).
+         */
+        post: operations["GroupsController_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/groups/{groupId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The group with its members and their absences. Errors: 403 FORBIDDEN. */
+        get: operations["GroupsController_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/groups/{groupId}/members/{userId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Removes a member (admin); their open tasks are redistributed.
+         *     Errors: 403 ADMIN_ONLY, 409 CANNOT_REMOVE_SELF.
+         */
+        delete: operations["GroupsController_removeMember"];
+        options?: never;
+        head?: never;
+        /**
+         * Changes a member's role (admin).
+         *     Errors: 403 ADMIN_ONLY, 404 NOT_FOUND, 409 LAST_ADMIN.
+         */
+        patch: operations["GroupsController_updateMember"];
+        trace?: never;
+    };
+    "/api/groups/{groupId}/leave": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Leaves the group; the caller's open tasks are redistributed.
+         *     Errors: 409 LAST_ADMIN when the only admin leaves a group with other members.
+         */
+        post: operations["GroupsController_leave"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/groups/{groupId}/invites": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Creates a 7-day invite link and optionally emails it (admin). Errors: 403 ADMIN_ONLY. */
+        post: operations["InvitesController_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/invites/{token}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** What the invite page shows; works signed out. Errors: 410 INVITE_INVALID (unknown, revoked or expired). */
+        get: operations["InvitesController_info"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/invites/{token}/accept": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Joins the group as a member; idempotent for existing members.
+         *     Errors: 410 INVITE_INVALID, 403 EMAIL_NOT_VERIFIED.
+         */
+        post: operations["InvitesController_accept"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/groups/{groupId}/absences": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Adds an absence; the caller's automatically assigned open tasks in that period are reassigned.
+         *     Errors: 400 VALIDATION (to beforeFrom), 403 FORBIDDEN.
+         */
+        post: operations["AbsencesController_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/groups/{groupId}/absences/{absenceId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Deletes one of the caller's absences. */
+        delete: operations["AbsencesController_remove"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/groups/{groupId}/tasks": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Instances in `[from, to)` by dueAt, ascending, with computed status. Errors: 403 FORBIDDEN. */
+        get: operations["TasksController_list"];
+        put?: never;
+        /**
+         * Creates a series (admin) and materialises it 4 weeks ahead; returns the first instance.
+         *     `assigneeId: null` assigns every instance automatically (FR-27).
+         *     Errors: 403 ADMIN_ONLY, 400 VALIDATION (title required/tooLong, dueAt required/inPast,
+         *     difficulty range, recurrence noWeekdays).
+         */
+        post: operations["TasksController_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/tasks/{taskId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** One instance. Errors: 404 NOT_FOUND, 403 FORBIDDEN. */
+        get: operations["TasksController_get"];
+        put?: never;
+        post?: never;
+        /**
+         * Deletes this instance or every unfinished instance of the series (admin); completed ones stay.
+         *     Errors: 404 NOT_FOUND, 403 ADMIN_ONLY.
+         */
+        delete: operations["TasksController_remove"];
+        options?: never;
+        head?: never;
+        /**
+         * Edits this instance (`scope=one`) or regenerates the upcoming unfinished instances of the
+         *     series (`scope=series`) (admin). Errors: 404 NOT_FOUND, 403 ADMIN_ONLY, 400 VALIDATION.
+         */
+        patch: operations["TasksController_update"];
+        trace?: never;
+    };
+    "/api/tasks/{taskId}/complete": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Marks the task done; only its assignee can. Idempotent. Errors: 404 NOT_FOUND, 403 NOT_ASSIGNEE. */
+        post: operations["TasksController_complete"];
+        /**
+         * Undoes the completion: the assignee within 24 hours, an admin at any time.
+         *     Errors: 404 NOT_FOUND, 403 NOT_ASSIGNEE, 409 UNDO_EXPIRED.
+         */
+        delete: operations["TasksController_undoComplete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/tasks/{taskId}/assignee": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Assigns the task to a member by hand (admin); the algorithm never overrides it (FR-30).
+         *     Errors: 404 NOT_FOUND, 403 ADMIN_ONLY, 409 TASK_DONE, 400 VALIDATION (not a member).
+         */
+        patch: operations["TasksController_reassign"];
+        trace?: never;
+    };
+    "/api/me/calendar/connect": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Starts the calendar OAuth flow; after consent Google returns to /settings?calendar=connected. */
+        post: operations["CalendarController_connect"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/me/calendar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Disconnects the calendar and deletes the stored tokens. */
+        delete: operations["CalendarController_disconnect"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/me/calendar/sync": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Syncs now and resumes a paused sync. Errors: 409 CALENDAR_NOT_CONNECTED. */
+        post: operations["CalendarController_sync"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/notifications": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The newest 50 notifications and how many of them are unread. */
+        get: operations["NotificationsController_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/notifications/read": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Marks the given notifications, or all of them, as read. */
+        post: operations["NotificationsController_markRead"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/me/settings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Notification and calendar settings. */
+        get: operations["SettingsController_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Updates the reminder offset and notification switches. */
+        patch: operations["SettingsController_update"];
+        trace?: never;
+    };
+    "/api/groups/{groupId}/stats": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Done, overdue and difficulty per member for the period. Errors: 403 FORBIDDEN. */
+        get: operations["StatsController_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
         HealthResponseDto: {
             /** @enum {string} */
-            status: "ok";
+            status: "ok" | "error";
+            /** @enum {string} */
+            database: "up" | "down";
+        };
+        /** @enum {string} */
+        ErrorCode: "VALIDATION" | "TOKEN_INVALID" | "WRONG_PASSWORD" | "UNAUTHENTICATED" | "INVALID_CREDENTIALS" | "FORBIDDEN" | "ADMIN_ONLY" | "NOT_ASSIGNEE" | "EMAIL_NOT_VERIFIED" | "NOT_FOUND" | "EMAIL_TAKEN" | "LAST_ADMIN" | "TASK_DONE" | "UNDO_EXPIRED" | "CANNOT_REMOVE_SELF" | "CALENDAR_NOT_CONNECTED" | "CONFLICT" | "INVITE_INVALID" | "FILE_TOO_LARGE" | "ACCOUNT_LOCKED" | "TOO_MANY_REQUESTS" | "INTERNAL" | "NOT_IMPLEMENTED" | "SERVICE_UNAVAILABLE";
+        ApiErrorDto: {
+            code: components["schemas"]["ErrorCode"];
+            /**
+             * @description Field code per invalid property, e.g. `{ "title": "tooLong" }` (VALIDATION only)
+             * @example {
+             *       "title": "tooLong"
+             *     }
+             */
+            fields?: {
+                [key: string]: string;
+            };
+            /** @description Seconds until the next attempt is allowed (ACCOUNT_LOCKED) */
+            retryAfterSeconds?: number;
+            /** @description Names of the groups where the user is the last admin (LAST_ADMIN on account deletion) */
+            groups?: string[];
+        };
+        /** @enum {string} */
+        Locale: "uk" | "en";
+        UpdateProfileDto: {
+            locale?: components["schemas"]["Locale"];
+            name?: string;
+            /** @description IANA time zone, e.g. Europe/Kyiv */
+            timezone?: string;
+        };
+        UserDto: {
+            /** @description UI and email language */
+            locale: components["schemas"]["Locale"];
+            id: string;
+            name: string;
+            email: string;
+            emailVerified: boolean;
+            /** @description IANA time zone, e.g. Europe/Kyiv */
+            timezone: string;
+            avatarUrl: string | null;
+        };
+        AvatarUploadDto: {
+            /**
+             * Format: binary
+             * @description An image up to 512 KB
+             */
+            file: string;
+        };
+        RegisterDto: {
+            /** @description Current UI language; becomes the account language */
+            locale?: components["schemas"]["Locale"];
+            name: string;
+            /** Format: email */
+            email: string;
+            /** @description At least 8 characters with a letter and a digit (FR-01) */
+            password: string;
+        };
+        LoginDto: {
+            email: string;
+            password: string;
+        };
+        ForgotPasswordDto: {
+            /** Format: email */
+            email: string;
+        };
+        ResetPasswordDto: {
+            /** @description Token from the reset link */
+            token: string;
+            password: string;
+        };
+        VerifyEmailDto: {
+            /** @description Token from the verification link */
+            token: string;
+        };
+        ChangePasswordDto: {
+            currentPassword: string;
+            /** @description At least 8 characters with a letter and a digit (FR-01) */
+            newPassword: string;
+        };
+        /**
+         * @description The caller's role in the group
+         * @enum {string}
+         */
+        GroupRole: "admin" | "member";
+        GroupSummaryDto: {
+            /** @description The caller's role in the group */
+            role: components["schemas"]["GroupRole"];
+            id: string;
+            name: string;
+            memberCount: number;
+        };
+        CreateGroupDto: {
+            name: string;
+        };
+        AbsenceDto: {
+            id: string;
+            /** @description First day, yyyy-mm-dd (inclusive) */
+            from: string;
+            /** @description Last day, yyyy-mm-dd (inclusive) */
+            to: string;
+        };
+        MemberDto: {
+            role: components["schemas"]["GroupRole"];
+            userId: string;
+            name: string;
+            email: string;
+            /** @description Hex colour of the member in the calendar */
+            color: string;
+            avatarUrl: string | null;
+            absences: components["schemas"]["AbsenceDto"][];
+        };
+        GroupDto: {
+            /** @description The caller's role in the group */
+            role: components["schemas"]["GroupRole"];
+            id: string;
+            name: string;
+            members: components["schemas"]["MemberDto"][];
+        };
+        UpdateMemberDto: {
+            role: components["schemas"]["GroupRole"];
+        };
+        CreateInviteDto: {
+            /**
+             * Format: email
+             * @description Also email the link to this address; without it the link is only returned
+             */
+            email?: string;
+        };
+        InviteDto: {
+            /** @description Link to share: {APP_URL}/invite/{token} */
+            url: string;
+            /** @description The link works for 7 days */
+            expiresAt: string;
+        };
+        InviteInfoDto: {
+            groupId: string;
+            groupName: string;
+            /** @description Name of the member who created the invite */
+            invitedBy: string;
+            /** @description True when the signed-in user is already in the group */
+            alreadyMember: boolean;
+        };
+        AcceptInviteDto: {
+            groupId: string;
+        };
+        CreateAbsenceDto: {
+            /** @description First day, yyyy-mm-dd */
+            from: string;
+            /** @description Last day, yyyy-mm-dd, not before `from` */
+            to: string;
+        };
+        OnceRecurrenceDto: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "once";
+        };
+        DailyRecurrenceDto: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "daily";
+        };
+        WeeklyRecurrenceDto: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "weekly";
+            /** @description ISO weekdays: 1 = Monday … 7 = Sunday; at least one */
+            weekdays: number[];
+        };
+        MonthlyRecurrenceDto: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "monthly";
+        };
+        /**
+         * @description Computed: done → overdue → unassigned → planned
+         * @enum {string}
+         */
+        TaskStatus: "planned" | "done" | "overdue" | "unassigned";
+        TaskDto: {
+            recurrence: components["schemas"]["OnceRecurrenceDto"] | components["schemas"]["DailyRecurrenceDto"] | components["schemas"]["WeeklyRecurrenceDto"] | components["schemas"]["MonthlyRecurrenceDto"];
+            /** @description Computed: done → overdue → unassigned → planned */
+            status: components["schemas"]["TaskStatus"];
+            id: string;
+            seriesId: string;
+            groupId: string;
+            title: string;
+            description: string;
+            /** @description ISO date-time, UTC */
+            dueAt: string;
+            /** @description 1–5 */
+            difficulty: number;
+            assigneeId: string | null;
+            /** @description Set by an admin; the algorithm never overwrites it (FR-30) */
+            manuallyAssigned: boolean;
+            completedAt: string | null;
+        };
+        CreateTaskDto: {
+            recurrence: components["schemas"]["OnceRecurrenceDto"] | components["schemas"]["DailyRecurrenceDto"] | components["schemas"]["WeeklyRecurrenceDto"] | components["schemas"]["MonthlyRecurrenceDto"];
+            /** @description ISO date-time, not in the past */
+            dueAt: string;
+            title: string;
+            description: string;
+            difficulty: number;
+            /**
+             * Format: uuid
+             * @description A member id, or null for automatic assignment (FR-27)
+             */
+            assigneeId: string | null;
+        };
+        /** @enum {string} */
+        EditScope: "one" | "series";
+        UpdateTaskDto: {
+            recurrence: components["schemas"]["OnceRecurrenceDto"] | components["schemas"]["DailyRecurrenceDto"] | components["schemas"]["WeeklyRecurrenceDto"] | components["schemas"]["MonthlyRecurrenceDto"];
+            /** @description ISO date-time */
+            dueAt: string;
+            title: string;
+            description: string;
+            difficulty: number;
+            /**
+             * Format: uuid
+             * @description A member id, or null for automatic assignment (FR-27)
+             */
+            assigneeId: string | null;
+        };
+        ReassignTaskDto: {
+            /** Format: uuid */
+            assigneeId: string;
+        };
+        CalendarConnectDto: {
+            /** @description Google consent page; the frontend navigates to it */
+            url: string;
+        };
+        /**
+         * @description `paused` after repeated sync failures; the settings page shows a banner
+         * @enum {string}
+         */
+        SyncStatus: "ok" | "paused";
+        CalendarStatusDto: {
+            /** @description `paused` after repeated sync failures; the settings page shows a banner */
+            syncStatus: components["schemas"]["SyncStatus"];
+            connected: boolean;
+            googleEmail: string | null;
+            lastSyncedAt: string | null;
+        };
+        /** @enum {string} */
+        NotificationType: "groupCreated" | "groupJoined" | "memberJoined" | "taskAssigned" | "taskUnassigned" | "taskOverdue" | "roleGranted" | "roleRevoked" | "removedFromGroup";
+        NotificationDataDto: {
+            groupName?: string;
+            taskTitle?: string;
+            actorName?: string;
+            /** @description ISO date-time */
+            dueAt?: string;
+        };
+        NotificationDto: {
+            type: components["schemas"]["NotificationType"];
+            id: string;
+            createdAt: string;
+            read: boolean;
+            /** @description Null when the user is no longer in the group (removedFromGroup) */
+            groupId: string | null;
+            taskId: string | null;
+            data: components["schemas"]["NotificationDataDto"];
+        };
+        NotificationListDto: {
+            /** @description The newest 50, newest first */
+            items: components["schemas"]["NotificationDto"][];
+            /** @description Unread among `items` */
+            unread: number;
+        };
+        MarkReadDto: {
+            /** @description Notifications to mark as read; all of them when omitted */
+            ids?: string[];
+        };
+        NotificationPrefsDto: {
+            /** @description Email when a task is assigned to me */
+            assigned: boolean;
+            /** @description Reminder before the due time */
+            dueSoon: boolean;
+            /** @description Email when my task becomes overdue */
+            overdue: boolean;
+            weeklyDigest: boolean;
+        };
+        SettingsDto: {
+            calendar: components["schemas"]["CalendarStatusDto"];
+            /** @description Minutes before the due time when the reminder goes out: 15, 30, 60, 180 or 1440 */
+            reminderMinutes: number;
+            notifications: components["schemas"]["NotificationPrefsDto"];
+        };
+        UpdateNotificationPrefsDto: {
+            assigned?: boolean;
+            dueSoon?: boolean;
+            overdue?: boolean;
+            weeklyDigest?: boolean;
+        };
+        UpdateSettingsDto: {
+            /**
+             * @description 15, 30, 60, 180 or 1440
+             * @enum {number}
+             */
+            reminderMinutes?: 15 | 30 | 60 | 180 | 1440;
+            notifications?: components["schemas"]["UpdateNotificationPrefsDto"];
+        };
+        /** @enum {string} */
+        StatsPeriod: "week" | "month";
+        MemberStatsDto: {
+            userId: string;
+            /** @description Completed tasks in the period */
+            done: number;
+            overdue: number;
+            /** @description Sum of the difficulty of completed tasks */
+            difficulty: number;
         };
     };
     responses: never;
@@ -46,13 +961,1270 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description The server is up */
+            /** @description The server and the database are up */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
                     "application/json": components["schemas"]["HealthResponseDto"];
+                };
+            };
+            /** @description The database is down */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HealthResponseDto"];
+                };
+            };
+        };
+    };
+    MeController_deleteAccount: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Error: { code, fields?, ... } */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
+        };
+    };
+    MeController_updateProfile: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateProfileDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UserDto"];
+                };
+            };
+            /** @description Error: { code, fields?, ... } */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
+        };
+    };
+    MeController_uploadAvatar: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["AvatarUploadDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UserDto"];
+                };
+            };
+            /** @description Error: { code, fields?, ... } */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
+        };
+    };
+    MeController_deleteAvatar: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UserDto"];
+                };
+            };
+            /** @description Error: { code, fields?, ... } */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
+        };
+    };
+    AuthController_me: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UserDto"];
+                };
+            };
+            /** @description Error: { code, fields?, ... } */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
+        };
+    };
+    AuthController_register: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RegisterDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UserDto"];
+                };
+            };
+            /** @description Error: { code, fields?, ... } */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
+        };
+    };
+    AuthController_login: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LoginDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UserDto"];
+                };
+            };
+            /** @description Error: { code, fields?, ... } */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
+        };
+    };
+    AuthController_logout: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Error: { code, fields?, ... } */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
+        };
+    };
+    AuthController_google: {
+        parameters: {
+            query?: {
+                /** @description Frontend path to return to after signing in */
+                next?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Redirect to Google */
+            302: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Error: { code, fields?, ... } */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
+        };
+    };
+    AuthController_forgotPassword: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ForgotPasswordDto"];
+            };
+        };
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Error: { code, fields?, ... } */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
+        };
+    };
+    AuthController_resetPassword: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ResetPasswordDto"];
+            };
+        };
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Error: { code, fields?, ... } */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
+        };
+    };
+    AuthController_verifyEmail: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VerifyEmailDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UserDto"];
+                };
+            };
+            /** @description Error: { code, fields?, ... } */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
+        };
+    };
+    AuthController_resendVerification: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Error: { code, fields?, ... } */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
+        };
+    };
+    AccountController_changePassword: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ChangePasswordDto"];
+            };
+        };
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Error: { code, fields?, ... } */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
+        };
+    };
+    GroupsController_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GroupSummaryDto"][];
+                };
+            };
+            /** @description Error: { code, fields?, ... } */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
+        };
+    };
+    GroupsController_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateGroupDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GroupDto"];
+                };
+            };
+            /** @description Error: { code, fields?, ... } */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
+        };
+    };
+    GroupsController_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                groupId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GroupDto"];
+                };
+            };
+            /** @description Error: { code, fields?, ... } */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
+        };
+    };
+    GroupsController_removeMember: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                groupId: string;
+                userId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Error: { code, fields?, ... } */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
+        };
+    };
+    GroupsController_updateMember: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                groupId: string;
+                userId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateMemberDto"];
+            };
+        };
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Error: { code, fields?, ... } */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
+        };
+    };
+    GroupsController_leave: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                groupId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Error: { code, fields?, ... } */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
+        };
+    };
+    InvitesController_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                groupId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateInviteDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InviteDto"];
+                };
+            };
+            /** @description Error: { code, fields?, ... } */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
+        };
+    };
+    InvitesController_info: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                token: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InviteInfoDto"];
+                };
+            };
+            /** @description Error: { code, fields?, ... } */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
+        };
+    };
+    InvitesController_accept: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                token: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AcceptInviteDto"];
+                };
+            };
+            /** @description Error: { code, fields?, ... } */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
+        };
+    };
+    AbsencesController_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                groupId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateAbsenceDto"];
+            };
+        };
+        responses: {
+            /** @description Created; the body is empty */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Error: { code, fields?, ... } */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
+        };
+    };
+    AbsencesController_remove: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                groupId: string;
+                absenceId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Error: { code, fields?, ... } */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
+        };
+    };
+    TasksController_list: {
+        parameters: {
+            query?: {
+                /** @description Inclusive lower bound on dueAt, ISO date-time */
+                from?: string;
+                /** @description Exclusive upper bound on dueAt, ISO date-time */
+                to?: string;
+                /** @description Only instances of this series (completion history) */
+                seriesId?: string;
+            };
+            header?: never;
+            path: {
+                groupId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TaskDto"][];
+                };
+            };
+            /** @description Error: { code, fields?, ... } */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
+        };
+    };
+    TasksController_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                groupId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateTaskDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TaskDto"];
+                };
+            };
+            /** @description Error: { code, fields?, ... } */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
+        };
+    };
+    TasksController_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                taskId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TaskDto"];
+                };
+            };
+            /** @description Error: { code, fields?, ... } */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
+        };
+    };
+    TasksController_remove: {
+        parameters: {
+            query: {
+                /** @description `one` changes this instance only, `series` all upcoming unfinished ones */
+                scope: components["schemas"]["EditScope"];
+            };
+            header?: never;
+            path: {
+                taskId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Error: { code, fields?, ... } */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
+        };
+    };
+    TasksController_update: {
+        parameters: {
+            query: {
+                /** @description `one` changes this instance only, `series` all upcoming unfinished ones */
+                scope: components["schemas"]["EditScope"];
+            };
+            header?: never;
+            path: {
+                taskId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateTaskDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TaskDto"];
+                };
+            };
+            /** @description Error: { code, fields?, ... } */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
+        };
+    };
+    TasksController_complete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                taskId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TaskDto"];
+                };
+            };
+            /** @description Error: { code, fields?, ... } */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
+        };
+    };
+    TasksController_undoComplete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                taskId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TaskDto"];
+                };
+            };
+            /** @description Error: { code, fields?, ... } */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
+        };
+    };
+    TasksController_reassign: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                taskId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReassignTaskDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TaskDto"];
+                };
+            };
+            /** @description Error: { code, fields?, ... } */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
+        };
+    };
+    CalendarController_connect: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CalendarConnectDto"];
+                };
+            };
+            /** @description Error: { code, fields?, ... } */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
+        };
+    };
+    CalendarController_disconnect: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CalendarStatusDto"];
+                };
+            };
+            /** @description Error: { code, fields?, ... } */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
+        };
+    };
+    CalendarController_sync: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CalendarStatusDto"];
+                };
+            };
+            /** @description Error: { code, fields?, ... } */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
+        };
+    };
+    NotificationsController_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NotificationListDto"];
+                };
+            };
+            /** @description Error: { code, fields?, ... } */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
+        };
+    };
+    NotificationsController_markRead: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MarkReadDto"];
+            };
+        };
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Error: { code, fields?, ... } */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
+        };
+    };
+    SettingsController_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SettingsDto"];
+                };
+            };
+            /** @description Error: { code, fields?, ... } */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
+        };
+    };
+    SettingsController_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateSettingsDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SettingsDto"];
+                };
+            };
+            /** @description Error: { code, fields?, ... } */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
+        };
+    };
+    StatsController_get: {
+        parameters: {
+            query?: {
+                /** @description The last 7 (week, default) or 30 (month) days */
+                period?: components["schemas"]["StatsPeriod"];
+            };
+            header?: never;
+            path: {
+                groupId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MemberStatsDto"][];
+                };
+            };
+            /** @description Error: { code, fields?, ... } */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
                 };
             };
         };

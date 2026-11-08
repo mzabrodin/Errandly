@@ -7,7 +7,7 @@ import {
 } from '@tanstack/react-query';
 
 import { currentLocale } from '../i18n';
-import { ApiError, http } from './client';
+import { api, ApiError, unwrap } from './client';
 import type { User } from './types';
 
 export const sessionKey = ['session'] as const;
@@ -17,7 +17,7 @@ export function useSession(): UseQueryResult<User | null> {
     queryKey: sessionKey,
     queryFn: async () => {
       try {
-        return await http.get<User>('/auth/me');
+        return await unwrap(api.GET('/api/auth/me'));
       } catch (error) {
         if (error instanceof ApiError && error.status === 401) return null;
         throw error;
@@ -38,7 +38,7 @@ export function useRegister(): UseMutationResult<User, Error, RegisterInput> {
   return useMutation({
     // The account starts in the language the user signed up in, so the verification email matches
     mutationFn: (input: RegisterInput) =>
-      http.post<User>('/auth/register', { ...input, locale: currentLocale() }),
+      unwrap(api.POST('/api/auth/register', { body: { ...input, locale: currentLocale() } })),
     onSuccess: (user) => queryClient.setQueryData(sessionKey, user),
   });
 }
@@ -47,7 +47,7 @@ export function useLogin(): UseMutationResult<User, Error, { email: string; pass
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (input: { email: string; password: string }) =>
-      http.post<User>('/auth/login', input),
+      unwrap(api.POST('/api/auth/login', { body: input })),
     onSuccess: (user) => queryClient.setQueryData(sessionKey, user),
   });
 }
@@ -55,7 +55,7 @@ export function useLogin(): UseMutationResult<User, Error, { email: string; pass
 export function useLogout(): UseMutationResult<void, Error, void> {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: () => http.post<void>('/auth/logout'),
+    mutationFn: () => unwrap(api.POST('/api/auth/logout')),
     onSuccess: () => {
       queryClient.clear();
       queryClient.setQueryData(sessionKey, null);
@@ -65,7 +65,8 @@ export function useLogout(): UseMutationResult<void, Error, void> {
 
 export function useForgotPassword(): UseMutationResult<void, Error, string> {
   return useMutation({
-    mutationFn: (email: string) => http.post<void>('/auth/forgot-password', { email }),
+    mutationFn: (email: string) =>
+      unwrap(api.POST('/api/auth/forgot-password', { body: { email } })),
   });
 }
 
@@ -76,21 +77,21 @@ export function useResetPassword(): UseMutationResult<
 > {
   return useMutation({
     mutationFn: (input: { token: string; password: string }) =>
-      http.post<void>('/auth/reset-password', input),
+      unwrap(api.POST('/api/auth/reset-password', { body: input })),
   });
 }
 
 export function useVerifyEmail(): UseMutationResult<User, Error, string> {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (token: string) => http.post<User>('/auth/verify-email', { token }),
+    mutationFn: (token: string) => unwrap(api.POST('/api/auth/verify-email', { body: { token } })),
     onSuccess: (user) => queryClient.setQueryData(sessionKey, user),
   });
 }
 
 export function useResendVerification(): UseMutationResult<void, Error, void> {
   return useMutation({
-    mutationFn: () => http.post<void>('/auth/verify-email/resend'),
+    mutationFn: () => unwrap(api.POST('/api/auth/verify-email/resend')),
   });
 }
 

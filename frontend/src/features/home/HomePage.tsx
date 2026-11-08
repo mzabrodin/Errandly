@@ -6,7 +6,7 @@ import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router';
 
 import { useSession } from '../../shared/api/auth';
-import { http } from '../../shared/api/client';
+import { api, unwrap } from '../../shared/api/client';
 import { groupKeys, useGroups } from '../../shared/api/groups';
 import { taskKeys } from '../../shared/api/tasks';
 import type { Group, GroupSummary, Task } from '../../shared/api/types';
@@ -131,15 +131,18 @@ export function HomePage(): JSX.Element {
   const details = useQueries({
     queries: (groups ?? []).map((group) => ({
       queryKey: groupKeys.detail(group.id),
-      queryFn: () => http.get<Group>(`/groups/${group.id}`),
+      queryFn: () =>
+        unwrap(api.GET('/api/groups/{groupId}', { params: { path: { groupId: group.id } } })),
     })),
   });
   const taskLists = useQueries({
     queries: (groups ?? []).map((group) => ({
       queryKey: taskKeys.range(group.id, range.from, range.to),
       queryFn: () =>
-        http.get<Task[]>(
-          `/groups/${group.id}/tasks?from=${encodeURIComponent(range.from)}&to=${encodeURIComponent(range.to)}`,
+        unwrap(
+          api.GET('/api/groups/{groupId}/tasks', {
+            params: { path: { groupId: group.id }, query: { from: range.from, to: range.to } },
+          }),
         ),
     })),
   });

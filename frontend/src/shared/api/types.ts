@@ -1,147 +1,36 @@
-// API contract the frontend relies on. Full description: frontend/API.md
-import type { Locale } from '../i18n';
+// Domain names for the API contract. The shapes come from the backend DTOs via
+// backend/openapi.json → schema.d.ts (npm run api:sync); behaviour rules: docs/api.md
+import type { components } from './schema';
 
-export interface User {
-  id: string;
-  name: string;
-  email: string;
-  emailVerified: boolean;
-  timezone: string;
-  /** UI and email language */
-  locale: Locale;
-  avatarUrl: string | null;
-}
+type Schemas = components['schemas'];
 
-export type GroupRole = 'admin' | 'member';
+export type User = Schemas['UserDto'];
+export type Locale = Schemas['Locale'];
 
-export interface GroupSummary {
-  id: string;
-  name: string;
-  role: GroupRole;
-  memberCount: number;
-}
+export type GroupRole = Schemas['GroupRole'];
+export type GroupSummary = Schemas['GroupSummaryDto'];
+export type Absence = Schemas['AbsenceDto'];
+export type Member = Schemas['MemberDto'];
+export type Group = Schemas['GroupDto'];
+export type Invite = Schemas['InviteDto'];
+export type InviteInfo = Schemas['InviteInfoDto'];
 
-export interface Absence {
-  id: string;
-  from: string; // ISO date, yyyy-mm-dd
-  to: string;
-}
+export type TaskStatus = Schemas['TaskStatus'];
+/** 1 = Monday … 7 = Sunday for weekly series */
+export type Recurrence = Schemas['TaskDto']['recurrence'];
+export type Task = Schemas['TaskDto'];
+/** Task form; `assigneeId: null` means automatic assignment */
+export type TaskInput = Schemas['CreateTaskDto'];
+export type EditScope = Schemas['EditScope'];
 
-export interface Member {
-  userId: string;
-  name: string;
-  email: string;
-  role: GroupRole;
-  color: string;
-  avatarUrl: string | null;
-  absences: Absence[];
-}
+export type StatsPeriod = Schemas['StatsPeriod'];
+export type MemberStats = Schemas['MemberStatsDto'];
 
-export interface Group {
-  id: string;
-  name: string;
-  role: GroupRole;
-  members: Member[];
-}
+export type NotificationType = Schemas['NotificationType'];
+export type AppNotification = Schemas['NotificationDto'];
+export type NotificationList = Schemas['NotificationListDto'];
 
-export type TaskStatus = 'planned' | 'done' | 'overdue' | 'unassigned';
-
-export type Recurrence =
-  | { type: 'once' }
-  | { type: 'daily' }
-  | { type: 'weekly'; weekdays: number[] } // 1 = Monday … 7 = Sunday
-  | { type: 'monthly' };
-
-export interface Task {
-  id: string;
-  seriesId: string;
-  groupId: string;
-  title: string;
-  description: string;
-  dueAt: string; // ISO, UTC
-  difficulty: number; // 1–5
-  recurrence: Recurrence;
-  status: TaskStatus;
-  assigneeId: string | null;
-  manuallyAssigned: boolean;
-  completedAt: string | null;
-}
-
-export interface TaskInput {
-  title: string;
-  description: string;
-  dueAt: string;
-  difficulty: number;
-  recurrence: Recurrence;
-  assigneeId: string | null; // null means automatic assignment
-}
-
-export type EditScope = 'one' | 'series';
-
-export interface Invite {
-  url: string;
-  expiresAt: string;
-}
-
-export interface InviteInfo {
-  groupId: string;
-  groupName: string;
-  invitedBy: string;
-  alreadyMember: boolean;
-}
-
-export type StatsPeriod = 'week' | 'month';
-
-export interface MemberStats {
-  userId: string;
-  done: number;
-  overdue: number;
-  difficulty: number;
-}
-
-export type NotificationType =
-  | 'groupCreated'
-  | 'groupJoined'
-  | 'memberJoined'
-  | 'taskAssigned'
-  | 'taskUnassigned'
-  | 'taskOverdue'
-  | 'roleGranted'
-  | 'roleRevoked'
-  | 'removedFromGroup';
-
-export interface AppNotification {
-  id: string;
-  type: NotificationType;
-  createdAt: string;
-  read: boolean;
-  groupId: string | null;
-  taskId: string | null;
-  data: {
-    groupName?: string | undefined;
-    taskTitle?: string | undefined;
-    actorName?: string | undefined;
-    dueAt?: string | undefined;
-  };
-}
-
-export interface NotificationList {
-  items: AppNotification[];
-  unread: number;
-}
-
-export interface Settings {
-  calendar: {
-    connected: boolean;
-    syncStatus: 'ok' | 'paused';
-    googleEmail: string | null;
-    lastSyncedAt: string | null;
-  };
-  reminderMinutes: number;
-  notifications: {
-    assigned: boolean;
-    dueSoon: boolean;
-    overdue: boolean;
-    weeklyDigest: boolean;
-  };
-}
+export type CalendarStatus = Schemas['CalendarStatusDto'];
+export type Settings = Schemas['SettingsDto'];
+export type SettingsPatch = Schemas['UpdateSettingsDto'];
+export type ProfilePatch = Schemas['UpdateProfileDto'];
