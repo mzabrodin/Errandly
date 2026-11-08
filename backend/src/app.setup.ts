@@ -3,6 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { DocumentBuilder, SwaggerModule, type OpenAPIObject } from '@nestjs/swagger';
 import { Logger, LoggerErrorInterceptor } from 'nestjs-pino';
 
+import { validationExceptionFactory } from './common/validation/validation.js';
 import { NodeEnv, type EnvironmentVariables } from './config/env.validation.js';
 import { API_PREFIX } from './config/urls.js';
 
@@ -13,7 +14,12 @@ export function configureApp(app: INestApplication): void {
   app.useGlobalInterceptors(new LoggerErrorInterceptor());
   app.setGlobalPrefix(API_PREFIX);
   app.useGlobalPipes(
-    new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true, transform: true }),
+    new ValidationPipe({
+      whitelist: true,
+      forbidNonWhitelisted: true,
+      transform: true,
+      exceptionFactory: validationExceptionFactory,
+    }),
   );
   app.enableCors({ origin: config.get('APP_URL', { infer: true }), credentials: true });
   app.enableShutdownHooks();
@@ -24,6 +30,10 @@ export function configureApp(app: INestApplication): void {
 }
 
 export function createOpenApiDocument(app: INestApplication): OpenAPIObject {
-  const config = new DocumentBuilder().setTitle('Errandly API').setVersion('0.1.0').build();
+  const config = new DocumentBuilder()
+    .setTitle('Errandly API')
+    .setVersion('0.1.0')
+    .addCookieAuth('errandly_session')
+    .build();
   return SwaggerModule.createDocument(app, config);
 }

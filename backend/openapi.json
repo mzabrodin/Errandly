@@ -7,7 +7,17 @@
         "parameters": [],
         "responses": {
           "200": {
-            "description": "The server is up",
+            "description": "The server and the database are up",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponseDto"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "The database is down",
             "content": {
               "application/json": {
                 "schema": {
@@ -21,6 +31,1797 @@
           "health"
         ]
       }
+    },
+    "/api/me": {
+      "patch": {
+        "operationId": "MeController_updateProfile",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateProfileDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserDto"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error: { code, fields?, ... }",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "cookie": []
+          }
+        ],
+        "summary": "Updates name, time zone or language. Errors: 400 VALIDATION (name required/tooLong, timezone invalid, locale invalid).",
+        "tags": [
+          "me"
+        ]
+      },
+      "delete": {
+        "operationId": "MeController_deleteAccount",
+        "parameters": [],
+        "responses": {
+          "204": {
+            "description": ""
+          },
+          "default": {
+            "description": "Error: { code, fields?, ... }",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "cookie": []
+          }
+        ],
+        "summary": "Deletes the account and ends the session; open tasks are redistributed.\nErrors: 409 LAST_ADMIN (+groups: names of groups where the user is the only admin).",
+        "tags": [
+          "me"
+        ]
+      }
+    },
+    "/api/me/avatar": {
+      "post": {
+        "operationId": "MeController_uploadAvatar",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/AvatarUploadDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserDto"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error: { code, fields?, ... }",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "cookie": []
+          }
+        ],
+        "summary": "Uploads an avatar image (field `file`). Errors: 400 VALIDATION (file type), 413 FILE_TOO_LARGE.",
+        "tags": [
+          "me"
+        ]
+      },
+      "delete": {
+        "operationId": "MeController_deleteAvatar",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserDto"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error: { code, fields?, ... }",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "cookie": []
+          }
+        ],
+        "summary": "Removes the avatar.",
+        "tags": [
+          "me"
+        ]
+      }
+    },
+    "/api/auth/me": {
+      "get": {
+        "operationId": "AuthController_me",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserDto"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error: { code, fields?, ... }",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "cookie": []
+          }
+        ],
+        "summary": "The signed-in user. 401 UNAUTHENTICATED means \"signed out\".",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/auth/register": {
+      "post": {
+        "operationId": "AuthController_register",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegisterDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserDto"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error: { code, fields?, ... }",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Creates an account, signs it in and sends the verifyEmail email.\nErrors: 400 VALIDATION (name required, email invalid, password weak), 409 EMAIL_TAKEN.",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/auth/login": {
+      "post": {
+        "operationId": "AuthController_login",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserDto"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error: { code, fields?, ... }",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Signs in with email and password. The 5th failure in a row locks the account for 15 minutes.\nErrors: 401 INVALID_CREDENTIALS, 423 ACCOUNT_LOCKED (+retryAfterSeconds).",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/auth/logout": {
+      "post": {
+        "operationId": "AuthController_logout",
+        "parameters": [],
+        "responses": {
+          "204": {
+            "description": ""
+          },
+          "default": {
+            "description": "Error: { code, fields?, ... }",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Ends the session and clears the cookie.",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/auth/google": {
+      "get": {
+        "operationId": "AuthController_google",
+        "parameters": [
+          {
+            "name": "next",
+            "required": false,
+            "in": "query",
+            "description": "Frontend path to return to after signing in",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "302": {
+            "description": "Redirect to Google"
+          },
+          "default": {
+            "description": "Error: { code, fields?, ... }",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Redirects to Google sign-in, then back to `next`. A separate flow from the calendar connection.",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/auth/forgot-password": {
+      "post": {
+        "operationId": "AuthController_forgotPassword",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ForgotPasswordDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": ""
+          },
+          "default": {
+            "description": "Error: { code, fields?, ... }",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Sends a reset link (valid 1 hour, single use) if the account exists; always answers 204.",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/auth/reset-password": {
+      "post": {
+        "operationId": "AuthController_resetPassword",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResetPasswordDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": ""
+          },
+          "default": {
+            "description": "Error: { code, fields?, ... }",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Sets a new password from a reset link. Errors: 400 TOKEN_INVALID, 400 VALIDATION (password weak).",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/auth/verify-email": {
+      "post": {
+        "operationId": "AuthController_verifyEmail",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VerifyEmailDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserDto"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error: { code, fields?, ... }",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Confirms the email from the link. Errors: 400 TOKEN_INVALID.",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/auth/verify-email/resend": {
+      "post": {
+        "operationId": "AuthController_resendVerification",
+        "parameters": [],
+        "responses": {
+          "204": {
+            "description": ""
+          },
+          "default": {
+            "description": "Error: { code, fields?, ... }",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "cookie": []
+          }
+        ],
+        "summary": "Sends the verification email again.",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/me/password": {
+      "post": {
+        "operationId": "AccountController_changePassword",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChangePasswordDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": ""
+          },
+          "default": {
+            "description": "Error: { code, fields?, ... }",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "cookie": []
+          }
+        ],
+        "summary": "Changes the password. Errors: 400 WRONG_PASSWORD, 400 VALIDATION (newPassword weak).",
+        "tags": [
+          "me"
+        ]
+      }
+    },
+    "/api/groups": {
+      "get": {
+        "operationId": "GroupsController_list",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/GroupSummaryDto"
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error: { code, fields?, ... }",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "cookie": []
+          }
+        ],
+        "summary": "Groups of the signed-in user.",
+        "tags": [
+          "groups"
+        ]
+      },
+      "post": {
+        "operationId": "GroupsController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateGroupDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GroupDto"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error: { code, fields?, ... }",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "cookie": []
+          }
+        ],
+        "summary": "Creates a group with the caller as its admin.\nErrors: 403 EMAIL_NOT_VERIFIED, 400 VALIDATION (name required/tooLong).",
+        "tags": [
+          "groups"
+        ]
+      }
+    },
+    "/api/groups/{groupId}": {
+      "get": {
+        "operationId": "GroupsController_get",
+        "parameters": [
+          {
+            "name": "groupId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GroupDto"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error: { code, fields?, ... }",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "cookie": []
+          }
+        ],
+        "summary": "The group with its members and their absences. Errors: 403 FORBIDDEN.",
+        "tags": [
+          "groups"
+        ]
+      }
+    },
+    "/api/groups/{groupId}/members/{userId}": {
+      "delete": {
+        "operationId": "GroupsController_removeMember",
+        "parameters": [
+          {
+            "name": "groupId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "userId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          },
+          "default": {
+            "description": "Error: { code, fields?, ... }",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "cookie": []
+          }
+        ],
+        "summary": "Removes a member (admin); their open tasks are redistributed.\nErrors: 403 ADMIN_ONLY, 409 CANNOT_REMOVE_SELF.",
+        "tags": [
+          "groups"
+        ]
+      },
+      "patch": {
+        "operationId": "GroupsController_updateMember",
+        "parameters": [
+          {
+            "name": "groupId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "userId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateMemberDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": ""
+          },
+          "default": {
+            "description": "Error: { code, fields?, ... }",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "cookie": []
+          }
+        ],
+        "summary": "Changes a member's role (admin).\nErrors: 403 ADMIN_ONLY, 404 NOT_FOUND, 409 LAST_ADMIN.",
+        "tags": [
+          "groups"
+        ]
+      }
+    },
+    "/api/groups/{groupId}/leave": {
+      "post": {
+        "operationId": "GroupsController_leave",
+        "parameters": [
+          {
+            "name": "groupId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          },
+          "default": {
+            "description": "Error: { code, fields?, ... }",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "cookie": []
+          }
+        ],
+        "summary": "Leaves the group; the caller's open tasks are redistributed.\nErrors: 409 LAST_ADMIN when the only admin leaves a group with other members.",
+        "tags": [
+          "groups"
+        ]
+      }
+    },
+    "/api/groups/{groupId}/invites": {
+      "post": {
+        "operationId": "InvitesController_create",
+        "parameters": [
+          {
+            "name": "groupId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateInviteDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InviteDto"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error: { code, fields?, ... }",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "cookie": []
+          }
+        ],
+        "summary": "Creates a 7-day invite link and optionally emails it (admin). Errors: 403 ADMIN_ONLY.",
+        "tags": [
+          "invites"
+        ]
+      }
+    },
+    "/api/invites/{token}": {
+      "get": {
+        "operationId": "InvitesController_info",
+        "parameters": [
+          {
+            "name": "token",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InviteInfoDto"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error: { code, fields?, ... }",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "What the invite page shows; works signed out. Errors: 410 INVITE_INVALID (unknown, revoked or expired).",
+        "tags": [
+          "invites"
+        ]
+      }
+    },
+    "/api/invites/{token}/accept": {
+      "post": {
+        "operationId": "InvitesController_accept",
+        "parameters": [
+          {
+            "name": "token",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AcceptInviteDto"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error: { code, fields?, ... }",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "cookie": []
+          }
+        ],
+        "summary": "Joins the group as a member; idempotent for existing members.\nErrors: 410 INVITE_INVALID, 403 EMAIL_NOT_VERIFIED.",
+        "tags": [
+          "invites"
+        ]
+      }
+    },
+    "/api/groups/{groupId}/absences": {
+      "post": {
+        "operationId": "AbsencesController_create",
+        "parameters": [
+          {
+            "name": "groupId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateAbsenceDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created; the body is empty"
+          },
+          "default": {
+            "description": "Error: { code, fields?, ... }",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "cookie": []
+          }
+        ],
+        "summary": "Adds an absence; the caller's automatically assigned open tasks in that period are reassigned.\nErrors: 400 VALIDATION (to beforeFrom), 403 FORBIDDEN.",
+        "tags": [
+          "groups"
+        ]
+      }
+    },
+    "/api/groups/{groupId}/absences/{absenceId}": {
+      "delete": {
+        "operationId": "AbsencesController_remove",
+        "parameters": [
+          {
+            "name": "groupId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "absenceId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          },
+          "default": {
+            "description": "Error: { code, fields?, ... }",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "cookie": []
+          }
+        ],
+        "summary": "Deletes one of the caller's absences.",
+        "tags": [
+          "groups"
+        ]
+      }
+    },
+    "/api/groups/{groupId}/tasks": {
+      "get": {
+        "operationId": "TasksController_list",
+        "parameters": [
+          {
+            "name": "groupId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "from",
+            "required": false,
+            "in": "query",
+            "description": "Inclusive lower bound on dueAt, ISO date-time",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "to",
+            "required": false,
+            "in": "query",
+            "description": "Exclusive upper bound on dueAt, ISO date-time",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "seriesId",
+            "required": false,
+            "in": "query",
+            "description": "Only instances of this series (completion history)",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TaskDto"
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error: { code, fields?, ... }",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "cookie": []
+          }
+        ],
+        "summary": "Instances in `[from, to)` by dueAt, ascending, with computed status. Errors: 403 FORBIDDEN.",
+        "tags": [
+          "tasks"
+        ]
+      },
+      "post": {
+        "operationId": "TasksController_create",
+        "parameters": [
+          {
+            "name": "groupId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateTaskDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskDto"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error: { code, fields?, ... }",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "cookie": []
+          }
+        ],
+        "summary": "Creates a series (admin) and materialises it 4 weeks ahead; returns the first instance.\n`assigneeId: null` assigns every instance automatically (FR-27).\nErrors: 403 ADMIN_ONLY, 400 VALIDATION (title required/tooLong, dueAt required/inPast,\ndifficulty range, recurrence noWeekdays).",
+        "tags": [
+          "tasks"
+        ]
+      }
+    },
+    "/api/tasks/{taskId}": {
+      "get": {
+        "operationId": "TasksController_get",
+        "parameters": [
+          {
+            "name": "taskId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskDto"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error: { code, fields?, ... }",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "cookie": []
+          }
+        ],
+        "summary": "One instance. Errors: 404 NOT_FOUND, 403 FORBIDDEN.",
+        "tags": [
+          "tasks"
+        ]
+      },
+      "patch": {
+        "operationId": "TasksController_update",
+        "parameters": [
+          {
+            "name": "taskId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "scope",
+            "required": true,
+            "in": "query",
+            "description": "`one` changes this instance only, `series` all upcoming unfinished ones",
+            "schema": {
+              "$ref": "#/components/schemas/EditScope"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateTaskDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskDto"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error: { code, fields?, ... }",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "cookie": []
+          }
+        ],
+        "summary": "Edits this instance (`scope=one`) or regenerates the upcoming unfinished instances of the\nseries (`scope=series`) (admin). Errors: 404 NOT_FOUND, 403 ADMIN_ONLY, 400 VALIDATION.",
+        "tags": [
+          "tasks"
+        ]
+      },
+      "delete": {
+        "operationId": "TasksController_remove",
+        "parameters": [
+          {
+            "name": "taskId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "scope",
+            "required": true,
+            "in": "query",
+            "description": "`one` changes this instance only, `series` all upcoming unfinished ones",
+            "schema": {
+              "$ref": "#/components/schemas/EditScope"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          },
+          "default": {
+            "description": "Error: { code, fields?, ... }",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "cookie": []
+          }
+        ],
+        "summary": "Deletes this instance or every unfinished instance of the series (admin); completed ones stay.\nErrors: 404 NOT_FOUND, 403 ADMIN_ONLY.",
+        "tags": [
+          "tasks"
+        ]
+      }
+    },
+    "/api/tasks/{taskId}/complete": {
+      "post": {
+        "operationId": "TasksController_complete",
+        "parameters": [
+          {
+            "name": "taskId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskDto"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error: { code, fields?, ... }",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "cookie": []
+          }
+        ],
+        "summary": "Marks the task done; only its assignee can. Idempotent. Errors: 404 NOT_FOUND, 403 NOT_ASSIGNEE.",
+        "tags": [
+          "tasks"
+        ]
+      },
+      "delete": {
+        "operationId": "TasksController_undoComplete",
+        "parameters": [
+          {
+            "name": "taskId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskDto"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error: { code, fields?, ... }",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "cookie": []
+          }
+        ],
+        "summary": "Undoes the completion: the assignee within 24 hours, an admin at any time.\nErrors: 404 NOT_FOUND, 403 NOT_ASSIGNEE, 409 UNDO_EXPIRED.",
+        "tags": [
+          "tasks"
+        ]
+      }
+    },
+    "/api/tasks/{taskId}/assignee": {
+      "patch": {
+        "operationId": "TasksController_reassign",
+        "parameters": [
+          {
+            "name": "taskId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReassignTaskDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskDto"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error: { code, fields?, ... }",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "cookie": []
+          }
+        ],
+        "summary": "Assigns the task to a member by hand (admin); the algorithm never overrides it (FR-30).\nErrors: 404 NOT_FOUND, 403 ADMIN_ONLY, 409 TASK_DONE, 400 VALIDATION (not a member).",
+        "tags": [
+          "tasks"
+        ]
+      }
+    },
+    "/api/me/calendar/connect": {
+      "post": {
+        "operationId": "CalendarController_connect",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CalendarConnectDto"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error: { code, fields?, ... }",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "cookie": []
+          }
+        ],
+        "summary": "Starts the calendar OAuth flow; after consent Google returns to /settings?calendar=connected.",
+        "tags": [
+          "calendar"
+        ]
+      }
+    },
+    "/api/me/calendar": {
+      "delete": {
+        "operationId": "CalendarController_disconnect",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CalendarStatusDto"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error: { code, fields?, ... }",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "cookie": []
+          }
+        ],
+        "summary": "Disconnects the calendar and deletes the stored tokens.",
+        "tags": [
+          "calendar"
+        ]
+      }
+    },
+    "/api/me/calendar/sync": {
+      "post": {
+        "operationId": "CalendarController_sync",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CalendarStatusDto"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error: { code, fields?, ... }",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "cookie": []
+          }
+        ],
+        "summary": "Syncs now and resumes a paused sync. Errors: 409 CALENDAR_NOT_CONNECTED.",
+        "tags": [
+          "calendar"
+        ]
+      }
+    },
+    "/api/notifications": {
+      "get": {
+        "operationId": "NotificationsController_list",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotificationListDto"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error: { code, fields?, ... }",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "cookie": []
+          }
+        ],
+        "summary": "The newest 50 notifications and how many of them are unread.",
+        "tags": [
+          "notifications"
+        ]
+      }
+    },
+    "/api/notifications/read": {
+      "post": {
+        "operationId": "NotificationsController_markRead",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MarkReadDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": ""
+          },
+          "default": {
+            "description": "Error: { code, fields?, ... }",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "cookie": []
+          }
+        ],
+        "summary": "Marks the given notifications, or all of them, as read.",
+        "tags": [
+          "notifications"
+        ]
+      }
+    },
+    "/api/me/settings": {
+      "get": {
+        "operationId": "SettingsController_get",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SettingsDto"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error: { code, fields?, ... }",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "cookie": []
+          }
+        ],
+        "summary": "Notification and calendar settings.",
+        "tags": [
+          "me"
+        ]
+      },
+      "patch": {
+        "operationId": "SettingsController_update",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateSettingsDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SettingsDto"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error: { code, fields?, ... }",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "cookie": []
+          }
+        ],
+        "summary": "Updates the reminder offset and notification switches.",
+        "tags": [
+          "me"
+        ]
+      }
+    },
+    "/api/groups/{groupId}/stats": {
+      "get": {
+        "operationId": "StatsController_get",
+        "parameters": [
+          {
+            "name": "groupId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "period",
+            "required": false,
+            "in": "query",
+            "description": "The last 7 (week, default) or 30 (month) days",
+            "schema": {
+              "$ref": "#/components/schemas/StatsPeriod"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/MemberStatsDto"
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error: { code, fields?, ... }",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "cookie": []
+          }
+        ],
+        "summary": "Done, overdue and difficulty per member for the period. Errors: 403 FORBIDDEN.",
+        "tags": [
+          "stats"
+        ]
+      }
     }
   },
   "info": {
@@ -32,19 +1833,1101 @@
   "tags": [],
   "servers": [],
   "components": {
+    "securitySchemes": {
+      "cookie": {
+        "type": "apiKey",
+        "in": "cookie",
+        "name": "errandly_session"
+      }
+    },
     "schemas": {
       "HealthResponseDto": {
         "type": "object",
         "properties": {
           "status": {
-            "type": "string",
             "enum": [
-              "ok"
+              "ok",
+              "error"
+            ],
+            "type": "string"
+          },
+          "database": {
+            "enum": [
+              "up",
+              "down"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "status",
+          "database"
+        ]
+      },
+      "ErrorCode": {
+        "type": "string",
+        "enum": [
+          "VALIDATION",
+          "TOKEN_INVALID",
+          "WRONG_PASSWORD",
+          "UNAUTHENTICATED",
+          "INVALID_CREDENTIALS",
+          "FORBIDDEN",
+          "ADMIN_ONLY",
+          "NOT_ASSIGNEE",
+          "EMAIL_NOT_VERIFIED",
+          "NOT_FOUND",
+          "EMAIL_TAKEN",
+          "LAST_ADMIN",
+          "TASK_DONE",
+          "UNDO_EXPIRED",
+          "CANNOT_REMOVE_SELF",
+          "CALENDAR_NOT_CONNECTED",
+          "CONFLICT",
+          "INVITE_INVALID",
+          "FILE_TOO_LARGE",
+          "ACCOUNT_LOCKED",
+          "TOO_MANY_REQUESTS",
+          "INTERNAL",
+          "NOT_IMPLEMENTED",
+          "SERVICE_UNAVAILABLE"
+        ]
+      },
+      "ApiErrorDto": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ErrorCode"
+              }
+            ]
+          },
+          "fields": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            },
+            "description": "Field code per invalid property, e.g. `{ \"title\": \"tooLong\" }` (VALIDATION only)",
+            "example": {
+              "title": "tooLong"
+            }
+          },
+          "retryAfterSeconds": {
+            "type": "number",
+            "description": "Seconds until the next attempt is allowed (ACCOUNT_LOCKED)"
+          },
+          "groups": {
+            "description": "Names of the groups where the user is the last admin (LAST_ADMIN on account deletion)",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "code"
+        ]
+      },
+      "Locale": {
+        "type": "string",
+        "enum": [
+          "uk",
+          "en"
+        ]
+      },
+      "UpdateProfileDto": {
+        "type": "object",
+        "properties": {
+          "locale": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Locale"
+              }
+            ]
+          },
+          "name": {
+            "type": "string",
+            "maxLength": 60
+          },
+          "timezone": {
+            "type": "string",
+            "description": "IANA time zone, e.g. Europe/Kyiv"
+          }
+        }
+      },
+      "UserDto": {
+        "type": "object",
+        "properties": {
+          "locale": {
+            "description": "UI and email language",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Locale"
+              }
+            ]
+          },
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "emailVerified": {
+            "type": "boolean"
+          },
+          "timezone": {
+            "type": "string",
+            "description": "IANA time zone, e.g. Europe/Kyiv"
+          },
+          "avatarUrl": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "locale",
+          "id",
+          "name",
+          "email",
+          "emailVerified",
+          "timezone",
+          "avatarUrl"
+        ]
+      },
+      "AvatarUploadDto": {
+        "type": "object",
+        "properties": {
+          "file": {
+            "type": "string",
+            "description": "An image up to 512 KB",
+            "format": "binary"
+          }
+        },
+        "required": [
+          "file"
+        ]
+      },
+      "RegisterDto": {
+        "type": "object",
+        "properties": {
+          "locale": {
+            "description": "Current UI language; becomes the account language",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Locale"
+              }
+            ]
+          },
+          "name": {
+            "type": "string",
+            "maxLength": 60
+          },
+          "email": {
+            "type": "string",
+            "maxLength": 254,
+            "format": "email"
+          },
+          "password": {
+            "type": "string",
+            "description": "At least 8 characters with a letter and a digit (FR-01)"
+          }
+        },
+        "required": [
+          "name",
+          "email",
+          "password"
+        ]
+      },
+      "LoginDto": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string"
+          },
+          "password": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "email",
+          "password"
+        ]
+      },
+      "ForgotPasswordDto": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email"
+          }
+        },
+        "required": [
+          "email"
+        ]
+      },
+      "ResetPasswordDto": {
+        "type": "object",
+        "properties": {
+          "token": {
+            "type": "string",
+            "description": "Token from the reset link"
+          },
+          "password": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "token",
+          "password"
+        ]
+      },
+      "VerifyEmailDto": {
+        "type": "object",
+        "properties": {
+          "token": {
+            "type": "string",
+            "description": "Token from the verification link"
+          }
+        },
+        "required": [
+          "token"
+        ]
+      },
+      "ChangePasswordDto": {
+        "type": "object",
+        "properties": {
+          "currentPassword": {
+            "type": "string"
+          },
+          "newPassword": {
+            "type": "string",
+            "description": "At least 8 characters with a letter and a digit (FR-01)"
+          }
+        },
+        "required": [
+          "currentPassword",
+          "newPassword"
+        ]
+      },
+      "GroupRole": {
+        "type": "string",
+        "enum": [
+          "admin",
+          "member"
+        ],
+        "description": "The caller's role in the group"
+      },
+      "GroupSummaryDto": {
+        "type": "object",
+        "properties": {
+          "role": {
+            "description": "The caller's role in the group",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/GroupRole"
+              }
+            ]
+          },
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "memberCount": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "role",
+          "id",
+          "name",
+          "memberCount"
+        ]
+      },
+      "CreateGroupDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 50
+          }
+        },
+        "required": [
+          "name"
+        ]
+      },
+      "AbsenceDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "from": {
+            "type": "string",
+            "description": "First day, yyyy-mm-dd (inclusive)"
+          },
+          "to": {
+            "type": "string",
+            "description": "Last day, yyyy-mm-dd (inclusive)"
+          }
+        },
+        "required": [
+          "id",
+          "from",
+          "to"
+        ]
+      },
+      "MemberDto": {
+        "type": "object",
+        "properties": {
+          "role": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/GroupRole"
+              }
+            ]
+          },
+          "userId": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "color": {
+            "type": "string",
+            "description": "Hex colour of the member in the calendar"
+          },
+          "avatarUrl": {
+            "type": "string",
+            "nullable": true
+          },
+          "absences": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AbsenceDto"
+            }
+          }
+        },
+        "required": [
+          "role",
+          "userId",
+          "name",
+          "email",
+          "color",
+          "avatarUrl",
+          "absences"
+        ]
+      },
+      "GroupDto": {
+        "type": "object",
+        "properties": {
+          "role": {
+            "description": "The caller's role in the group",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/GroupRole"
+              }
+            ]
+          },
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "members": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MemberDto"
+            }
+          }
+        },
+        "required": [
+          "role",
+          "id",
+          "name",
+          "members"
+        ]
+      },
+      "UpdateMemberDto": {
+        "type": "object",
+        "properties": {
+          "role": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/GroupRole"
+              }
             ]
           }
         },
         "required": [
-          "status"
+          "role"
+        ]
+      },
+      "CreateInviteDto": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "description": "Also email the link to this address; without it the link is only returned",
+            "format": "email"
+          }
+        }
+      },
+      "InviteDto": {
+        "type": "object",
+        "properties": {
+          "url": {
+            "type": "string",
+            "description": "Link to share: {APP_URL}/invite/{token}"
+          },
+          "expiresAt": {
+            "type": "string",
+            "description": "The link works for 7 days"
+          }
+        },
+        "required": [
+          "url",
+          "expiresAt"
+        ]
+      },
+      "InviteInfoDto": {
+        "type": "object",
+        "properties": {
+          "groupId": {
+            "type": "string"
+          },
+          "groupName": {
+            "type": "string"
+          },
+          "invitedBy": {
+            "type": "string",
+            "description": "Name of the member who created the invite"
+          },
+          "alreadyMember": {
+            "type": "boolean",
+            "description": "True when the signed-in user is already in the group"
+          }
+        },
+        "required": [
+          "groupId",
+          "groupName",
+          "invitedBy",
+          "alreadyMember"
+        ]
+      },
+      "AcceptInviteDto": {
+        "type": "object",
+        "properties": {
+          "groupId": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "groupId"
+        ]
+      },
+      "CreateAbsenceDto": {
+        "type": "object",
+        "properties": {
+          "from": {
+            "type": "string",
+            "description": "First day, yyyy-mm-dd"
+          },
+          "to": {
+            "type": "string",
+            "description": "Last day, yyyy-mm-dd, not before `from`"
+          }
+        },
+        "required": [
+          "from",
+          "to"
+        ]
+      },
+      "OnceRecurrenceDto": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "enum": [
+              "once"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "type"
+        ]
+      },
+      "DailyRecurrenceDto": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "enum": [
+              "daily"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "type"
+        ]
+      },
+      "WeeklyRecurrenceDto": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "enum": [
+              "weekly"
+            ],
+            "type": "string"
+          },
+          "weekdays": {
+            "description": "ISO weekdays: 1 = Monday … 7 = Sunday; at least one",
+            "minItems": 1,
+            "uniqueItems": true,
+            "type": "array",
+            "items": {
+              "type": "number",
+              "maximum": 7,
+              "minimum": 1
+            }
+          }
+        },
+        "required": [
+          "type",
+          "weekdays"
+        ]
+      },
+      "MonthlyRecurrenceDto": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "enum": [
+              "monthly"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "type"
+        ]
+      },
+      "TaskStatus": {
+        "type": "string",
+        "enum": [
+          "planned",
+          "done",
+          "overdue",
+          "unassigned"
+        ],
+        "description": "Computed: done → overdue → unassigned → planned"
+      },
+      "TaskDto": {
+        "type": "object",
+        "properties": {
+          "recurrence": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/OnceRecurrenceDto"
+              },
+              {
+                "$ref": "#/components/schemas/DailyRecurrenceDto"
+              },
+              {
+                "$ref": "#/components/schemas/WeeklyRecurrenceDto"
+              },
+              {
+                "$ref": "#/components/schemas/MonthlyRecurrenceDto"
+              }
+            ],
+            "discriminator": {
+              "propertyName": "type",
+              "mapping": {
+                "once": "#/components/schemas/OnceRecurrenceDto",
+                "daily": "#/components/schemas/DailyRecurrenceDto",
+                "weekly": "#/components/schemas/WeeklyRecurrenceDto",
+                "monthly": "#/components/schemas/MonthlyRecurrenceDto"
+              }
+            }
+          },
+          "status": {
+            "description": "Computed: done → overdue → unassigned → planned",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/TaskStatus"
+              }
+            ]
+          },
+          "id": {
+            "type": "string"
+          },
+          "seriesId": {
+            "type": "string"
+          },
+          "groupId": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "dueAt": {
+            "type": "string",
+            "description": "ISO date-time, UTC"
+          },
+          "difficulty": {
+            "type": "number",
+            "description": "1–5"
+          },
+          "assigneeId": {
+            "type": "string",
+            "nullable": true
+          },
+          "manuallyAssigned": {
+            "type": "boolean",
+            "description": "Set by an admin; the algorithm never overwrites it (FR-30)"
+          },
+          "completedAt": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "recurrence",
+          "status",
+          "id",
+          "seriesId",
+          "groupId",
+          "title",
+          "description",
+          "dueAt",
+          "difficulty",
+          "assigneeId",
+          "manuallyAssigned",
+          "completedAt"
+        ]
+      },
+      "CreateTaskDto": {
+        "type": "object",
+        "properties": {
+          "recurrence": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/OnceRecurrenceDto"
+              },
+              {
+                "$ref": "#/components/schemas/DailyRecurrenceDto"
+              },
+              {
+                "$ref": "#/components/schemas/WeeklyRecurrenceDto"
+              },
+              {
+                "$ref": "#/components/schemas/MonthlyRecurrenceDto"
+              }
+            ],
+            "discriminator": {
+              "propertyName": "type",
+              "mapping": {
+                "once": "#/components/schemas/OnceRecurrenceDto",
+                "daily": "#/components/schemas/DailyRecurrenceDto",
+                "weekly": "#/components/schemas/WeeklyRecurrenceDto",
+                "monthly": "#/components/schemas/MonthlyRecurrenceDto"
+              }
+            }
+          },
+          "dueAt": {
+            "type": "string",
+            "description": "ISO date-time, not in the past"
+          },
+          "title": {
+            "type": "string",
+            "maxLength": 100
+          },
+          "description": {
+            "type": "string",
+            "maxLength": 2000
+          },
+          "difficulty": {
+            "type": "number",
+            "minimum": 1,
+            "maximum": 5
+          },
+          "assigneeId": {
+            "type": "string",
+            "nullable": true,
+            "description": "A member id, or null for automatic assignment (FR-27)",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "recurrence",
+          "dueAt",
+          "title",
+          "description",
+          "difficulty",
+          "assigneeId"
+        ]
+      },
+      "EditScope": {
+        "type": "string",
+        "enum": [
+          "one",
+          "series"
+        ]
+      },
+      "UpdateTaskDto": {
+        "type": "object",
+        "properties": {
+          "recurrence": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/OnceRecurrenceDto"
+              },
+              {
+                "$ref": "#/components/schemas/DailyRecurrenceDto"
+              },
+              {
+                "$ref": "#/components/schemas/WeeklyRecurrenceDto"
+              },
+              {
+                "$ref": "#/components/schemas/MonthlyRecurrenceDto"
+              }
+            ],
+            "discriminator": {
+              "propertyName": "type",
+              "mapping": {
+                "once": "#/components/schemas/OnceRecurrenceDto",
+                "daily": "#/components/schemas/DailyRecurrenceDto",
+                "weekly": "#/components/schemas/WeeklyRecurrenceDto",
+                "monthly": "#/components/schemas/MonthlyRecurrenceDto"
+              }
+            }
+          },
+          "dueAt": {
+            "type": "string",
+            "description": "ISO date-time"
+          },
+          "title": {
+            "type": "string",
+            "maxLength": 100
+          },
+          "description": {
+            "type": "string",
+            "maxLength": 2000
+          },
+          "difficulty": {
+            "type": "number",
+            "minimum": 1,
+            "maximum": 5
+          },
+          "assigneeId": {
+            "type": "string",
+            "nullable": true,
+            "description": "A member id, or null for automatic assignment (FR-27)",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "recurrence",
+          "dueAt",
+          "title",
+          "description",
+          "difficulty",
+          "assigneeId"
+        ]
+      },
+      "ReassignTaskDto": {
+        "type": "object",
+        "properties": {
+          "assigneeId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "assigneeId"
+        ]
+      },
+      "CalendarConnectDto": {
+        "type": "object",
+        "properties": {
+          "url": {
+            "type": "string",
+            "description": "Google consent page; the frontend navigates to it"
+          }
+        },
+        "required": [
+          "url"
+        ]
+      },
+      "SyncStatus": {
+        "type": "string",
+        "enum": [
+          "ok",
+          "paused"
+        ],
+        "description": "`paused` after repeated sync failures; the settings page shows a banner"
+      },
+      "CalendarStatusDto": {
+        "type": "object",
+        "properties": {
+          "syncStatus": {
+            "description": "`paused` after repeated sync failures; the settings page shows a banner",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/SyncStatus"
+              }
+            ]
+          },
+          "connected": {
+            "type": "boolean"
+          },
+          "googleEmail": {
+            "type": "string",
+            "nullable": true
+          },
+          "lastSyncedAt": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "syncStatus",
+          "connected",
+          "googleEmail",
+          "lastSyncedAt"
+        ]
+      },
+      "NotificationType": {
+        "type": "string",
+        "enum": [
+          "groupCreated",
+          "groupJoined",
+          "memberJoined",
+          "taskAssigned",
+          "taskUnassigned",
+          "taskOverdue",
+          "roleGranted",
+          "roleRevoked",
+          "removedFromGroup"
+        ]
+      },
+      "NotificationDataDto": {
+        "type": "object",
+        "properties": {
+          "groupName": {
+            "type": "string"
+          },
+          "taskTitle": {
+            "type": "string"
+          },
+          "actorName": {
+            "type": "string"
+          },
+          "dueAt": {
+            "type": "string",
+            "description": "ISO date-time"
+          }
+        }
+      },
+      "NotificationDto": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/NotificationType"
+              }
+            ]
+          },
+          "id": {
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "string"
+          },
+          "read": {
+            "type": "boolean"
+          },
+          "groupId": {
+            "type": "string",
+            "nullable": true,
+            "description": "Null when the user is no longer in the group (removedFromGroup)"
+          },
+          "taskId": {
+            "type": "string",
+            "nullable": true
+          },
+          "data": {
+            "$ref": "#/components/schemas/NotificationDataDto"
+          }
+        },
+        "required": [
+          "type",
+          "id",
+          "createdAt",
+          "read",
+          "groupId",
+          "taskId",
+          "data"
+        ]
+      },
+      "NotificationListDto": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "description": "The newest 50, newest first",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/NotificationDto"
+            }
+          },
+          "unread": {
+            "type": "number",
+            "description": "Unread among `items`"
+          }
+        },
+        "required": [
+          "items",
+          "unread"
+        ]
+      },
+      "MarkReadDto": {
+        "type": "object",
+        "properties": {
+          "ids": {
+            "description": "Notifications to mark as read; all of them when omitted",
+            "maxItems": 100,
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        }
+      },
+      "NotificationPrefsDto": {
+        "type": "object",
+        "properties": {
+          "assigned": {
+            "type": "boolean",
+            "description": "Email when a task is assigned to me"
+          },
+          "dueSoon": {
+            "type": "boolean",
+            "description": "Reminder before the due time"
+          },
+          "overdue": {
+            "type": "boolean",
+            "description": "Email when my task becomes overdue"
+          },
+          "weeklyDigest": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "assigned",
+          "dueSoon",
+          "overdue",
+          "weeklyDigest"
+        ]
+      },
+      "SettingsDto": {
+        "type": "object",
+        "properties": {
+          "calendar": {
+            "$ref": "#/components/schemas/CalendarStatusDto"
+          },
+          "reminderMinutes": {
+            "type": "number",
+            "description": "Minutes before the due time when the reminder goes out: 15, 30, 60, 180 or 1440"
+          },
+          "notifications": {
+            "$ref": "#/components/schemas/NotificationPrefsDto"
+          }
+        },
+        "required": [
+          "calendar",
+          "reminderMinutes",
+          "notifications"
+        ]
+      },
+      "UpdateNotificationPrefsDto": {
+        "type": "object",
+        "properties": {
+          "assigned": {
+            "type": "boolean"
+          },
+          "dueSoon": {
+            "type": "boolean"
+          },
+          "overdue": {
+            "type": "boolean"
+          },
+          "weeklyDigest": {
+            "type": "boolean"
+          }
+        }
+      },
+      "UpdateSettingsDto": {
+        "type": "object",
+        "properties": {
+          "reminderMinutes": {
+            "type": "number",
+            "description": "15, 30, 60, 180 or 1440",
+            "enum": [
+              15,
+              30,
+              60,
+              180,
+              1440
+            ]
+          },
+          "notifications": {
+            "$ref": "#/components/schemas/UpdateNotificationPrefsDto"
+          }
+        }
+      },
+      "StatsPeriod": {
+        "type": "string",
+        "enum": [
+          "week",
+          "month"
+        ]
+      },
+      "MemberStatsDto": {
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "string"
+          },
+          "done": {
+            "type": "number",
+            "description": "Completed tasks in the period"
+          },
+          "overdue": {
+            "type": "number"
+          },
+          "difficulty": {
+            "type": "number",
+            "description": "Sum of the difficulty of completed tasks"
+          }
+        },
+        "required": [
+          "userId",
+          "done",
+          "overdue",
+          "difficulty"
         ]
       }
     }

@@ -1,9 +1,12 @@
 import { Module } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { LoggerModule as PinoLoggerModule, type Params } from 'nestjs-pino';
+import type { SerializedRequest } from 'pino';
 
+import { errorCodeOf } from '../common/errors/api-exception.filter.js';
 import { NodeEnv, type EnvironmentVariables } from '../config/env.validation.js';
 import { API_PREFIX } from '../config/urls.js';
+import { redactUrl } from './redact-url.js';
 import { REQUEST_ID_HEADER, resolveRequestId } from './request-id.js';
 
 const HEALTH_PATH = `/${API_PREFIX}/health`;
@@ -14,7 +17,11 @@ const REDACTED_PATHS = [
   'req.headers.cookie',
   'res.headers["set-cookie"]',
   '*.password',
+  '*.currentPassword',
+  '*.newPassword',
+  '*.passwordHash',
   '*.token',
+  '*.accessToken',
   '*.refreshToken',
 ];
 
@@ -33,6 +40,14 @@ function createLoggerParams(config: ConfigService<EnvironmentVariables, true>): 
         return id;
       },
       redact: { paths: REDACTED_PATHS, censor: '[REDACTED]' },
+      serializers: {
+        req: (req: SerializedRequest): SerializedRequest => ({
+          ...req,
+          url: redactUrl(req.url) ?? '',
+        }),
+      },
+      // The contract error code (VALIDATION, LAST_ADMIN, ...) on the request-completed line
+      customProps: (_req, res) => ({ errorCode: errorCodeOf(res) }),
       autoLogging: { ignore: (req) => req.url?.startsWith(HEALTH_PATH) ?? false },
       customLogLevel: (_req, res, error) => {
         if (error !== undefined || res.statusCode >= 500) return 'error';

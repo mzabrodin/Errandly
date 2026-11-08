@@ -1,27 +1,17 @@
-import type { ConfigService } from '@nestjs/config';
-import nodemailer from 'nodemailer';
-
-import type { EnvironmentVariables } from '../config/env.validation.js';
+import { MailTransport, type OutgoingMail } from './mail-transport.js';
 import { MailService } from './mail.service.js';
 
-vi.mock('nodemailer', () => ({
-  default: { createTransport: vi.fn<typeof nodemailer.createTransport>() },
-}));
+class FakeTransport extends MailTransport {
+  readonly sent: OutgoingMail[] = [];
 
-const sendMail = vi.fn<(options: object) => Promise<{ messageId: string }>>();
+  constructor(readonly isLocal = true) {
+    super();
+  }
 
-function createService(env: Partial<EnvironmentVariables> = {}): MailService {
-  const values: Partial<EnvironmentVariables> = {
-    SMTP_HOST: 'localhost',
-    SMTP_PORT: 1025,
-    SMTP_SECURE: false,
-    SMTP_FROM: 'Errandly <no-reply@errandly.local>',
-    ...env,
-  };
-  const config = {
-    get: (key: keyof EnvironmentVariables) => values[key],
-  } as unknown as ConfigService<EnvironmentVariables, true>;
-  return new MailService(config);
+  send(mail: OutgoingMail): Promise<string> {
+    this.sent.push(mail);
+    return Promise.resolve('<id@test>');
+  }
 }
 
 const invite = {
@@ -31,53 +21,31 @@ const invite = {
 };
 
 describe('MailService', () => {
-  beforeEach(() => {
-    sendMail.mockReset().mockResolvedValue({ messageId: '<id@mailpit>' });
-    vi.mocked(nodemailer.createTransport)
-      .mockReset()
-      .mockReturnValue({ sendMail } as never);
+  it('reports whether mail stays local', () => {
+    expect(new MailService(new FakeTransport(true)).isLocalSmtp).toBe(true);
+    expect(new MailService(new FakeTransport(false)).isLocalSmtp).toBe(false);
   });
 
-  it('connects without auth when SMTP_USER is empty', () => {
-    createService({ SMTP_USER: '' });
-    expect(nodemailer.createTransport).toHaveBeenCalledWith({
-      host: 'localhost',
-      port: 1025,
-      secure: false,
-      auth: undefined,
-    });
-  });
+  it('renders the template and hands it to the transport', async () => {
+    const transport = new FakeTransport();
 
-  it('passes credentials when SMTP_USER is set', () => {
-    createService({ SMTP_HOST: 'smtp.gmail.com', SMTP_USER: 'me', SMTP_PASS: 'secret' });
-    expect(nodemailer.createTransport).toHaveBeenCalledWith(
-      expect.objectContaining({ auth: { user: 'me', pass: 'secret' } }),
-    );
-  });
+    const id = await new MailService(transport).send('invite', 'bob@errandly.dev', invite);
 
-  it('detects a local SMTP server', () => {
-    expect(createService({ SMTP_HOST: 'mailpit' }).isLocalSmtp).toBe(true);
-    expect(createService({ SMTP_HOST: 'smtp.gmail.com' }).isLocalSmtp).toBe(false);
-  });
-
-  it('sends a rendered template', async () => {
-    const id = await createService().send('invite', 'bob@errandly.dev', invite);
-
-    expect(id).toBe('<id@mailpit>');
-    expect(sendMail).toHaveBeenCalledWith(
+    expect(id).toBe('<id@test>');
+    expect(transport.sent).toEqual([
       expect.objectContaining({
-        from: 'Errandly <no-reply@errandly.local>',
         to: 'bob@errandly.dev',
         subject: 'Anya запрошує вас до «Room 12»',
       }),
-    );
+    ]);
+    expect(transport.sent[0]?.text).toContain('http://localhost:5173/invite/x');
   });
 
   it('renders the template in the requested language', async () => {
-    await createService().send('invite', 'bob@errandly.dev', invite, 'en');
+    const transport = new FakeTransport();
 
-    expect(sendMail).toHaveBeenCalledWith(
-      expect.objectContaining({ subject: 'Anya invites you to “Room 12”' }),
-    );
+    await new MailService(transport).send('invite', 'bob@errandly.dev', invite, 'en');
+
+    expect(transport.sent[0]?.subject).toBe('Anya invites you to “Room 12”');
   });
 });
