@@ -1,12 +1,14 @@
 /// <reference types="node" />
 /// <reference lib="es2023" />
-// Генерує *.module.d.css.ts поруч із CSS-модулями, щоб styles.foo мав точний тип
-// (strict TS: noPropertyAccessFromIndexSignature). Запуск: npm run css:types [-- --check]
+// Generates *.module.d.css.ts next to CSS modules so that styles.foo has an exact type
+// (strict TS: noPropertyAccessFromIndexSignature). Usage: npm run css:types [-- --check]
 import { existsSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 const check = process.argv.includes('--check');
-const root = new URL('../src', import.meta.url).pathname;
+// fileURLToPath, not URL.pathname: the latter keeps %-escapes and a leading slash before the drive letter on Windows
+const root = fileURLToPath(new URL('../src', import.meta.url));
 /** @type {string[]} */
 const stale = [];
 
@@ -36,7 +38,7 @@ function generate(cssPath) {
 
 walk(root);
 if (stale.length > 0) {
-  // oxlint-disable-next-line no-console -- CLI-скрипт: повідомлення для розробника
+  // oxlint-disable-next-line no-console -- CLI script: message for the developer
   console.error(`Outdated CSS module types, run npm run css:types:\n${stale.join('\n')}`);
   process.exit(1);
 }
