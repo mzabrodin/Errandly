@@ -22,7 +22,10 @@ npm-debug.log*
 .vscode/*
 !.vscode/extensions.json
 
+# Local notes; project docs live in docs/
 *.md
 !README.md
+!docs/**/*.md
 
-docs/*
+# The course report stays local
+*.pdf

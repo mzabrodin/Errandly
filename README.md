@@ -24,7 +24,7 @@
 ## Стек
 
 - **Frontend:** React 19, TypeScript, Vite, React Router, TanStack Query, i18next, openapi-fetch, Vitest + Testing Library
-- **Backend:** NestJS, TypeScript, PostgreSQL, OpenAPI (Swagger), pino, Vitest
+- **Backend:** NestJS, TypeScript, PostgreSQL + Drizzle ORM, OpenAPI (Swagger), pino, Vitest
 - **Інфраструктура:** Docker Compose, Mailpit, GitHub Actions, oxlint, Prettier, husky + lint-staged + commitlint
 
 ## Структура
@@ -35,13 +35,28 @@ frontend/            SPA-клієнт
   src/pages/         сторінки
   src/shared/        спільний шар: API-клієнт, i18n, утиліти (без бізнес-логіки)
 backend/             REST API
+  src/<модуль>/      users, auth, groups, tasks, calendar, notifications, stats, mail, health:
+                     index.ts (публічне API), контролери, DTO, таблиці (*.schema.ts),
+                     (далі) сервіси й репозиторії
+  src/common/        спільне ядро: доменний словник, помилки, валідація, Clock, шина подій
+  src/db/            підключення, збірка схеми, міграції та dev-seed
   src/config/        змінні середовища (з валідацією), адреси
   src/logger/        логування
+  drizzle/           SQL-міграції (згенеровані, комітяться)
   openapi.json       контракт API (згенерований)
 .github/             CI, шаблон PR
 ```
 
 Залежності між шарами фронтенду йдуть лише вниз: `app → pages → shared`. Лінтер це перевіряє.
+
+## Документація
+
+- [Архітектура](docs/architecture.md): модульний моноліт, взаємодія модулів (API та події), обробка запиту
+- [Модель предметної області](docs/domain.md): сутності, ER-діаграма, інваріанти
+- [База даних](docs/database.md): угоди, міграції, демо-дані
+- [API](docs/api.md): поведінка ендпоінтів і коди помилок
+
+Форми запитів і відповідей описує OpenAPI: `backend/openapi.json`, Swagger UI — `/api/docs` у `npm run dev:backend`.
 
 ## Запуск
 
@@ -57,6 +72,8 @@ docker compose up -d --build
 - API: <http://localhost:3000/api>
 - Mailpit (усі листи з dev-середовища): <http://localhost:8025>
 
+Перед стартом бекенду одноразовий сервіс `migrate` застосовує нові міграції. Демо-дані в Docker не завантажуються.
+
 Значення за замовчуванням підходять для розробки. Щоб змінити порти чи паролі, скопіюйте `.env.example` у `.env` (наприклад, `POSTGRES_PORT=5433`, якщо порт 5432 зайнятий).
 
 ### Локальна розробка
@@ -65,6 +82,8 @@ docker compose up -d --build
 npm install
 cp backend/.env.example backend/.env
 docker compose up -d postgresql mailpit   # лише залежності
+npm run db:migrate                        # схема бази
+npm run db:seed                           # демо-дані (лише для розробки)
 npm run dev:backend                       # http://localhost:3000, Swagger UI: /api/docs
 npm run dev:frontend                      # http://localhost:5173, /api проксіюється на бекенд
 ```
@@ -79,7 +98,7 @@ npm run dev:frontend                      # http://localhost:5173, /api прок
 - скинути дані: `errandlyResetMocks()` у консолі;
 - працювати з реальним бекендом: `VITE_USE_MOCKS=false npm run dev:frontend`.
 
-Контракт API, на який розраховує фронтенд, — [frontend/API.md](frontend/API.md).
+Контракт API, на який розраховує фронтенд, — [docs/api.md](docs/api.md).
 
 ### Листи (Mailpit)
 
@@ -95,6 +114,21 @@ npm run dev:backend
 - мок-API фронтенду надсилає листи через `POST /api/dev/mail`; ендпоінт працює лише з `MAIL_DEV_API=true` і локальним SMTP
 - якщо порти 1025/8025 зайняті: `MAILPIT_SMTP_PORT=1026 MAILPIT_UI_PORT=8026 docker compose up -d mailpit` і `SMTP_PORT=1026` у `backend/.env`
 
+### База даних
+
+Таблиці описані в TypeScript у модулі-власнику (`backend/src/<модуль>/<модуль>.schema.ts`, [Drizzle ORM](https://orm.drizzle.team)), міграції — SQL-файли в `backend/drizzle/`. Докладно — [docs/database.md](docs/database.md).
+
+```bash
+npm run db:generate          # після зміни схеми: нова міграція в backend/drizzle (закомітьте її)
+npm run db:migrate           # застосувати міграції до DATABASE_URL
+npm run db:seed              # очистити всі таблиці й завантажити демо-дані
+npm run db:studio -w backend # переглянути дані в браузері (Drizzle Studio)
+```
+
+- `db:seed` — лише для розробки й тестів: у production (`NODE_ENV=production`) команда відмовляється працювати. Демо-вхід той самий, що в моках: `anya@errandly.dev` / `Pass1234`.
+- Міграції не редагуються після мержу: зміна схеми — це нова міграція. CI перевіряє, що міграції відповідають схемі.
+- Сутності — це типи рядків, виведені зі схеми (`TaskRow`, `UserRow`). Бізнес-логіка живе в сервісах, запити до бази — у репозиторіях модуля.
+
 ### Перевірки
 
 ```bash
@@ -103,7 +137,7 @@ npm run format:check
 npm run build
 npm test
 npm run test:cov -w backend
-npm run test:e2e -w backend
+npm run test:e2e -w backend   # потрібна база: docker compose up -d postgresql && npm run db:migrate
 ```
 
 ## Типізований API
@@ -114,25 +148,28 @@ npm run test:e2e -w backend
 npm run api:sync
 ```
 
-Swagger UI (`/api/docs`) доступний лише в режимі розробки (`NODE_ENV=development`, тобто `npm run dev:backend`); у Docker і production його немає. Команда оновлює `backend/openapi.json` і `frontend/src/shared/api/schema.d.ts`. Обидва файли комітяться. CI перевіряє, що вони актуальні. На фронтенді запити робляться через `api` з `src/shared/api/client.ts`: шляхи, параметри й відповіді перевіряються компілятором.
+Swagger UI (`/api/docs`) доступний лише в режимі розробки (`NODE_ENV=development`, тобто `npm run dev:backend`); у Docker і production його немає. Команда оновлює `backend/openapi.json` і `frontend/src/shared/api/schema.d.ts`. Обидва файли комітяться. CI перевіряє, що вони актуальні. На фронтенді запити робляться через `api` з `src/shared/api/client.ts`: шляхи, параметри й відповіді перевіряються компілятором. Виняток — завантаження аватарки (`multipart/form-data`), для нього є `http.upload`.
+
+Контролери вже описують увесь контракт фронтенду й валідують запити (помилки у форматі `{ code, fields }`), але ще не реалізовані ендпоінти відповідають `501 NOT_IMPLEMENTED`. Поки вони не готові, фронтенд за замовчуванням працює на моках.
 
 ## Змінні середовища та секрети
 
 Конфігурація задається лише змінними середовища (NFR-DEP-02). Бекенд перевіряє їх під час запуску й не стартує з некоректними значеннями. Секрети не комітяться: `.env` у `.gitignore`, у репозиторії є лише `.env.example`.
 
-| Змінна                                        | Призначення                                           | Секрет | Де задається            |
-| --------------------------------------------- | ----------------------------------------------------- | ------ | ----------------------- |
-| `NODE_ENV`                                    | `development` / `production` / `test`                 | ні     | `backend/.env`, compose |
-| `PORT`                                        | порт API                                              | ні     | `backend/.env`, compose |
-| `APP_URL`                                     | публічна адреса застосунку: CORS, OAuth, посилання    | ні     | `backend/.env`, compose |
-| `LOG_LEVEL`                                   | `fatal`…`trace`, `silent`                             | ні     | `backend/.env`, `.env`  |
-| `DATABASE_URL`                                | підключення до PostgreSQL                             | так    | `backend/.env`, compose |
-| `POSTGRES_USER` / `POSTGRES_PASSWORD` / `_DB` | облікові дані бази в compose                          | так    | `.env`                  |
-| `SMTP_HOST` / `SMTP_PORT` / `SMTP_SECURE`     | поштовий сервер (за замовчуванням Mailpit)            | ні     | `backend/.env`, `.env`  |
-| `SMTP_USER` / `SMTP_PASS` / `SMTP_FROM`       | облікові дані пошти (Gmail: app password)             | так    | `backend/.env`, `.env`  |
-| `JWT_SECRET`, `TOKEN_ENCRYPTION_KEY`          | підпис сесій, шифрування Google-токенів (буде додано) | так    | `backend/.env`          |
-| `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET`   | OAuth-клієнт Google (буде додано)                     | так    | `backend/.env`          |
-| `VITE_API_URL`                                | адреса API для фронтенду, якщо не той самий origin    | ні     | `frontend/.env`         |
+| Змінна                                        | Призначення                                                  | Секрет | Де задається            |
+| --------------------------------------------- | ------------------------------------------------------------ | ------ | ----------------------- |
+| `NODE_ENV`                                    | `development` / `production` / `test`                        | ні     | `backend/.env`, compose |
+| `PORT`                                        | порт API                                                     | ні     | `backend/.env`, compose |
+| `APP_URL`                                     | публічна адреса застосунку: CORS, OAuth, посилання           | ні     | `backend/.env`, compose |
+| `LOG_LEVEL`                                   | `fatal`…`trace`, `silent`                                    | ні     | `backend/.env`, `.env`  |
+| `DATABASE_URL`                                | PostgreSQL; обов'язкова в production                         | так    | `backend/.env`, compose |
+| `EVENTS_POLL_INTERVAL_MS`                     | як часто доставляються події після коміту (мс, 0 — вимкнено) | ні     | `backend/.env`          |
+| `POSTGRES_USER` / `POSTGRES_PASSWORD` / `_DB` | облікові дані бази в compose                                 | так    | `.env`                  |
+| `SMTP_HOST` / `SMTP_PORT` / `SMTP_SECURE`     | поштовий сервер (за замовчуванням Mailpit)                   | ні     | `backend/.env`, `.env`  |
+| `SMTP_USER` / `SMTP_PASS` / `SMTP_FROM`       | облікові дані пошти (Gmail: app password)                    | так    | `backend/.env`, `.env`  |
+| `JWT_SECRET`, `TOKEN_ENCRYPTION_KEY`          | підпис сесій, шифрування Google-токенів (буде додано)        | так    | `backend/.env`          |
+| `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET`   | OAuth-клієнт Google (буде додано)                            | так    | `backend/.env`          |
+| `VITE_API_URL`                                | адреса API для фронтенду, якщо не той самий origin           | ні     | `frontend/.env`         |
 
 - Усе з префіксом `VITE_` потрапляє в браузер, тому секретів там бути не може.
 - **GitHub Secrets** зараз не потрібні: CI використовує лише вбудований `GITHUB_TOKEN`. Під час деплою секрети додаються в GitHub Environment `production` (Settings → Environments), а не в змінні репозиторію.
