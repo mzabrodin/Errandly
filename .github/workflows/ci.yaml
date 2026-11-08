@@ -15,6 +15,22 @@ concurrency:
 jobs:
   check:
     runs-on: ubuntu-latest
+    services:
+      # Migrations, the dev seed and the e2e health check run against a real database
+      postgresql:
+        image: postgres:18-alpine
+        env:
+          POSTGRES_USER: errandly
+          POSTGRES_PASSWORD: errandly
+          POSTGRES_DB: errandly
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U errandly -d errandly"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DATABASE_URL: postgresql://errandly:errandly@localhost:5432/errandly
     steps:
       - uses: actions/checkout@v7
         with:
@@ -34,6 +50,13 @@ jobs:
         run: |
           npm run api:sync
           git diff --exit-code -- backend/openapi.json frontend/src/shared/api/schema.d.ts
+      - name: Migrations match the schema
+        run: |
+          npm run db:generate -w backend
+          git diff --exit-code -- backend/drizzle
+          test -z "$(git status --porcelain -- backend/drizzle)"
+      - run: npm run db:migrate
+      - run: npm run db:seed
       - run: npm test -w frontend
       - run: npm run test:cov -w backend
       - run: npm run test:e2e -w backend
@@ -45,7 +68,7 @@ jobs:
       - name: Start the stack
         run: docker compose up --build -d --wait
       - name: Smoke test through nginx
-        run: curl -fsS http://localhost:8080/api/health
+        run: curl -fsS http://localhost:8080/api/health | grep -q '"database":"up"'
       - name: Logs on failure
         if: failure()
         run: docker compose logs
