@@ -4,6 +4,7 @@ import nodemailer, { type Transporter } from 'nodemailer';
 
 import type { EnvironmentVariables } from '../config/env.validation.js';
 import { renderTemplate, type TemplateName } from './templates/index.js';
+import { DEFAULT_MAIL_LOCALE, type MailLocale } from './templates/locale.js';
 
 const LOCAL_SMTP_HOSTS = new Set(['localhost', '127.0.0.1', 'mailpit']);
 
@@ -29,17 +30,19 @@ export class MailService {
     this.from = config.get('SMTP_FROM', { infer: true });
   }
 
-  /** SMTP-сервер для розробки (Mailpit), який не доставляє листи назовні */
+  /** Development SMTP server (Mailpit) that does not deliver emails outside */
   get isLocalSmtp(): boolean {
     return LOCAL_SMTP_HOSTS.has(this.smtpHost);
   }
 
+  /** Renders the template in the recipient's language and sends it */
   async send(
     template: TemplateName,
     to: string,
     data: Record<string, string | number>,
+    locale: MailLocale = DEFAULT_MAIL_LOCALE,
   ): Promise<string> {
-    const mail = renderTemplate(template, data);
+    const mail = renderTemplate(template, data, locale);
     const info = (await this.transporter.sendMail({
       from: this.from,
       to,
@@ -47,7 +50,7 @@ export class MailService {
       html: mail.html,
       text: mail.text,
     })) as { messageId: string };
-    this.logger.log(`Sent "${template}" (${info.messageId})`);
+    this.logger.log(`Sent "${template}" in ${locale} (${info.messageId})`);
     return info.messageId;
   }
 }

@@ -7,7 +7,7 @@
         "parameters": [],
         "responses": {
           "200": {
-            "description": "Сервер працює",
+            "description": "The server is up",
             "content": {
               "application/json": {
                 "schema": {
