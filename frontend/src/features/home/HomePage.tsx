@@ -1,6 +1,5 @@
 import { useQueries } from '@tanstack/react-query';
-import { addDays, endOfWeek, formatDistanceToNow, startOfDay } from 'date-fns';
-import { uk } from 'date-fns/locale';
+import { addDays, endOfWeek, startOfDay } from 'date-fns';
 import { ArrowRight, Plus } from 'lucide-react';
 import { useState, type JSX } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -11,7 +10,7 @@ import { http } from '../../shared/api/client';
 import { groupKeys, useGroups } from '../../shared/api/groups';
 import { taskKeys } from '../../shared/api/tasks';
 import type { Group, GroupSummary, Task } from '../../shared/api/types';
-import { formatDate, formatTime, weekOptions } from '../../shared/lib/dates';
+import { formatDate, formatRelative, formatTime, weekOptions } from '../../shared/lib/dates';
 import { useDocumentTitle } from '../../shared/lib/useDocumentTitle';
 import { Avatar } from '../../shared/ui/Avatar';
 import { ButtonLink } from '../../shared/ui/Button';
@@ -32,7 +31,7 @@ function byDue(a: Task, b: Task): number {
   return a.dueAt.localeCompare(b.dueAt);
 }
 
-/** Найважливіша задача користувача: спершу прострочена, далі найближча запланована */
+/** The user's most important task: overdue first, then the nearest planned one */
 function pickNext(tasks: Task[], userId: string): Task | null {
   const mine = tasks.filter((task) => task.assigneeId === userId);
   return (
@@ -64,12 +63,7 @@ function NextTask({
         >
           <span className={styles.nextWhen}>
             {formatDate(new Date(next.dueAt), 'd MMMM, EEEEEE')} · {formatTime(next.dueAt)}
-            <span className={styles.nextRelative}>
-              {formatDistanceToNow(new Date(next.dueAt), {
-                locale: uk,
-                addSuffix: true,
-              })}
-            </span>
+            <span className={styles.nextRelative}>{formatRelative(next.dueAt)}</span>
           </span>
           <span className={styles.nextTitle}>{next.title}</span>
           <span className={styles.nextGroup}>

@@ -1,6 +1,7 @@
 import { http, HttpResponse } from 'msw';
 
 import type { Settings } from '../../shared/api/types';
+import { isLocale } from '../../shared/i18n';
 import { isValidPassword } from '../../shared/lib/validation';
 import { db, defaultSettingsFor, persist, publicUser } from '../db';
 import {
@@ -24,7 +25,7 @@ function isValidTimeZone(timeZone: string): boolean {
   }
 }
 
-// у моках зберігаємо як data URL; сервер покладе файл у сховище й поверне посилання
+// Mocks store it as a data URL; the server will put the file in storage and return a link
 function readAsDataUrl(file: Blob): Promise<string> {
   return new Promise<string>((resolve, reject) => {
     const reader = new FileReader();
@@ -38,7 +39,7 @@ function readAsDataUrl(file: Blob): Promise<string> {
   });
 }
 
-/** Групи, які лишилися б з учасниками, але без адміністратора (FR-16) */
+/** Groups that would be left with members but no admin (FR-16) */
 function groupsBlockingDeletion(user: DbUserRecord): typeof db.memberships {
   return db.memberships.filter((item) => {
     if (item.userId !== user.id || item.role !== 'admin') return false;
@@ -91,24 +92,32 @@ const settingsHandlers = [
 ];
 
 const profileHandlers = [
-  http.patch<never, { name?: string; timezone?: string }>(`${API}/me`, async ({ request }) => {
-    const user = currentUser();
-    if (!user) return error(401, 'UNAUTHENTICATED');
-    const { name, timezone } = await request.json();
-    if (name !== undefined) {
-      if (name.trim() === '') return error(400, 'VALIDATION', { fields: { name: 'required' } });
-      if (name.trim().length > 60) return error(400, 'VALIDATION', { fields: { name: 'tooLong' } });
-      user.name = name.trim();
-    }
-    if (timezone !== undefined && timezone !== '') {
-      if (!isValidTimeZone(timezone)) {
-        return error(400, 'VALIDATION', { fields: { timezone: 'invalid' } });
+  http.patch<never, { name?: string; timezone?: string; locale?: string }>(
+    `${API}/me`,
+    async ({ request }) => {
+      const user = currentUser();
+      if (!user) return error(401, 'UNAUTHENTICATED');
+      const { name, timezone, locale } = await request.json();
+      if (name !== undefined) {
+        if (name.trim() === '') return error(400, 'VALIDATION', { fields: { name: 'required' } });
+        if (name.trim().length > 60)
+          return error(400, 'VALIDATION', { fields: { name: 'tooLong' } });
+        user.name = name.trim();
       }
-      user.timezone = timezone;
-    }
-    persist();
-    return HttpResponse.json(publicUser(user));
-  }),
+      if (timezone !== undefined && timezone !== '') {
+        if (!isValidTimeZone(timezone)) {
+          return error(400, 'VALIDATION', { fields: { timezone: 'invalid' } });
+        }
+        user.timezone = timezone;
+      }
+      if (locale !== undefined) {
+        if (!isLocale(locale)) return error(400, 'VALIDATION', { fields: { locale: 'invalid' } });
+        user.locale = locale;
+      }
+      persist();
+      return HttpResponse.json(publicUser(user));
+    },
+  ),
 
   http.post(`${API}/me/avatar`, async ({ request }) => {
     const user = currentUser();
@@ -152,7 +161,7 @@ const profileHandlers = [
   http.delete(`${API}/me`, () => {
     const user = currentUser();
     if (!user) return error(401, 'UNAUTHENTICATED');
-    // не можна лишити групу з учасниками без адміністратора (FR-16)
+    // A group with members cannot be left without an admin (FR-16)
     const blocking = groupsBlockingDeletion(user);
     if (blocking.length > 0) {
       return error(409, 'LAST_ADMIN', {
@@ -169,7 +178,7 @@ const calendarHandlers = [
   http.post(`${API}/me/calendar/connect`, () => {
     const user = currentUser();
     if (!user) return error(401, 'UNAUTHENTICATED');
-    // імітація OAuth-згоди Google
+    // Simulated Google OAuth consent
     defaultSettingsFor(user.id).calendar = {
       connected: true,
       syncStatus: 'ok',

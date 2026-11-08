@@ -23,6 +23,13 @@
   text-decoration: none;
 }
 
+.language {
+  position: absolute;
+  top: 24px;
+  right: 28px;
+  z-index: 2;
+}
+
 .hero {
   position: absolute;
   top: 30%;

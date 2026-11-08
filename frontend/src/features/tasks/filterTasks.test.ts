@@ -6,7 +6,7 @@ function task(partial: Partial<Task>): Task {
     id: Math.random().toString(),
     seriesId: 's',
     groupId: 'g',
-    title: 'Задача',
+    title: 'Task',
     description: '',
     dueAt: '2026-10-25T10:00:00.000Z',
     difficulty: 2,

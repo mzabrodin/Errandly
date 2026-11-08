@@ -6,6 +6,7 @@ import {
   type UseQueryResult,
 } from '@tanstack/react-query';
 
+import { currentLocale } from '../i18n';
 import { ApiError, http } from './client';
 import type { User } from './types';
 
@@ -35,7 +36,9 @@ export interface RegisterInput {
 export function useRegister(): UseMutationResult<User, Error, RegisterInput> {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (input: RegisterInput) => http.post<User>('/auth/register', input),
+    // The account starts in the language the user signed up in, so the verification email matches
+    mutationFn: (input: RegisterInput) =>
+      http.post<User>('/auth/register', { ...input, locale: currentLocale() }),
     onSuccess: (user) => queryClient.setQueryData(sessionKey, user),
   });
 }

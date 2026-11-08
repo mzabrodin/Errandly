@@ -1,9 +1,9 @@
 import { pickAssignee, type AllocationMember, type AllocationTask } from './allocation';
 
-const anya: AllocationMember = { userId: 'anya', name: 'Аня', absences: [] };
+const anya: AllocationMember = { userId: 'anya', name: 'Anya', absences: [] };
 const bohdan: AllocationMember = {
   userId: 'bohdan',
-  name: 'Богдан',
+  name: 'Bohdan',
   absences: [],
 };
 

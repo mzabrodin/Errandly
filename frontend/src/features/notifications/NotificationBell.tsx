@@ -1,6 +1,4 @@
 import { clsx } from 'clsx';
-import { formatDistanceToNow } from 'date-fns';
-import { uk } from 'date-fns/locale';
 import {
   AlertTriangle,
   ArrowRightLeft,
@@ -19,6 +17,7 @@ import { useNavigate } from 'react-router';
 
 import { useMarkNotificationsRead, useNotifications } from '../../shared/api/notifications';
 import type { AppNotification, NotificationType } from '../../shared/api/types';
+import { formatRelative } from '../../shared/lib/dates';
 import { handleMenuKeys } from '../../shared/lib/menuKeys';
 import { FlowerFace } from '../../shared/ui/Decor';
 import styles from './NotificationBell.module.css';
@@ -47,7 +46,7 @@ function linkFor(item: AppNotification): string {
   return '/home';
 }
 
-/** Закриває панель кліком поза нею або клавішею Escape */
+/** Closes the panel on an outside click or the Escape key */
 function useDismiss(
   open: boolean,
   ref: RefObject<HTMLElement | null>,
@@ -105,10 +104,7 @@ function NotificationItem({
             />
           </span>
           <time className={styles.time} dateTime={item.createdAt}>
-            {formatDistanceToNow(new Date(item.createdAt), {
-              locale: uk,
-              addSuffix: true,
-            })}
+            {formatRelative(item.createdAt)}
           </time>
         </span>
         {!item.read && (

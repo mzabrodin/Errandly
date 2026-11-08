@@ -2,7 +2,7 @@
 
 Фронтенд звертається до `/api` (у dev — через проксі Vite). Поки бекенд у розробці, ці ендпоінти імітує MSW (`src/mocks/handlers.ts`), тому мок — це робоча специфікація: якщо реалізація на бекенді відрізняється, оновіть і моки, і цей файл.
 
-Типи даних — `src/shared/api/types.ts`. Час — ISO 8601 в UTC. Автентифікація — cookie-сесія (`credentials: 'include'`).
+Типи даних — `src/shared/api/types.ts`. Мова (`locale`) — `"uk"` (за замовчуванням) або `"en"`: нею працюють інтерфейс і листи; під час реєстрації фронтенд передає поточну мову інтерфейсу. Час — ISO 8601 в UTC. Автентифікація — cookie-сесія (`credentials: 'include'`).
 
 ## Помилки
 
@@ -22,7 +22,7 @@
 | Метод | Шлях                        | Тіло → відповідь                          | FR    |
 | ----- | --------------------------- | ----------------------------------------- | ----- |
 | GET   | `/auth/me`                  | → `User` або 401                          | —     |
-| POST  | `/auth/register`            | `{ name, email, password }` → 201 `User`  | 01–04 |
+| POST  | `/auth/register`            | `{ name, email, password, locale? }` → 201 `User` | 01–04 |
 | POST  | `/auth/login`               | `{ email, password }` → `User`            | 05–06 |
 | POST  | `/auth/logout`              | → 204                                     | 09    |
 | GET   | `/auth/google?next=`        | редирект на OAuth Google, потім на `next` | 07    |
@@ -68,7 +68,7 @@
 
 | Метод  | Шлях                | Тіло → відповідь                                                                                               | Вимоги                 |
 | ------ | ------------------- | -------------------------------------------------------------------------------------------------------------- | ---------------------- |
-| PATCH  | `/me`               | `{ name?, timezone? }` → `User`                                                                                | NFR-COMP-03            |
+| PATCH  | `/me`               | `{ name?, timezone?, locale? }` → `User`                                                                       | NFR-COMP-03, NFR-USE-03 |
 | POST   | `/me/avatar`        | `multipart/form-data`, поле `file` (зображення ≤ 512 КБ; клієнт сам стискає до 256×256) → `User` з `avatarUrl` | —                      |
 | DELETE | `/me/avatar`        | → `User` (`avatarUrl: null`)                                                                                   | —                      |
 | POST   | `/me/password`      | `{ currentPassword, newPassword }` → 204; 400 `WRONG_PASSWORD`                                                 | FR-01 (правила пароля) |
@@ -86,7 +86,7 @@
 
 ## Листи
 
-Шаблони й відправка — `backend/src/mail` (`MailService.send(template, to, data)`). Шаблони: `verifyEmail`, `resetPassword`, `invite`, `taskAssigned`, `taskDueSoon`, `taskOverdue`; поля даних описані в `backend/src/mail/templates/index.ts`. Посилання в листах фронтенд очікує на `/verify-email/:token`, `/reset-password/:token`, `/invite/:token`, `/g/:groupId/tasks/:taskId`, `/settings`.
+Шаблони й відправка — `backend/src/mail` (`MailService.send(template, to, data, locale)`). Лист іде мовою акаунта одержувача (`User.locale`); запрошення людині без акаунта — мовою того, хто запрошує. Шаблони: `verifyEmail`, `resetPassword`, `invite`, `taskAssigned`, `taskDueSoon`, `taskOverdue`; поля даних описані в `backend/src/mail/templates/index.ts`. Посилання в листах фронтенд очікує на `/verify-email/:token`, `/reset-password/:token`, `/invite/:token`, `/g/:groupId/tasks/:taskId`, `/settings`.
 
 ## Статистика та налаштування
 

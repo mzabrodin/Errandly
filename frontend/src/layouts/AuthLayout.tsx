@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Link, Outlet } from 'react-router';
 
 import { Asterisk, Clouds, Flower, Hills } from '../shared/ui/Decor';
+import { LanguageSwitch } from '../shared/ui/LanguageSwitch';
 import { Logo } from '../shared/ui/Logo';
 import styles from './AuthLayout.module.css';
 
@@ -17,6 +18,7 @@ export function AuthLayout(): JSX.Element {
         <Link to="/" className={styles.brand} aria-label={t('notFound.back')}>
           <Logo size={20} />
         </Link>
+        <LanguageSwitch className={styles.language} />
         <Link to="/" className={styles.hero} tabIndex={-1} aria-hidden>
           <span className={styles.bigLogo}>
             errandly

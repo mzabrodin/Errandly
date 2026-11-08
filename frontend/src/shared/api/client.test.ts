@@ -8,7 +8,7 @@ describe('unwrap', () => {
   });
 
   it('throws ApiError with status and body of an error response', async () => {
-    const body = { message: 'Немає доступу' };
+    const body = { message: 'No access' };
     const request = Promise.resolve({ error: body, response: new Response(null, { status: 403 }) });
 
     await expect(unwrap(request)).rejects.toEqual(new ApiError(403, body));
