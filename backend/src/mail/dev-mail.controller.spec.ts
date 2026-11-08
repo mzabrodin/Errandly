@@ -16,8 +16,8 @@ function createController(enabled: boolean, isLocalSmtp = true): DevMailControll
 }
 
 const invite = {
-  inviterName: 'Аня',
-  groupName: 'Кімната 12',
+  inviterName: 'Anya',
+  groupName: 'Room 12',
   url: 'http://localhost:5173/invite/x',
 };
 
@@ -42,7 +42,18 @@ describe('DevMailController', () => {
     });
 
     expect(result).toEqual({ messageId: '<id@mailpit>' });
-    expect(send).toHaveBeenCalledWith('invite', 'bob@errandly.dev', invite);
+    expect(send).toHaveBeenCalledWith('invite', 'bob@errandly.dev', invite, undefined);
+  });
+
+  it('passes the recipient language through', async () => {
+    await createController(true).send({
+      template: 'invite',
+      to: 'bob@errandly.dev',
+      data: invite,
+      locale: 'en',
+    });
+
+    expect(send).toHaveBeenCalledWith('invite', 'bob@errandly.dev', invite, 'en');
   });
 
   it('rejects an unknown template', async () => {
@@ -61,8 +72,10 @@ describe('DevMailController', () => {
   it('lists and renders previews', () => {
     const controller = createController(true);
 
-    expect(controller.index()).toContain('preview/invite');
-    expect(controller.preview('invite')).toContain('<html');
+    expect(controller.index()).toContain('preview/invite?locale=en');
+    expect(controller.preview('invite')).toContain('<html lang="uk">');
+    expect(controller.preview('invite', 'en')).toContain('<html lang="en">');
+    expect(controller.preview('invite', 'fr')).toContain('<html lang="uk">');
     expect(() => controller.preview('nope')).toThrow(NotFoundException);
   });
 });

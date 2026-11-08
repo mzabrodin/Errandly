@@ -25,8 +25,8 @@ function createService(env: Partial<EnvironmentVariables> = {}): MailService {
 }
 
 const invite = {
-  inviterName: 'Аня',
-  groupName: 'Кімната 12',
+  inviterName: 'Anya',
+  groupName: 'Room 12',
   url: 'http://localhost:5173/invite/x',
 };
 
@@ -68,8 +68,16 @@ describe('MailService', () => {
       expect.objectContaining({
         from: 'Errandly <no-reply@errandly.local>',
         to: 'bob@errandly.dev',
-        subject: expect.stringContaining('Кімната 12') as unknown,
+        subject: 'Anya запрошує вас до «Room 12»',
       }),
+    );
+  });
+
+  it('renders the template in the requested language', async () => {
+    await createService().send('invite', 'bob@errandly.dev', invite, 'en');
+
+    expect(sendMail).toHaveBeenCalledWith(
+      expect.objectContaining({ subject: 'Anya invites you to “Room 12”' }),
     );
   });
 });

@@ -7,7 +7,7 @@ import { HealthResponseDto } from './dto/health-response.dto.js';
 @Controller('health')
 export class HealthController {
   @Get()
-  @ApiOkResponse({ type: HealthResponseDto, description: 'Сервер працює' })
+  @ApiOkResponse({ type: HealthResponseDto, description: 'The server is up' })
   check(): HealthResponseDto {
     return { status: 'ok' };
   }

@@ -46,7 +46,7 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description Сервер працює */
+            /** @description The server is up */
             200: {
                 headers: {
                     [name: string]: unknown;
