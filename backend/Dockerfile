@@ -16,6 +16,8 @@ COPY backend/package.json backend/
 COPY frontend/package.json frontend/
 RUN npm ci -w backend --omit=dev --ignore-scripts && npm cache clean --force
 COPY --from=build /app/backend/dist backend/dist
+# SQL migrations for the one-shot `migrate` service (node backend/dist/db/migrate.js)
+COPY --from=build /app/backend/drizzle backend/drizzle
 USER node
 EXPOSE 3000
 CMD ["node", "--enable-source-maps", "backend/dist/main.js"]
