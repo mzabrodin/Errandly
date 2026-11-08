@@ -14,6 +14,9 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "api:sync": "npm run openapi:export -w backend && npm run api:generate -w frontend",
+    "db:generate": "npm run db:generate -w backend",
+    "db:migrate": "npm run db:migrate -w backend",
+    "db:seed": "npm run db:seed -w backend",
     "prepare": "husky"
   },
   "engines": {

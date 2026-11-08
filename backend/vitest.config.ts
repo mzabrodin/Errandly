@@ -18,6 +18,9 @@ export default defineConfig({
         'src/openapi.ts',
         'src/app.setup.ts',
         'src/**/*.module.ts',
+        // CLI scripts, exercised by the CI migrate and seed steps
+        'src/db/migrate.ts',
+        'src/db/seed.ts',
       ],
       thresholds: { lines: 70, functions: 70, branches: 70, statements: 70 },
     },

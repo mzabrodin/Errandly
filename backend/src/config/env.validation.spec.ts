@@ -1,4 +1,4 @@
-import { LogLevel, NodeEnv, validateEnv } from './env.validation.js';
+import { DEV_DATABASE_URL, LogLevel, NodeEnv, validateEnv } from './env.validation.js';
 
 describe('validateEnv', () => {
   it('applies defaults', () => {
@@ -32,5 +32,21 @@ describe('validateEnv', () => {
 
   it('rejects an unknown LOG_LEVEL', () => {
     expect(() => validateEnv({ LOG_LEVEL: 'verbose' })).toThrow(/LOG_LEVEL/);
+  });
+
+  it('defaults DATABASE_URL to the local compose database outside production', () => {
+    expect(validateEnv({}).DATABASE_URL).toBe(DEV_DATABASE_URL);
+  });
+
+  it('requires DATABASE_URL in production', () => {
+    expect(() => validateEnv({ NODE_ENV: 'production' })).toThrow(/DATABASE_URL/);
+    const url = 'postgres://app:secret@db:5432/errandly';
+    expect(validateEnv({ NODE_ENV: 'production', DATABASE_URL: url }).DATABASE_URL).toBe(url);
+  });
+
+  it('rejects a DATABASE_URL that is not postgres', () => {
+    expect(() => validateEnv({ DATABASE_URL: 'mysql://localhost/errandly' })).toThrow(
+      /DATABASE_URL/,
+    );
   });
 });

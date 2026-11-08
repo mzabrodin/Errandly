@@ -1,8 +1,10 @@
-// Emails go out in the recipient's account language (the same languages as the frontend UI)
-export const MAIL_LOCALES = ['uk', 'en'] as const;
-export type MailLocale = (typeof MAIL_LOCALES)[number];
+import { DEFAULT_LOCALE, LOCALES, type Locale } from '../../common/domain.js';
 
-export const DEFAULT_MAIL_LOCALE: MailLocale = 'uk';
+// Emails go out in the recipient's account language (the same languages as the frontend UI)
+export const MAIL_LOCALES = LOCALES;
+export type MailLocale = Locale;
+
+export const DEFAULT_MAIL_LOCALE: MailLocale = DEFAULT_LOCALE;
 
 export function isMailLocale(value: unknown): value is MailLocale {
   return typeof value === 'string' && MAIL_LOCALES.some((locale) => locale === value);
