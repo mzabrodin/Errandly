@@ -1,14 +1,23 @@
-import { Controller, Get } from '@nestjs/common';
-import { ApiOkResponse, ApiTags } from '@nestjs/swagger';
+import { Controller, Get, HttpStatus, Res } from '@nestjs/common';
+import { ApiOkResponse, ApiServiceUnavailableResponse, ApiTags } from '@nestjs/swagger';
+import type { Response } from 'express';
 
+import { DatabaseHealth } from '../db/database-health.js';
 import { HealthResponseDto } from './dto/health-response.dto.js';
 
 @ApiTags('health')
 @Controller('health')
 export class HealthController {
+  constructor(private readonly database: DatabaseHealth) {}
+
   @Get()
-  @ApiOkResponse({ type: HealthResponseDto, description: 'The server is up' })
-  check(): HealthResponseDto {
-    return { status: 'ok' };
+  @ApiOkResponse({ type: HealthResponseDto, description: 'The server and the database are up' })
+  @ApiServiceUnavailableResponse({ type: HealthResponseDto, description: 'The database is down' })
+  async check(@Res({ passthrough: true }) res: Response): Promise<HealthResponseDto> {
+    if (await this.database.isUp()) {
+      return { status: 'ok', database: 'up' };
+    }
+    res.status(HttpStatus.SERVICE_UNAVAILABLE);
+    return { status: 'error', database: 'down' };
   }
 }

@@ -18,13 +18,18 @@ export enum LogLevel {
 
 const port = z.coerce.number().int().min(1).max(65535);
 
+/** Local compose database; production must set DATABASE_URL explicitly */
+export const DEV_DATABASE_URL = 'postgresql://errandly:errandly@localhost:5432/errandly';
+
 const envSchema = z.object({
   NODE_ENV: z.enum(NodeEnv).default(NodeEnv.Development),
   PORT: port.default(3000),
   // Public origin of the app: CORS, OAuth callbacks and links in emails are built from it
   APP_URL: z.url({ protocol: /^https?$/ }).default('http://localhost:5173'),
   LOG_LEVEL: z.enum(LogLevel).default(LogLevel.Info),
-  DATABASE_URL: z.string().optional(),
+  DATABASE_URL: z.url({ protocol: /^postgres(ql)?$/ }).optional(),
+  /** How often after-commit events are delivered from event_publications; 0 turns it off */
+  EVENTS_POLL_INTERVAL_MS: z.coerce.number().int().min(0).default(2000),
 
   // Defaults point at Mailpit (docker compose up -d mailpit)
   SMTP_HOST: z.string().default('localhost'),
@@ -37,10 +42,17 @@ const envSchema = z.object({
   MAIL_DEV_API: z.stringbool().default(false),
 });
 
-export type EnvironmentVariables = z.infer<typeof envSchema>;
+const refinedSchema = envSchema
+  .refine((env) => env.NODE_ENV !== NodeEnv.Production || env.DATABASE_URL !== undefined, {
+    message: 'DATABASE_URL is required in production',
+    path: ['DATABASE_URL'],
+  })
+  .transform((env) => ({ ...env, DATABASE_URL: env.DATABASE_URL ?? DEV_DATABASE_URL }));
+
+export type EnvironmentVariables = z.infer<typeof refinedSchema>;
 
 export function validateEnv(config: Record<string, unknown>): EnvironmentVariables {
-  const result = envSchema.safeParse(config);
+  const result = refinedSchema.safeParse(config);
   if (!result.success) {
     throw new Error(`Invalid environment variables:\n${z.prettifyError(result.error)}`);
   }
