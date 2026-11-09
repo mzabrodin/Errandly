@@ -291,7 +291,7 @@ export interface paths {
         post?: never;
         /**
          * Removes a member (admin); their open tasks are redistributed.
-         *     Errors: 403 ADMIN_ONLY, 409 CANNOT_REMOVE_SELF.
+         *     Errors: 403 ADMIN_ONLY, 404 NOT_FOUND (not a member), 409 CANNOT_REMOVE_SELF.
          */
         delete: operations["GroupsController_removeMember"];
         options?: never;
@@ -313,8 +313,8 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Leaves the group; the caller's open tasks are redistributed.
-         *     Errors: 409 LAST_ADMIN when the only admin leaves a group with other members.
+         * Leaves the group; the caller's open tasks are redistributed. The last member leaving
+         *     deletes the group. Errors: 409 LAST_ADMIN when the only admin leaves a group with others.
          */
         post: operations["GroupsController_leave"];
         delete?: never;
@@ -407,7 +407,7 @@ export interface paths {
         get?: never;
         put?: never;
         post?: never;
-        /** Deletes one of the caller's absences. */
+        /** Deletes one of the caller's absences. Errors: 404 NOT_FOUND (missing or someone else's). */
         delete: operations["AbsencesController_remove"];
         options?: never;
         head?: never;

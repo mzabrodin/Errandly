@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { eq } from 'drizzle-orm';
+import { eq, inArray } from 'drizzle-orm';
 
 import { isUniqueViolation } from '../common/errors/api-exception.filter.js';
 import { DomainError } from '../common/errors/domain-error.js';
@@ -18,6 +18,14 @@ export class UsersRepository {
   async findById(id: string, db: DbExecutor = this.db): Promise<UserRow | undefined> {
     const [row] = await db.select().from(users).where(eq(users.id, id)).limit(1);
     return row;
+  }
+
+  async findByIds(ids: readonly string[], db: DbExecutor = this.db): Promise<UserRow[]> {
+    if (ids.length === 0) return [];
+    return db
+      .select()
+      .from(users)
+      .where(inArray(users.id, [...ids]));
   }
 
   /** `email` must already be lowercased (NormalizeEmail) */
