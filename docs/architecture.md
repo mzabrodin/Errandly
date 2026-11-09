@@ -87,13 +87,13 @@ flowchart LR
 
 Фасади (реалізовані й заплановані):
 
-| Модуль     | Публічне API                                                                                                        | Хто використовує                           |
-| ---------- | ------------------------------------------------------------------------------------------------------------------- | ------------------------------------------ |
-| `users`    | `UsersApi`: `findById`, `findByEmail`, `create`, `markEmailVerified` — ім'я, мова, часовий пояс для листів          | `auth`, згодом усі                         |
-| `groups`   | `requireMember(groupId, userId)`, `requireAdmin(…)`, `membersWithAbsences(groupId)`, `groupsWhereLastAdmin(userId)` | `tasks`, `stats`, `notifications`, `users` |
-| `tasks`    | `findById`, `inRange(groupId, from, to)`, `dueBetween(from, to)`                                                    | `calendar`, `notifications`, `stats`       |
-| `calendar` | `status(userId)` → `CalendarStatusDto`                                                                              | `notifications` (сторінка налаштувань)     |
-| `mail`     | `MailService.send(template, to, data, locale)`                                                                      | `notifications`, `auth`, `groups`          |
+| Модуль     | Публічне API                                                                                                | Хто використовує                       |
+| ---------- | ----------------------------------------------------------------------------------------------------------- | -------------------------------------- |
+| `users`    | `UsersApi`: `findById`, `findByEmail`, `create`, `markEmailVerified` — ім'я, мова, часовий пояс для листів  | `auth`, згодом усі                     |
+| `groups`   | `GroupsApi`: `requireMember(groupId, userId)` → роль, `requireAdmin(…)`, `members(groupId)` з відсутностями | `tasks`, `stats`, `notifications`      |
+| `tasks`    | `findById`, `inRange(groupId, from, to)`, `dueBetween(from, to)`                                            | `calendar`, `notifications`, `stats`   |
+| `calendar` | `status(userId)` → `CalendarStatusDto`                                                                      | `notifications` (сторінка налаштувань) |
+| `mail`     | `MailService.send(template, to, data, locale)`                                                              | `notifications`, `auth`, `groups`      |
 
 ### Події
 
@@ -163,18 +163,21 @@ sequenceDiagram
 
 Payload — лише id, ISO-рядки й прості значення (`common/events/domain-events.ts`). Подія описує, **що сталося**, а не що робити далі.
 
-| Подія                             | Видавець | Слухачі (режим)                                                                                                        |
-| --------------------------------- | -------- | ---------------------------------------------------------------------------------------------------------------------- |
-| `auth.emailVerificationRequested` | `auth`   | `auth` — новий токен і лист `verifyEmail` (після коміту, з повторами)                                                  |
-| `auth.passwordResetRequested`     | `auth`   | `auth` — новий токен на 1 год і лист `resetPassword` (після коміту, з повторами)                                       |
-| `user.deleted`                    | `users`  | `groups` — вийти з усіх груп (у транзакції; далі `group.memberLeft`)                                                   |
-| `group.memberJoined`              | `groups` | `notifications` — `groupJoined` новачку, `memberJoined` адмінам (після коміту)                                         |
-| `group.memberLeft`                | `groups` | `tasks` — перерозподіл відкритих задач (у транзакції, FR-15); `notifications` — `removedFromGroup` (після коміту)      |
-| `group.absenceAdded`              | `groups` | `tasks` — перепризначити автоматично розподілені задачі на ці дні (у транзакції, FR-29)                                |
-| `task.assigned`                   | `tasks`  | `notifications` — `taskAssigned`/`taskUnassigned` і лист (після коміту); `calendar` — подія в календарі (після коміту) |
-| `task.changed`                    | `tasks`  | `calendar` — оновити подію (після коміту)                                                                              |
-| `task.completed`                  | `tasks`  | `calendar` — позначити подію (після коміту)                                                                            |
-| `task.deleted`                    | `tasks`  | `calendar` — видалити подію (після коміту)                                                                             |
+| Подія                             | Видавець | Слухачі (режим)                                                                                                                                     |
+| --------------------------------- | -------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `auth.emailVerificationRequested` | `auth`   | `auth` — новий токен і лист `verifyEmail` (після коміту, з повторами)                                                                               |
+| `auth.passwordResetRequested`     | `auth`   | `auth` — новий токен на 1 год і лист `resetPassword` (після коміту, з повторами)                                                                    |
+| `user.deleted`                    | `users`  | `groups` — `LAST_ADMIN`, якщо користувач — єдиний адмін групи з іншими учасниками, інакше вийти з усіх груп (у транзакції; далі `group.memberLeft`) |
+| `group.created`                   | `groups` | `notifications` — `groupCreated` (після коміту, буде додано)                                                                                        |
+| `group.roleChanged`               | `groups` | `notifications` — `roleGranted`/`roleRevoked` (після коміту, буде додано)                                                                           |
+| `group.inviteEmailRequested`      | `groups` | `groups` — окреме посилання й лист `invite` одержувачу (після коміту, з повторами)                                                                  |
+| `group.memberJoined`              | `groups` | `notifications` — `groupJoined` новачку, `memberJoined` адмінам (після коміту)                                                                      |
+| `group.memberLeft`                | `groups` | `tasks` — перерозподіл відкритих задач (у транзакції, FR-15); `notifications` — `removedFromGroup` (після коміту)                                   |
+| `group.absenceAdded`              | `groups` | `tasks` — перепризначити автоматично розподілені задачі на ці дні (у транзакції, FR-29)                                                             |
+| `task.assigned`                   | `tasks`  | `notifications` — `taskAssigned`/`taskUnassigned` і лист (після коміту); `calendar` — подія в календарі (після коміту)                              |
+| `task.changed`                    | `tasks`  | `calendar` — оновити подію (після коміту)                                                                                                           |
+| `task.completed`                  | `tasks`  | `calendar` — позначити подію (після коміту)                                                                                                         |
+| `task.deleted`                    | `tasks`  | `calendar` — видалити подію (після коміту)                                                                                                          |
 
 Періодичні задачі — не події, а розклад (`@nestjs/schedule`): нагадування `taskDueSoon`, прострочення `taskOverdue`, тижневий підсумок, поповнення серій на 4 тижні вперед (SD-4).
 
@@ -202,7 +205,7 @@ flowchart LR
   - Сесія — HttpOnly-cookie `errandly_session` (`SameSite=Lax`, `Path=/api`, `Secure` у production) з випадковим токеном на 256 біт; у базі лише його SHA-256. Строк — 30 днів від останнього використання, продовжується не частіше за раз на годину.
   - `ThrottlerGuard`: 100 запитів на хвилину з IP на будь-який маршрут і 10 — на вхід, реєстрацію, відновлення пароля й листи (`RATE_LIMIT_PER_MINUTE`, `AUTH_RATE_LIMIT_PER_MINUTE`), інакше `429 TOO_MANY_REQUESTS`. IP — з `X-Forwarded-For` (`trust proxy` для nginx). Блокування акаунта після 5 невдалих входів діє незалежно від IP.
   - `helmet` (заголовки безпеки) і перевірка `Origin`: запит, що змінює дані, з чужого origin отримує `403 FORBIDDEN` (захист від CSRF разом із `SameSite`).
-  - Доступ до групи перевіряють сервіси через `GroupsApi` (з'явиться з модулем `groups`).
+  - Доступ до групи перевіряють сервіси через `GroupsApi` (`requireMember`, `requireAdmin`). Зміни ролей, вихід і видалення учасників блокують рядки членства групи (`SELECT … FOR UPDATE`), тож два паралельні запити не залишать групу без адміністратора.
 
 ## Порти та адаптери
 
