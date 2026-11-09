@@ -109,7 +109,7 @@
     },
     "/api/me/avatar": {
       "post": {
-        "operationId": "MeController_uploadAvatar",
+        "operationId": "AvatarController_uploadAvatar",
         "parameters": [],
         "requestBody": {
           "required": true,
@@ -154,7 +154,7 @@
         ]
       },
       "delete": {
-        "operationId": "MeController_deleteAvatar",
+        "operationId": "AvatarController_deleteAvatar",
         "parameters": [],
         "responses": {
           "200": {
@@ -335,41 +335,6 @@
         ]
       }
     },
-    "/api/auth/google": {
-      "get": {
-        "operationId": "AuthController_google",
-        "parameters": [
-          {
-            "name": "next",
-            "required": false,
-            "in": "query",
-            "description": "Frontend path to return to after signing in",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "302": {
-            "description": "Redirect to Google"
-          },
-          "default": {
-            "description": "Error: { code, fields?, ... }",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiErrorDto"
-                }
-              }
-            }
-          }
-        },
-        "summary": "Redirects to Google sign-in, then back to `next`. A separate flow from the calendar connection.",
-        "tags": [
-          "auth"
-        ]
-      }
-    },
     "/api/auth/forgot-password": {
       "post": {
         "operationId": "AuthController_forgotPassword",
@@ -434,7 +399,7 @@
             }
           }
         },
-        "summary": "Sets a new password from a reset link. Errors: 400 TOKEN_INVALID, 400 VALIDATION (password weak).",
+        "summary": "Sets a new password from a reset link and signs out every session.\nErrors: 400 TOKEN_INVALID, 400 VALIDATION (password weak).",
         "tags": [
           "auth"
         ]
@@ -476,7 +441,7 @@
             }
           }
         },
-        "summary": "Confirms the email from the link. Errors: 400 TOKEN_INVALID.",
+        "summary": "Confirms the email from the link (no session needed). Errors: 400 TOKEN_INVALID.",
         "tags": [
           "auth"
         ]
@@ -506,7 +471,7 @@
             "cookie": []
           }
         ],
-        "summary": "Sends the verification email again.",
+        "summary": "Sends the verification email again; does nothing once the email is confirmed.",
         "tags": [
           "auth"
         ]
@@ -546,9 +511,44 @@
             "cookie": []
           }
         ],
-        "summary": "Changes the password. Errors: 400 WRONG_PASSWORD, 400 VALIDATION (newPassword weak).",
+        "summary": "Changes the password and signs out the other sessions.\nErrors: 400 WRONG_PASSWORD, 400 VALIDATION (newPassword weak).",
         "tags": [
           "me"
+        ]
+      }
+    },
+    "/api/auth/google": {
+      "get": {
+        "operationId": "GoogleAuthController_google",
+        "parameters": [
+          {
+            "name": "next",
+            "required": false,
+            "in": "query",
+            "description": "Frontend path to return to after signing in",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "302": {
+            "description": "Redirect to Google"
+          },
+          "default": {
+            "description": "Error: { code, fields?, ... }",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Redirects to Google sign-in, then back to `next`. A separate flow from the calendar connection.",
+        "tags": [
+          "auth"
         ]
       }
     },

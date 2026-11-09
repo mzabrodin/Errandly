@@ -38,6 +38,22 @@ export function postgresErrorCode(error: unknown): string | undefined {
   return undefined;
 }
 
+/**
+ * True when `error` is a unique violation of `constraint`. Repositories use it to turn a race
+ * the service's own check missed into the business error (EMAIL_TAKEN) instead of 409 CONFLICT.
+ */
+export function isUniqueViolation(error: unknown, constraint: string): boolean {
+  for (let current = error; current instanceof Error; current = current.cause) {
+    if (
+      Reflect.get(current, 'code') === UNIQUE_VIOLATION &&
+      Reflect.get(current, 'constraint') === constraint
+    ) {
+      return true;
+    }
+  }
+  return false;
+}
+
 // The request log line picks the code up from here (see logger.module.ts)
 const errorCodes = new WeakMap<object, ErrorCode>();
 

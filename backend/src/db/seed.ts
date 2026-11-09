@@ -1,14 +1,13 @@
 // Development/test only: wipes every table and loads the demo data (npm run db:seed).
 // Never part of the migrations and never run on boot.
 import { Logger } from '@nestjs/common';
-import { getTableName, is, sql } from 'drizzle-orm';
-import { PgTable } from 'drizzle-orm/pg-core';
 
 import { Argon2PasswordHasher } from '../auth/index.js';
 import { NodeEnv, validateEnv } from '../config/env.validation.js';
 import { createDatabase, createPool } from './database.js';
 import * as schema from './schema.js';
 import { buildSeed, DEMO_PASSWORD } from './seed-data.js';
+import { truncateAll } from './tables.js';
 
 const logger = new Logger('Seed');
 const env = validateEnv(process.env);
@@ -18,21 +17,14 @@ if (env.NODE_ENV === NodeEnv.Production) {
   process.exit(1);
 }
 
-// Every table of every module, found in the schema, so a new table is never forgotten
-const TABLES: PgTable[] = [];
-for (const value of Object.values(schema)) {
-  if (is(value, PgTable)) TABLES.push(value);
-}
-
 const pool = createPool(env.DATABASE_URL);
 const db = createDatabase(pool, { logQueries: false });
 
 try {
   const data = buildSeed(new Date(), await new Argon2PasswordHasher().hash(DEMO_PASSWORD));
-  const tableList = TABLES.map((table) => `"${getTableName(table)}"`).join(', ');
 
   await db.transaction(async (tx) => {
-    await tx.execute(sql.raw(`TRUNCATE ${tableList} RESTART IDENTITY CASCADE`));
+    await truncateAll(tx);
     await tx.insert(schema.users).values(data.users);
     await tx.insert(schema.passwordCredentials).values(data.passwordCredentials);
     await tx.insert(schema.groups).values(data.groups);

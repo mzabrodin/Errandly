@@ -8,6 +8,8 @@ describe('validateEnv', () => {
     expect(env.PORT).toBe(3000);
     expect(env.LOG_LEVEL).toBe(LogLevel.Info);
     expect(env.SMTP_SECURE).toBe(false);
+    expect(env.RATE_LIMIT_PER_MINUTE).toBe(100);
+    expect(env.AUTH_RATE_LIMIT_PER_MINUTE).toBe(10);
   });
 
   it('converts strings from process.env', () => {

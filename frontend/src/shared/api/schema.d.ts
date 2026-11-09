@@ -51,9 +51,9 @@ export interface paths {
         get?: never;
         put?: never;
         /** Uploads an avatar image (field `file`). Errors: 400 VALIDATION (file type), 413 FILE_TOO_LARGE. */
-        post: operations["MeController_uploadAvatar"];
+        post: operations["AvatarController_uploadAvatar"];
         /** Removes the avatar. */
-        delete: operations["MeController_deleteAvatar"];
+        delete: operations["AvatarController_deleteAvatar"];
         options?: never;
         head?: never;
         patch?: never;
@@ -133,23 +133,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/auth/google": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Redirects to Google sign-in, then back to `next`. A separate flow from the calendar connection. */
-        get: operations["AuthController_google"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/api/auth/forgot-password": {
         parameters: {
             query?: never;
@@ -176,7 +159,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Sets a new password from a reset link. Errors: 400 TOKEN_INVALID, 400 VALIDATION (password weak). */
+        /**
+         * Sets a new password from a reset link and signs out every session.
+         *     Errors: 400 TOKEN_INVALID, 400 VALIDATION (password weak).
+         */
         post: operations["AuthController_resetPassword"];
         delete?: never;
         options?: never;
@@ -193,7 +179,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Confirms the email from the link. Errors: 400 TOKEN_INVALID. */
+        /** Confirms the email from the link (no session needed). Errors: 400 TOKEN_INVALID. */
         post: operations["AuthController_verifyEmail"];
         delete?: never;
         options?: never;
@@ -210,7 +196,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Sends the verification email again. */
+        /** Sends the verification email again; does nothing once the email is confirmed. */
         post: operations["AuthController_resendVerification"];
         delete?: never;
         options?: never;
@@ -227,8 +213,28 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Changes the password. Errors: 400 WRONG_PASSWORD, 400 VALIDATION (newPassword weak). */
+        /**
+         * Changes the password and signs out the other sessions.
+         *     Errors: 400 WRONG_PASSWORD, 400 VALIDATION (newPassword weak).
+         */
         post: operations["AccountController_changePassword"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/auth/google": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Redirects to Google sign-in, then back to `next`. A separate flow from the calendar connection. */
+        get: operations["GoogleAuthController_google"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -1039,7 +1045,7 @@ export interface operations {
             };
         };
     };
-    MeController_uploadAvatar: {
+    AvatarController_uploadAvatar: {
         parameters: {
             query?: never;
             header?: never;
@@ -1071,7 +1077,7 @@ export interface operations {
             };
         };
     };
-    MeController_deleteAvatar: {
+    AvatarController_deleteAvatar: {
         parameters: {
             query?: never;
             header?: never;
@@ -1201,36 +1207,6 @@ export interface operations {
         requestBody?: never;
         responses: {
             204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Error: { code, fields?, ... } */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorDto"];
-                };
-            };
-        };
-    };
-    AuthController_google: {
-        parameters: {
-            query?: {
-                /** @description Frontend path to return to after signing in */
-                next?: string;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Redirect to Google */
-            302: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -1379,6 +1355,36 @@ export interface operations {
         };
         responses: {
             204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Error: { code, fields?, ... } */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
+        };
+    };
+    GoogleAuthController_google: {
+        parameters: {
+            query?: {
+                /** @description Frontend path to return to after signing in */
+                next?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Redirect to Google */
+            302: {
                 headers: {
                     [name: string]: unknown;
                 };

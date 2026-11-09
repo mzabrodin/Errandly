@@ -1,21 +1,37 @@
 import { Global, Module } from '@nestjs/common';
-import { APP_FILTER } from '@nestjs/core';
+import { ConfigService } from '@nestjs/config';
+import { APP_FILTER, APP_GUARD } from '@nestjs/core';
+import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 
+import type { EnvironmentVariables } from '../config/env.validation.js';
 import { Clock, SystemClock } from './clock.js';
 import { ApiExceptionFilter } from './errors/api-exception.filter.js';
 import { EventBus } from './events/event-bus.js';
 import { EventDispatcher } from './events/event-dispatcher.js';
 import { EventPublicationStore } from './events/event-publication.store.js';
+import { rateLimits } from './http/rate-limit.js';
 
 /**
- * Shared kernel available to every module: the clock, the event bus and the global
- * exception handler. Needs DatabaseModule and ScheduleModule.
+ * Shared kernel available to every module: the clock, the event bus, the global exception
+ * handler and per-IP rate limits. Needs DatabaseModule and ScheduleModule.
  */
 @Global()
 @Module({
+  imports: [
+    ThrottlerModule.forRootAsync({
+      inject: [ConfigService],
+      useFactory: (config: ConfigService<EnvironmentVariables, true>) =>
+        rateLimits(
+          config.get('RATE_LIMIT_PER_MINUTE', { infer: true }),
+          config.get('AUTH_RATE_LIMIT_PER_MINUTE', { infer: true }),
+        ),
+    }),
+  ],
   providers: [
     { provide: Clock, useClass: SystemClock },
     { provide: APP_FILTER, useClass: ApiExceptionFilter },
+    // Registered before the auth module's SessionGuard, so floods are cut off first
+    { provide: APP_GUARD, useClass: ThrottlerGuard },
     EventPublicationStore,
     EventBus,
     EventDispatcher,

@@ -1,0 +1,23 @@
+import type { NextFunction, Request, RequestHandler, Response } from 'express';
+
+import type { ApiErrorDto } from '../errors/api-error.dto.js';
+
+const SAFE_METHODS = new Set(['GET', 'HEAD', 'OPTIONS']);
+
+/**
+ * CSRF defence in depth next to SameSite=Lax cookies (NFR-SEC-06): a state-changing request
+ * that a browser sends from another origin is refused. Requests without an Origin header
+ * (curl, server-to-server, same-origin GETs) are not browser cross-site requests and pass.
+ */
+export function originCheck(allowedOrigin: string): RequestHandler {
+  const allowed = new URL(allowedOrigin).origin;
+  return (request: Request, response: Response, next: NextFunction): void => {
+    const origin = request.headers.origin;
+    if (SAFE_METHODS.has(request.method) || origin === undefined || origin === allowed) {
+      next();
+      return;
+    }
+    const body: ApiErrorDto = { code: 'FORBIDDEN' };
+    response.status(403).json(body);
+  };
+}

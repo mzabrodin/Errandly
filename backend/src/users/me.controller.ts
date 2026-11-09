@@ -1,31 +1,37 @@
-import {
-  Body,
-  Controller,
-  Delete,
-  HttpCode,
-  HttpStatus,
-  Patch,
-  Post,
-  UseInterceptors,
-} from '@nestjs/common';
-import { FileInterceptor } from '@nestjs/platform-express';
-import { ApiBody, ApiConsumes, ApiTags } from '@nestjs/swagger';
+import { Body, Controller, Delete, HttpCode, HttpStatus, Patch, Res } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import { ApiTags } from '@nestjs/swagger';
+import type { Response } from 'express';
 
-import { LIMITS } from '../common/domain.js';
 import { ApiSession } from '../common/http/api-docs.js';
-import { notImplemented } from '../common/http/stubs.js';
-import { AvatarUploadDto, UpdateProfileDto } from './dto/profile.dto.js';
+import { CurrentUser, type RequestUser } from '../common/http/auth.js';
+import { clearSessionCookie, secureCookies } from '../common/http/session-cookie.js';
+import type { EnvironmentVariables } from '../config/env.validation.js';
+import { UpdateProfileDto } from './dto/profile.dto.js';
 import { UserDto } from './dto/user.dto.js';
+import { UsersService } from './users.service.js';
 
-/** The signed-in user's profile and avatar */
+/** The signed-in user's profile and account */
 @ApiTags('me')
 @ApiSession()
 @Controller('me')
 export class MeController {
+  private readonly secure: boolean;
+
+  constructor(
+    private readonly users: UsersService,
+    config: ConfigService<EnvironmentVariables, true>,
+  ) {
+    this.secure = secureCookies(config);
+  }
+
   /** Updates name, time zone or language. Errors: 400 VALIDATION (name required/tooLong, timezone invalid, locale invalid). */
   @Patch()
-  updateProfile(@Body() body: UpdateProfileDto): Promise<UserDto> {
-    return notImplemented(body);
+  updateProfile(
+    @CurrentUser() user: RequestUser,
+    @Body() body: UpdateProfileDto,
+  ): Promise<UserDto> {
+    return this.users.updateProfile(user.id, body);
   }
 
   /**
@@ -34,23 +40,11 @@ export class MeController {
    */
   @Delete()
   @HttpCode(HttpStatus.NO_CONTENT)
-  deleteAccount(): Promise<void> {
-    return notImplemented();
-  }
-
-  /** Uploads an avatar image (field `file`). Errors: 400 VALIDATION (file type), 413 FILE_TOO_LARGE. */
-  @Post('avatar')
-  @HttpCode(HttpStatus.OK)
-  @UseInterceptors(FileInterceptor('file', { limits: { fileSize: LIMITS.avatarBytes } }))
-  @ApiConsumes('multipart/form-data')
-  @ApiBody({ type: AvatarUploadDto })
-  uploadAvatar(): Promise<UserDto> {
-    return notImplemented();
-  }
-
-  /** Removes the avatar. */
-  @Delete('avatar')
-  deleteAvatar(): Promise<UserDto> {
-    return notImplemented();
+  async deleteAccount(
+    @CurrentUser() user: RequestUser,
+    @Res({ passthrough: true }) response: Response,
+  ): Promise<void> {
+    await this.users.deleteAccount(user.id);
+    clearSessionCookie(response, this.secure);
   }
 }

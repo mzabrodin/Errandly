@@ -21,6 +21,10 @@ export default defineConfig({
         // CLI scripts, exercised by the CI migrate and seed steps
         'src/db/migrate.ts',
         'src/db/seed.ts',
+        // Drizzle queries only; the e2e tests run them against PostgreSQL (test/**)
+        'src/**/*.repository.ts',
+        'src/**/*.store.ts',
+        'src/db/tables.ts',
       ],
       thresholds: { lines: 70, functions: 70, branches: 70, statements: 70 },
     },

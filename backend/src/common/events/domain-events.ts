@@ -3,6 +3,13 @@
 // Who publishes and who listens: docs/architecture.md, "Events".
 
 export interface DomainEventMap {
+  /**
+   * auth: an account needs its email confirmed (registration or "send again"). The listener
+   * issues a fresh token when it sends, so a retried email never needs a stored raw token.
+   */
+  'auth.emailVerificationRequested': { userId: string };
+  /** auth: someone asked to reset the password of an existing account (FR-08) */
+  'auth.passwordResetRequested': { userId: string };
   /** users: an account was deleted (NFR-LEG-02) */
   'user.deleted': { userId: string };
   /** groups: someone accepted an invite (SD-2) */

@@ -1,7 +1,6 @@
 import { NotImplementedException } from '@nestjs/common';
 
-import { AccountController } from '../../auth/account.controller.js';
-import { AuthController } from '../../auth/auth.controller.js';
+import { GoogleAuthController } from '../../auth/google-auth.controller.js';
 import { CalendarController } from '../../calendar/calendar.controller.js';
 import { AbsencesController } from '../../groups/absences.controller.js';
 import { GroupsController } from '../../groups/groups.controller.js';
@@ -10,13 +9,12 @@ import { NotificationsController } from '../../notifications/notifications.contr
 import { SettingsController } from '../../notifications/settings.controller.js';
 import { StatsController } from '../../stats/stats.controller.js';
 import { TasksController } from '../../tasks/tasks.controller.js';
-import { MeController } from '../../users/me.controller.js';
+import { AvatarController } from '../../users/avatar.controller.js';
 
 // Until a module gets its service, every handler of its controller answers 501
 const controllers = [
-  AuthController,
-  AccountController,
-  MeController,
+  GoogleAuthController,
+  AvatarController,
   CalendarController,
   GroupsController,
   InvitesController,
