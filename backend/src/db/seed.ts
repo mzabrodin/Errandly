@@ -4,7 +4,7 @@ import { Logger } from '@nestjs/common';
 import { getTableName, is, sql } from 'drizzle-orm';
 import { PgTable } from 'drizzle-orm/pg-core';
 
-import { ScryptPasswordHasher } from '../auth/index.js';
+import { Argon2PasswordHasher } from '../auth/index.js';
 import { NodeEnv, validateEnv } from '../config/env.validation.js';
 import { createDatabase, createPool } from './database.js';
 import * as schema from './schema.js';
@@ -28,7 +28,7 @@ const pool = createPool(env.DATABASE_URL);
 const db = createDatabase(pool, { logQueries: false });
 
 try {
-  const data = buildSeed(new Date(), await new ScryptPasswordHasher().hash(DEMO_PASSWORD));
+  const data = buildSeed(new Date(), await new Argon2PasswordHasher().hash(DEMO_PASSWORD));
   const tableList = TABLES.map((table) => `"${getTableName(table)}"`).join(', ');
 
   await db.transaction(async (tx) => {
