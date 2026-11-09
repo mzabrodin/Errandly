@@ -37,7 +37,7 @@ erDiagram
   }
   password_credentials {
     uuid user_id PK
-    text password_hash "scrypt"
+    text password_hash "argon2id"
     smallint failed_logins
     timestamptz locked_until
   }
@@ -144,7 +144,7 @@ erDiagram
 
 ### auth
 
-- **PasswordCredentials** — вхід за email і паролем: хеш scrypt і блокування після 5 невдалих спроб на 15 хвилин (`ACCOUNT_LOCKED` + `retryAfterSeconds`). Акаунт лише з Google такого рядка не має.
+- **PasswordCredentials** — вхід за email і паролем: хеш argon2id і блокування після 5 невдалих спроб на 15 хвилин (`ACCOUNT_LOCKED` + `retryAfterSeconds`). Акаунт лише з Google такого рядка не має.
 - **AuthIdentity** — прив'язаний зовнішній акаунт (`provider`, `provider_user_id`). Сьогодні це Google; Apple чи Microsoft — нове значення переліку й нова стратегія входу.
 - **Session** — cookie-сесія. У cookie лежить випадковий токен, у базі — лише його SHA-256 (SYS-24).
 - **EmailToken** — одноразове посилання з листа: підтвердження email або відновлення пароля (діє 1 год).

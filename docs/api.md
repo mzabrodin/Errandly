@@ -10,18 +10,19 @@
 
 Тіло помилки: `{ "code": "...", "fields"?: { "<поле>": "<код>" }, "retryAfterSeconds"?: number, "groups"?: string[] }` (схема `ApiErrorDto`, коди — `backend/src/common/errors/error-codes.ts`).
 
-| Статус | Коди                                                                                                     |
-| ------ | -------------------------------------------------------------------------------------------------------- |
-| 400    | `VALIDATION` (з `fields`), `TOKEN_INVALID`, `WRONG_PASSWORD`                                             |
-| 401    | `UNAUTHENTICATED`, `INVALID_CREDENTIALS`                                                                 |
-| 403    | `FORBIDDEN` (не учасник групи), `ADMIN_ONLY`, `NOT_ASSIGNEE`, `EMAIL_NOT_VERIFIED`                       |
-| 404    | `NOT_FOUND` (зокрема id не у форматі UUID і невідомий маршрут)                                           |
-| 409    | `EMAIL_TAKEN`, `LAST_ADMIN`, `TASK_DONE`, `UNDO_EXPIRED`, `CANNOT_REMOVE_SELF`, `CALENDAR_NOT_CONNECTED` |
-| 410    | `INVITE_INVALID`                                                                                         |
-| 413    | `FILE_TOO_LARGE` (аватарка > 512 КБ)                                                                     |
-| 423    | `ACCOUNT_LOCKED` (+ `retryAfterSeconds`)                                                                 |
-| 500    | `INTERNAL` (деталі лише в логах сервера за `X-Request-Id`)                                               |
-| 501    | `NOT_IMPLEMENTED` (контракт є, логіки ще немає)                                                          |
+| Статус | Коди                                                                                                        |
+| ------ | ----------------------------------------------------------------------------------------------------------- |
+| 400    | `VALIDATION` (з `fields`), `TOKEN_INVALID`, `WRONG_PASSWORD`                                                |
+| 401    | `UNAUTHENTICATED`, `INVALID_CREDENTIALS`                                                                    |
+| 403    | `FORBIDDEN` (не учасник групи; запит з чужого `Origin`), `ADMIN_ONLY`, `NOT_ASSIGNEE`, `EMAIL_NOT_VERIFIED` |
+| 404    | `NOT_FOUND` (зокрема id не у форматі UUID і невідомий маршрут)                                              |
+| 409    | `EMAIL_TAKEN`, `LAST_ADMIN`, `TASK_DONE`, `UNDO_EXPIRED`, `CANNOT_REMOVE_SELF`, `CALENDAR_NOT_CONNECTED`    |
+| 410    | `INVITE_INVALID`                                                                                            |
+| 413    | `FILE_TOO_LARGE` (аватарка > 512 КБ)                                                                        |
+| 423    | `ACCOUNT_LOCKED` (+ `retryAfterSeconds`)                                                                    |
+| 429    | `TOO_MANY_REQUESTS` (ліміт запитів з одного IP; заголовок `Retry-After`)                                    |
+| 500    | `INTERNAL` (деталі лише в логах сервера за `X-Request-Id`)                                                  |
+| 501    | `NOT_IMPLEMENTED` (контракт є, логіки ще немає)                                                             |
 
 Коди полів у `fields`: `required`, `tooLong`, `invalid`, `weak` (пароль), `inPast` (термін), `range` (складність 1–5), `noWeekdays`, `beforeFrom` (кінець відсутності раніше за початок), `type` (неправильний тип значення або файлу), `unknown` (поле, якого немає в контракті). Для кожного поля — один код, найважливіший.
 
@@ -40,6 +41,17 @@
 | POST  | `/auth/verify-email/resend` | → 204                                             | 04    |
 
 Посилання в листах фронтенд очікує такі: `/verify-email/:token`, `/reset-password/:token`, `/invite/:token`.
+
+Поведінка (реалізовано на бекенді):
+
+- **Сесія** — HttpOnly-cookie `errandly_session` (`SameSite=Lax`, `Path=/api`, `Secure` у production). Вона діє 30 днів від останнього використання й продовжується сама. Реєстрація та вхід її встановлюють, вихід і видалення акаунта — прибирають. Усі маршрути, крім позначених як публічні (реєстрація, вхід, вихід, відновлення пароля, підтвердження email, `GET /invites/:token`, `/health`), без сесії відповідають `401 UNAUTHENTICATED`.
+- **Вхід**: невідомий email і хибний пароль відповідають однаково (`401 INVALID_CREDENTIALS`). П'ята невдала спроба поспіль блокує акаунт на 15 хвилин (`423 ACCOUNT_LOCKED`, `retryAfterSeconds: 900`), і поки блокування діє, навіть правильний пароль отримує 423.
+- **Листи** надсилаються після коміту з повторами (30 с, 2 хв, 8 хв, 32 хв). Збій пошти не скасовує реєстрацію. Кожен лист містить новий токен, а попередні посилання того ж типу перестають діяти.
+- **Посилання**: підтвердження email діє 48 годин, відновлення пароля — 1 годину. Обидва одноразові.
+- **Відновлення пароля** знімає блокування й завершує всі сесії. `POST /me/password` завершує всі сесії, крім поточної. `verify-email/resend` нічого не робить, якщо email уже підтверджено.
+- **Порядок перевірок**: спершу валідується тіло, тому слабкий пароль дає `VALIDATION` раніше, ніж `TOKEN_INVALID` чи `WRONG_PASSWORD`.
+- **Ліміти**: 10 запитів на хвилину з IP до реєстрації, входу, відновлення пароля й листів, 100 — до решти API (`429 TOO_MANY_REQUESTS`).
+- `GET /auth/google` і аватарки (`/me/avatar`) поки відповідають `501`.
 
 ## Групи
 

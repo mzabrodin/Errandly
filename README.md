@@ -137,7 +137,7 @@ npm run format:check
 npm run build
 npm test
 npm run test:cov -w backend
-npm run test:e2e -w backend   # потрібна база: docker compose up -d postgresql && npm run db:migrate
+npm run test:e2e -w backend   # Testcontainers: потрібен запущений Docker (або E2E_DATABASE_URL)
 ```
 
 ## Типізований API
@@ -164,10 +164,12 @@ Swagger UI (`/api/docs`) доступний лише в режимі розро�
 | `LOG_LEVEL`                                   | `fatal`…`trace`, `silent`                                    | ні     | `backend/.env`, `.env`  |
 | `DATABASE_URL`                                | PostgreSQL; обов'язкова в production                         | так    | `backend/.env`, compose |
 | `EVENTS_POLL_INTERVAL_MS`                     | як часто доставляються події після коміту (мс, 0 — вимкнено) | ні     | `backend/.env`          |
+| `RATE_LIMIT_PER_MINUTE`                       | запитів на хвилину з одного IP (100)                         | ні     | `backend/.env`          |
+| `AUTH_RATE_LIMIT_PER_MINUTE`                  | те саме для входу, відновлення пароля й листів (10)          | ні     | `backend/.env`          |
 | `POSTGRES_USER` / `POSTGRES_PASSWORD` / `_DB` | облікові дані бази в compose                                 | так    | `.env`                  |
 | `SMTP_HOST` / `SMTP_PORT` / `SMTP_SECURE`     | поштовий сервер (за замовчуванням Mailpit)                   | ні     | `backend/.env`, `.env`  |
 | `SMTP_USER` / `SMTP_PASS` / `SMTP_FROM`       | облікові дані пошти (Gmail: app password)                    | так    | `backend/.env`, `.env`  |
-| `JWT_SECRET`, `TOKEN_ENCRYPTION_KEY`          | підпис сесій, шифрування Google-токенів (буде додано)        | так    | `backend/.env`          |
+| `TOKEN_ENCRYPTION_KEY`                        | шифрування Google-токенів (буде додано)                      | так    | `backend/.env`          |
 | `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET`   | OAuth-клієнт Google (буде додано)                            | так    | `backend/.env`          |
 | `VITE_API_URL`                                | адреса API для фронтенду, якщо не той самий origin           | ні     | `frontend/.env`         |
 
