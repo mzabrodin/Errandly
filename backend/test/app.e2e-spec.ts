@@ -1,43 +1,36 @@
-import { INestApplication } from '@nestjs/common';
-import { Test, TestingModule } from '@nestjs/testing';
-import request from 'supertest';
-import { App } from 'supertest/types.js';
+import { createTestApp, type TestApp } from './support/test-app.js';
 
-import { AppModule } from './../src/app.module.js';
-import { configureApp } from './../src/app.setup.js';
+describe('App (e2e)', () => {
+  let t: TestApp;
 
-describe('HealthController (e2e)', () => {
-  let app: INestApplication<App>;
-
-  beforeEach(async () => {
-    const moduleFixture: TestingModule = await Test.createTestingModule({
-      imports: [AppModule],
-    }).compile();
-
-    app = moduleFixture.createNestApplication();
-    configureApp(app);
-    await app.init();
+  beforeAll(async () => {
+    t = await createTestApp();
   });
 
-  it('/api/health (GET)', () => {
-    return request(app.getHttpServer())
-      .get('/api/health')
-      .expect(200)
-      .expect({ status: 'ok', database: 'up' });
+  afterAll(async () => {
+    await t.close();
+  });
+
+  it('/api/health (GET) works without a session', () => {
+    return t.agent().get('/api/health').expect(200).expect({ status: 'ok', database: 'up' });
   });
 
   it('echoes the request id', () => {
-    return request(app.getHttpServer())
+    return t
+      .agent()
       .get('/api/health')
       .set('X-Request-Id', 'e2e-123')
       .expect('x-request-id', 'e2e-123');
   });
 
   it('does not serve Swagger UI outside development', () => {
-    return request(app.getHttpServer()).get('/api/docs').expect(404);
+    return t.agent().get('/api/docs').expect(404);
   });
 
-  afterEach(async () => {
-    await app.close();
+  it('sends security headers (helmet)', async () => {
+    const response = await t.agent().get('/api/health').expect(200);
+
+    expect(response.headers['x-content-type-options']).toBe('nosniff');
+    expect(response.headers['x-powered-by']).toBeUndefined();
   });
 });

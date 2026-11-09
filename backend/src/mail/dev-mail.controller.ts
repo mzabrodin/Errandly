@@ -13,6 +13,7 @@ import { ConfigService } from '@nestjs/config';
 import { ApiExcludeController } from '@nestjs/swagger';
 import { IsEmail, IsIn, IsObject, IsOptional, IsString } from 'class-validator';
 
+import { Public } from '../common/http/auth.js';
 import type { EnvironmentVariables } from '../config/env.validation.js';
 import { MailService } from './mail.service.js';
 import {
@@ -49,6 +50,7 @@ class SendDevMailDto {
  * with a local SMTP host, so it cannot become an open mail relay.
  */
 @ApiExcludeController()
+@Public()
 @Controller('dev/mail')
 export class DevMailController {
   private readonly enabled: boolean;

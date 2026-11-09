@@ -11,6 +11,7 @@ import type { Mock } from 'vitest';
 import {
   ApiExceptionFilter,
   errorCodeOf,
+  isUniqueViolation,
   postgresErrorCode,
   toApiError,
 } from './api-exception.filter.js';
@@ -62,6 +63,18 @@ describe('toApiError', () => {
     expect(toApiError(pgError)).toEqual({ status: 409, body: { code: 'CONFLICT' } });
     expect(toApiError(wrapped)).toEqual({ status: 409, body: { code: 'CONFLICT' } });
     expect(postgresErrorCode(new Error('plain'))).toBeUndefined();
+  });
+
+  it('recognises a unique violation of one constraint', () => {
+    const pgError = Object.assign(new Error('duplicate key'), {
+      code: '23505',
+      constraint: 'users_email_key',
+    });
+    const wrapped = new Error('Failed query', { cause: pgError });
+
+    expect(isUniqueViolation(wrapped, 'users_email_key')).toBe(true);
+    expect(isUniqueViolation(wrapped, 'other_key')).toBe(false);
+    expect(isUniqueViolation(new Error('plain'), 'users_email_key')).toBe(false);
   });
 
   it('hides unexpected errors behind INTERNAL', () => {

@@ -1,10 +1,11 @@
 import { writeFile } from 'node:fs/promises';
 import { NestFactory } from '@nestjs/core';
+import type { NestExpressApplication } from '@nestjs/platform-express';
 
 import { AppModule } from './app.module.js';
 import { configureApp, createOpenApiDocument } from './app.setup.js';
 
-const app = await NestFactory.create(AppModule, { logger: false });
+const app = await NestFactory.create<NestExpressApplication>(AppModule, { logger: false });
 configureApp(app);
 
 const document = createOpenApiDocument(app);
