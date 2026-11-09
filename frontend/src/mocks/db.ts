@@ -81,6 +81,11 @@ export function memberColor(index: number): string {
   return MEMBER_COLORS[index % MEMBER_COLORS.length] ?? '#e6f36b';
 }
 
+/** Like the backend: the first colour nobody in the group has, then by position */
+export function freeMemberColor(taken: readonly string[]): string {
+  return MEMBER_COLORS.find((color) => !taken.includes(color)) ?? memberColor(taken.length);
+}
+
 export function isCompleted(task: Pick<DbTask, 'completedAt'>): boolean {
   return task.completedAt !== null && task.completedAt !== '';
 }
