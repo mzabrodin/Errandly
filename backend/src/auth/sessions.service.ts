@@ -2,10 +2,10 @@ import { Injectable } from '@nestjs/common';
 
 import { Clock } from '../common/clock.js';
 import type { RequestUser } from '../common/http/auth.js';
+import { generateToken, hashToken } from '../common/tokens.js';
 import type { DbExecutor } from '../db/database.js';
 import { AuthRepository } from './auth.repository.js';
 import { sessionExpiry, shouldRefreshSession } from './auth.rules.js';
-import { generateToken, hashToken } from './tokens.js';
 
 /** What goes into the cookie */
 export interface IssuedSession {

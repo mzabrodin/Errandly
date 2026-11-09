@@ -5,6 +5,7 @@ import { DEFAULT_LOCALE } from '../common/domain.js';
 import { DomainError } from '../common/errors/domain-error.js';
 import { EventBus } from '../common/events/event-bus.js';
 import type { RequestUser } from '../common/http/auth.js';
+import { hashToken } from '../common/tokens.js';
 import { DATABASE, type Database } from '../db/database.js';
 import { UsersApi, type UserDto } from '../users/index.js';
 import { AuthRepository } from './auth.repository.js';
@@ -12,7 +13,6 @@ import { afterFailedLogin, lockRemainingSeconds } from './auth.rules.js';
 import type { LoginDto, RegisterDto } from './dto/auth.dto.js';
 import { PasswordHasher } from './password-hasher.js';
 import { SessionService, type IssuedSession } from './sessions.service.js';
-import { hashToken } from './tokens.js';
 
 export interface SignedIn {
   user: UserDto;

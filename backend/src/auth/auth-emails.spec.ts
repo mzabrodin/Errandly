@@ -3,13 +3,13 @@ import type { ConfigService } from '@nestjs/config';
 import { FixedClock } from '../common/clock.js';
 import type { EmailTokenPurpose } from '../common/domain.js';
 import type { EventBus } from '../common/events/event-bus.js';
+import { hashToken } from '../common/tokens.js';
 import type { EnvironmentVariables } from '../config/env.validation.js';
 import type { Database } from '../db/database.js';
 import type { MailService } from '../mail/index.js';
 import type { UserDto, UsersApi } from '../users/index.js';
 import { AuthEmails } from './auth-emails.js';
 import type { AuthRepository } from './auth.repository.js';
-import { hashToken } from './tokens.js';
 
 const NOW = new Date('2026-11-09T12:00:00.000Z');
 
