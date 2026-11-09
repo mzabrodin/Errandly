@@ -2,9 +2,6 @@ import { NotImplementedException } from '@nestjs/common';
 
 import { GoogleAuthController } from '../../auth/google-auth.controller.js';
 import { CalendarController } from '../../calendar/calendar.controller.js';
-import { AbsencesController } from '../../groups/absences.controller.js';
-import { GroupsController } from '../../groups/groups.controller.js';
-import { InvitesController } from '../../groups/invites.controller.js';
 import { NotificationsController } from '../../notifications/notifications.controller.js';
 import { SettingsController } from '../../notifications/settings.controller.js';
 import { StatsController } from '../../stats/stats.controller.js';
@@ -16,9 +13,6 @@ const controllers = [
   GoogleAuthController,
   AvatarController,
   CalendarController,
-  GroupsController,
-  InvitesController,
-  AbsencesController,
   TasksController,
   NotificationsController,
   SettingsController,

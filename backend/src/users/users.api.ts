@@ -26,6 +26,12 @@ export class UsersApi {
     return row ? toUserDto(row) : null;
   }
 
+  /** Users by id, keyed by id; unknown ids are left out */
+  async findMany(ids: readonly string[], db?: DbExecutor): Promise<Map<string, UserDto>> {
+    const rows = await this.users.findByIds(ids, db);
+    return new Map(rows.map((row) => [row.id, toUserDto(row)]));
+  }
+
   async findByEmail(email: string, db?: DbExecutor): Promise<UserDto | null> {
     const row = await this.users.findByEmail(email, db);
     return row ? toUserDto(row) : null;

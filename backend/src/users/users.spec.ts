@@ -35,6 +35,10 @@ class FakeRepository {
     return Promise.resolve(this.rows.get(id));
   }
 
+  findByIds(ids: readonly string[]) {
+    return Promise.resolve([...this.rows.values()].filter((r) => ids.includes(r.id)));
+  }
+
   findByEmail(email: string) {
     return Promise.resolve([...this.rows.values()].find((r) => r.email === email));
   }
@@ -84,6 +88,16 @@ describe('UsersApi', () => {
     await expect(api.findByEmail('anya@errandly.test')).resolves.toMatchObject({ id: 'u1' });
     await expect(api.findById('nobody')).resolves.toBeNull();
     await expect(api.findByEmail('nobody@errandly.test')).resolves.toBeNull();
+  });
+
+  it('finds many users at once, keyed by id', async () => {
+    repository.rows.set('u1', row());
+    repository.rows.set('u2', row({ id: 'u2', name: 'Oleh' }));
+
+    const found = await api.findMany(['u1', 'u2', 'gone']);
+
+    expect([...found.keys()]).toEqual(['u1', 'u2']);
+    expect(found.get('u2')?.name).toBe('Oleh');
   });
 
   it('creates a user', async () => {

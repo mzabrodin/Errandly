@@ -724,7 +724,7 @@
             "cookie": []
           }
         ],
-        "summary": "Removes a member (admin); their open tasks are redistributed.\nErrors: 403 ADMIN_ONLY, 409 CANNOT_REMOVE_SELF.",
+        "summary": "Removes a member (admin); their open tasks are redistributed.\nErrors: 403 ADMIN_ONLY, 404 NOT_FOUND (not a member), 409 CANNOT_REMOVE_SELF.",
         "tags": [
           "groups"
         ]
@@ -818,7 +818,7 @@
             "cookie": []
           }
         ],
-        "summary": "Leaves the group; the caller's open tasks are redistributed.\nErrors: 409 LAST_ADMIN when the only admin leaves a group with other members.",
+        "summary": "Leaves the group; the caller's open tasks are redistributed. The last member leaving\ndeletes the group. Errors: 409 LAST_ADMIN when the only admin leaves a group with others.",
         "tags": [
           "groups"
         ]
@@ -1057,7 +1057,7 @@
             "cookie": []
           }
         ],
-        "summary": "Deletes one of the caller's absences.",
+        "summary": "Deletes one of the caller's absences. Errors: 404 NOT_FOUND (missing or someone else's).",
         "tags": [
           "groups"
         ]
