@@ -1,7 +1,7 @@
 import { http, HttpResponse } from 'msw';
 
 import { toDateInputValue } from '../../shared/lib/dates';
-import { autoAssign, DAY_MS, db, id, isCompleted, memberColor, persist } from '../db';
+import { autoAssign, DAY_MS, db, freeMemberColor, id, isCompleted, persist } from '../db';
 import { sendMail } from '../mailer';
 import { pushNotification } from '../notifications';
 import {
@@ -55,7 +55,7 @@ const groupListHandlers = [
       groupId,
       userId: user.id,
       role: 'admin',
-      color: memberColor(0),
+      color: freeMemberColor([]),
     });
     pushNotification(user.id, 'groupCreated', {
       groupId,
@@ -93,6 +93,8 @@ const inviteHandlers = [
       persist();
       const url = `${location.origin}/invite/${invite.token}`;
       if (email !== undefined && email !== '') {
+        // The recipient's account language; without an account, the inviter's
+        const recipient = db.users.find((candidate) => candidate.email === email.toLowerCase());
         sendMail(
           'invite',
           email,
@@ -101,7 +103,7 @@ const inviteHandlers = [
             groupName: must(groupName(groupId), 'group'),
             url,
           },
-          auth.user.locale,
+          recipient?.locale ?? auth.user.locale,
         );
       }
       return HttpResponse.json({ url, expiresAt: invite.expiresAt }, { status: 201 });
@@ -130,12 +132,14 @@ const inviteHandlers = [
     if (!invite || !isActiveInvite(invite)) return error(410, 'INVITE_INVALID');
     if (!user.emailVerified) return error(403, 'EMAIL_NOT_VERIFIED');
     if (!membership(invite.groupId, user.id)) {
-      const taken = db.memberships.filter((item) => item.groupId === invite.groupId).length;
+      const taken = db.memberships
+        .filter((item) => item.groupId === invite.groupId)
+        .map((item) => item.color);
       db.memberships.push({
         groupId: invite.groupId,
         userId: user.id,
         role: 'member',
-        color: memberColor(taken),
+        color: freeMemberColor(taken),
       });
       const payload = {
         groupId: invite.groupId,
@@ -160,6 +164,7 @@ const memberHandlers = [
     const auth = authorize(groupId, true);
     if (auth instanceof Response) return auth;
     if (userId === auth.user.id) return error(409, 'CANNOT_REMOVE_SELF');
+    if (!membership(groupId, userId)) return error(404, 'NOT_FOUND');
     db.memberships = db.memberships.filter(
       (item) => !(item.groupId === groupId && item.userId === userId),
     );
@@ -216,10 +221,19 @@ const memberHandlers = [
       (item) => !(item.groupId === groupId && item.userId === auth.user.id),
     );
     redistributeOpenTasks(groupId, auth.user.id);
+    // Like the backend: nobody is left to see the group, so it goes with its tasks and invites
+    if (members.length === 1) deleteGroup(groupId);
     persist();
     return emptyResponse();
   }),
 ];
+
+function deleteGroup(groupId: string): void {
+  db.groups = db.groups.filter((group) => group.id !== groupId);
+  db.invites = db.invites.filter((invite) => invite.groupId !== groupId);
+  db.absences = db.absences.filter((absence) => absence.groupId !== groupId);
+  db.tasks = db.tasks.filter((task) => task.groupId !== groupId);
+}
 
 /** A new absence releases the auto-assigned tasks in that period */
 function releaseTasksDuring(groupId: string, userId: string, from: string, to: string): void {
@@ -268,9 +282,11 @@ const absenceHandlers = [
     ({ params }) => {
       const auth = authorize(params.groupId);
       if (auth instanceof Response) return auth;
-      db.absences = db.absences.filter(
-        (absence) => !(absence.id === params.absenceId && absence.userId === auth.user.id),
-      );
+      const own = (absence: { id: string; userId: string }) =>
+        absence.id === params.absenceId && absence.userId === auth.user.id;
+      // Like the backend: someone else's or a missing absence is 404
+      if (!db.absences.some(own)) return error(404, 'NOT_FOUND');
+      db.absences = db.absences.filter((absence) => !own(absence));
       persist();
       return emptyResponse();
     },
