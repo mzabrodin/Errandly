@@ -2,11 +2,11 @@ import { Module } from '@nestjs/common';
 
 import { AccountController } from './account.controller.js';
 import { AuthController } from './auth.controller.js';
-import { PasswordHasher, ScryptPasswordHasher } from './password-hasher.js';
+import { Argon2PasswordHasher, PasswordHasher } from './password-hasher.js';
 
 @Module({
   controllers: [AuthController, AccountController],
-  providers: [{ provide: PasswordHasher, useClass: ScryptPasswordHasher }],
+  providers: [{ provide: PasswordHasher, useFactory: () => new Argon2PasswordHasher() }],
   exports: [PasswordHasher],
 })
 export class AuthModule {}

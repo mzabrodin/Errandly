@@ -1,39 +1,4 @@
-import { randomBytes, scrypt, timingSafeEqual } from 'node:crypto';
-import { Injectable } from '@nestjs/common';
-
-interface ScryptParams {
-  /** log2 of the CPU/memory cost N */
-  logN: number;
-  r: number;
-  p: number;
-}
-
-// OWASP Password Storage Cheat Sheet: scrypt N=2^16, r=8, p=2 (about 64 MB per hash)
-const CURRENT: ScryptParams = { logN: 16, r: 8, p: 2 };
-const KEY_LENGTH = 32;
-const SALT_LENGTH = 16;
-const PREFIX = 'scrypt';
-
-function derive(password: string, salt: Buffer, params: ScryptParams): Promise<Buffer> {
-  const N = 2 ** params.logN;
-  return new Promise((resolve, reject) => {
-    scrypt(
-      password.normalize('NFKC'),
-      salt,
-      KEY_LENGTH,
-      { N, r: params.r, p: params.p, maxmem: 256 * N * params.r },
-      (error, key) => {
-        if (error) reject(error);
-        else resolve(key);
-      },
-    );
-  });
-}
-
-function parseInteger(value: string | undefined): number | null {
-  if (value === undefined || !/^\d+$/.test(value)) return null;
-  return Number(value);
-}
+import { hash, verify, type Options } from '@node-rs/argon2';
 
 /** Port: services depend on this, not on a hashing algorithm */
 export abstract class PasswordHasher {
@@ -42,35 +7,40 @@ export abstract class PasswordHasher {
   abstract verify(password: string, stored: string): Promise<boolean>;
 }
 
-/** Password hashes in the self-describing format `scrypt$logN$r$p$salt$hash` (base64) */
-@Injectable()
-export class ScryptPasswordHasher extends PasswordHasher {
-  async hash(password: string): Promise<string> {
-    const salt = randomBytes(SALT_LENGTH);
-    const key = await derive(password, salt, CURRENT);
-    const { logN, r, p } = CURRENT;
-    return [PREFIX, logN, r, p, salt.toString('base64'), key.toString('base64')].join('$');
+export interface Argon2Params {
+  /** Memory per hash in KiB */
+  memoryCost: number;
+  /** Passes over the memory */
+  timeCost: number;
+  parallelism: number;
+}
+
+/** OWASP Password Storage Cheat Sheet, argon2id: m=19 MiB, t=2, p=1 (NFR-SEC-01) */
+export const ARGON2_OWASP: Argon2Params = { memoryCost: 19_456, timeCost: 2, parallelism: 1 };
+
+/**
+ * Argon2id hashes as PHC strings (`$argon2id$v=19$m=…,t=…,p=…$salt$hash`), so stored hashes
+ * keep their own parameters and stronger ones can be rolled out without breaking old logins.
+ * The algorithm defaults to argon2id; the option is not set because it is a `const enum`.
+ */
+export class Argon2PasswordHasher extends PasswordHasher {
+  private readonly options: Options;
+
+  constructor(params: Argon2Params = ARGON2_OWASP) {
+    super();
+    this.options = { ...params };
+  }
+
+  hash(password: string): Promise<string> {
+    return hash(password.normalize('NFKC'), this.options);
   }
 
   async verify(password: string, stored: string): Promise<boolean> {
-    const [prefix, logN, r, p, salt, hash] = stored.split('$');
-    const params = { logN: parseInteger(logN), r: parseInteger(r), p: parseInteger(p) };
-    if (
-      prefix !== PREFIX ||
-      params.logN === null ||
-      params.r === null ||
-      params.p === null ||
-      salt === undefined ||
-      hash === undefined
-    ) {
+    try {
+      return await verify(stored, password.normalize('NFKC'));
+    } catch {
+      // Not a PHC string, or one this library cannot read
       return false;
     }
-    const expected = Buffer.from(hash, 'base64');
-    const actual = await derive(password, Buffer.from(salt, 'base64'), {
-      logN: params.logN,
-      r: params.r,
-      p: params.p,
-    });
-    return expected.length === actual.length && timingSafeEqual(expected, actual);
   }
 }

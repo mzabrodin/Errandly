@@ -21,7 +21,7 @@ export const passwordCredentials = pgTable('password_credentials', {
   userId: uuid()
     .primaryKey()
     .references(() => users.id, { onDelete: 'cascade' }),
-  /** `scrypt$logN$r$p$salt$hash` (ScryptPasswordHasher) */
+  /** Argon2id PHC string `$argon2id$v=19$m=…,t=…,p=…$salt$hash` (Argon2PasswordHasher) */
   passwordHash: text().notNull(),
   /** Lockout after 5 failed logins in a row (ACCOUNT_LOCKED) */
   failedLogins: smallint().notNull().default(0),
