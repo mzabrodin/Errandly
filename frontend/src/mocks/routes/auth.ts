@@ -119,12 +119,15 @@ export const authHandlers = [
     `${API}/auth/reset-password`,
     async ({ request }) => {
       const { token, password = '' } = await request.json();
-      const user = db.users.find((candidate) => candidate.id === token);
-      if (!user) return error(400, 'TOKEN_INVALID');
+      // Like the backend: the body is validated before the token is looked up
       if (!isValidPassword(password)) {
         return error(400, 'VALIDATION', { fields: { password: 'weak' } });
       }
+      const user = db.users.find((candidate) => candidate.id === token);
+      if (!user) return error(400, 'TOKEN_INVALID');
       user.password = password;
+      user.failedLogins = 0;
+      user.lockedUntil = null;
       persist();
       return emptyResponse();
     },
@@ -142,6 +145,8 @@ export const authHandlers = [
   http.post(`${API}/auth/verify-email/resend`, () => {
     const user = currentUser();
     if (!user) return error(401, 'UNAUTHENTICATED');
+    // Nothing to confirm any more
+    if (user.emailVerified) return emptyResponse();
     sendMail('verifyEmail', user.email, {
       name: user.name,
       url: `${location.origin}/verify-email/${user.id}`,

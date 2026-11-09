@@ -148,10 +148,11 @@ const profileHandlers = [
       const user = currentUser();
       if (!user) return error(401, 'UNAUTHENTICATED');
       const { currentPassword, newPassword = '' } = await request.json();
-      if (user.password !== currentPassword) return error(400, 'WRONG_PASSWORD');
+      // Like the backend: the body is validated before the current password is checked
       if (!isValidPassword(newPassword)) {
         return error(400, 'VALIDATION', { fields: { newPassword: 'weak' } });
       }
+      if (user.password !== currentPassword) return error(400, 'WRONG_PASSWORD');
       user.password = newPassword;
       persist();
       return emptyResponse();
