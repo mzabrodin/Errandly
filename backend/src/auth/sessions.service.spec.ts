@@ -1,8 +1,8 @@
 import { FixedClock } from '../common/clock.js';
+import { hashToken } from '../common/tokens.js';
 import type { AuthRepository } from './auth.repository.js';
 import { SESSION_TTL_MS } from './auth.rules.js';
 import { SessionService } from './sessions.service.js';
-import { hashToken } from './tokens.js';
 
 interface Row {
   id: string;

@@ -2,13 +2,13 @@ import { FixedClock } from '../common/clock.js';
 import type { EmailTokenPurpose } from '../common/domain.js';
 import { DomainError } from '../common/errors/domain-error.js';
 import type { EventBus } from '../common/events/event-bus.js';
+import { hashToken } from '../common/tokens.js';
 import type { Database } from '../db/database.js';
 import type { UserDto, UsersApi } from '../users/index.js';
 import type { AuthRepository } from './auth.repository.js';
 import type { LoginAttempts } from './auth.rules.js';
 import { AuthService } from './auth.service.js';
 import type { SessionService } from './sessions.service.js';
-import { hashToken } from './tokens.js';
 
 // In-memory stand-ins for the database-facing collaborators; the e2e tests cover the real ones
 

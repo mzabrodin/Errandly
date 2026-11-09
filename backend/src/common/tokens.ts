@@ -6,7 +6,7 @@ export function generateToken(): string {
 }
 
 /**
- * Only the SHA-256 of a session or email token is stored, so a database leak does not hand
+ * Only the SHA-256 of a session, email or invite token is stored, so a database leak does not hand
  * out working links or sessions. A fast hash is enough: the token is random, not a password.
  */
 export function hashToken(token: string): string {

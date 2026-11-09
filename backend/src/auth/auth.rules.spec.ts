@@ -1,3 +1,4 @@
+import { generateToken, hashToken } from '../common/tokens.js';
 import {
   afterFailedLogin,
   firstName,
@@ -9,7 +10,6 @@ import {
   sessionExpiry,
   shouldRefreshSession,
 } from './auth.rules.js';
-import { generateToken, hashToken } from './tokens.js';
 
 const now = new Date('2026-11-09T12:00:00.000Z');
 const at = (ms: number) => new Date(now.getTime() + ms);

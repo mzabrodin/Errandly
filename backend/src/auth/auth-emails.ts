@@ -4,6 +4,7 @@ import { ConfigService } from '@nestjs/config';
 import { Clock } from '../common/clock.js';
 import type { EmailTokenPurpose } from '../common/domain.js';
 import { EventBus } from '../common/events/event-bus.js';
+import { generateToken, hashToken } from '../common/tokens.js';
 import type { EnvironmentVariables } from '../config/env.validation.js';
 import { appLink } from '../config/urls.js';
 import { DATABASE, type Database } from '../db/database.js';
@@ -11,7 +12,6 @@ import { MailService } from '../mail/index.js';
 import { UsersApi } from '../users/index.js';
 import { AuthRepository } from './auth.repository.js';
 import { firstName, RESET_TOKEN_TTL_MS, VERIFY_TOKEN_TTL_MS } from './auth.rules.js';
-import { generateToken, hashToken } from './tokens.js';
 
 /**
  * Verification and reset emails, sent after commit with retries (a mail failure never
