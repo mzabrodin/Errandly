@@ -1,4 +1,4 @@
-import { DEV_DATABASE_URL, LogLevel, NodeEnv, validateEnv } from './env.validation.js';
+import { DEV_DATABASE_URL, DEV_STORAGE, LogLevel, NodeEnv, validateEnv } from './env.validation.js';
 
 describe('validateEnv', () => {
   it('applies defaults', () => {
@@ -50,5 +50,27 @@ describe('validateEnv', () => {
     expect(() => validateEnv({ DATABASE_URL: 'mysql://localhost/errandly' })).toThrow(
       /DATABASE_URL/,
     );
+  });
+
+  it('points storage at the local SeaweedFS outside production', () => {
+    expect(validateEnv({})).toMatchObject({
+      ...DEV_STORAGE,
+      S3_REGION: 'us-east-1',
+      S3_BUCKET: 'avatars',
+    });
+  });
+
+  it('leaves storage to AWS S3 and its credential chain in production when nothing is set', () => {
+    const env = validateEnv({ NODE_ENV: 'production', DATABASE_URL: 'postgresql://db/errandly' });
+
+    expect(env.S3_ENDPOINT).toBeUndefined();
+    expect(env.S3_ACCESS_KEY_ID).toBeUndefined();
+  });
+
+  it('keeps storage settings that were set', () => {
+    const env = validateEnv({ S3_ENDPOINT: 'https://r2.example.com', S3_ACCESS_KEY_ID: 'id' });
+
+    expect(env).toMatchObject({ S3_ENDPOINT: 'https://r2.example.com', S3_ACCESS_KEY_ID: 'id' });
+    expect(env.S3_SECRET_ACCESS_KEY).toBe(DEV_STORAGE.S3_SECRET_ACCESS_KEY);
   });
 });

@@ -1,17 +1,17 @@
 # Local stack. Variables: .env.example (copy to .env to override the dev defaults)
 #   docker compose up -d --build        app http://localhost:8080, Mailpit http://localhost:8025
 #                                       (Swagger UI only with npm run dev:backend, NODE_ENV=development)
-#   docker compose up -d postgresql mailpit   dependencies only, when the backend runs on the host
+#   docker compose up -d postgresql mailpit storage   dependencies only, when the backend runs on the host
 #   docker compose logs -f backend      JSON logs; find a request by its X-Request-Id
 #   docker compose down                 stop, data is kept
-#   docker compose down -v              stop and delete the database
+#   docker compose down -v              stop and delete the database and the stored avatars
 #
 # The one-shot `migrate` service applies pending migrations before the backend starts.
 # Demo data is not loaded here: npm run db:seed works only outside production.
 #
 # Ports are bound to 127.0.0.1, so the services are reachable only from this machine.
-# Networks: frontend (nginx -> backend), backend (backend -> postgresql, mailpit);
-# nginx cannot reach the database or Mailpit.
+# Networks: frontend (nginx -> backend), backend (backend -> postgresql, mailpit, storage);
+# nginx cannot reach the database, Mailpit or the storage.
 
 name: errandly
 
@@ -22,6 +22,9 @@ x-logging: &default-logging
     max-file: '3'
 
 x-database-url: &database-url postgresql://${POSTGRES_USER:-errandly}:${POSTGRES_PASSWORD:-errandly}@postgresql:5432/${POSTGRES_DB:-errandly}
+
+x-s3-access-key-id: &s3-access-key-id ${S3_ACCESS_KEY_ID:-errandly}
+x-s3-secret-access-key: &s3-secret-access-key ${S3_SECRET_ACCESS_KEY:-errandly-dev-secret}
 
 x-backend-build: &backend-build
   context: .
@@ -64,6 +67,27 @@ services:
       - '127.0.0.1:${MAILPIT_UI_PORT:-8025}:8025'
     networks: [backend]
 
+  # S3 storage for avatars; the AWS_* pair is its only identity, so anonymous access is refused
+  storage:
+    <<: *service
+    image: chrislusf/seaweedfs:4.48
+    command: ['mini']
+    environment:
+      AWS_ACCESS_KEY_ID: *s3-access-key-id
+      AWS_SECRET_ACCESS_KEY: *s3-secret-access-key
+      S3_BUCKET: avatars
+    ports:
+      - '127.0.0.1:${S3_PORT:-8333}:8333'
+    volumes:
+      - storage-data:/data
+    networks: [backend]
+    healthcheck:
+      test: ['CMD', 'curl', '-fsS', 'http://localhost:8333/healthz']
+      interval: 5s
+      timeout: 5s
+      start_period: 20s
+      retries: 10
+
   migrate:
     <<: *service
     restart: 'no'
@@ -96,6 +120,9 @@ services:
       SMTP_PASS: ${SMTP_PASS:-}
       # Dev endpoint for emails from the frontend mock API; ignored unless SMTP is Mailpit
       MAIL_DEV_API: ${MAIL_DEV_API:-true}
+      S3_ENDPOINT: http://storage:8333
+      S3_ACCESS_KEY_ID: *s3-access-key-id
+      S3_SECRET_ACCESS_KEY: *s3-secret-access-key
     ports:
       - '127.0.0.1:${API_PORT:-3000}:3000'
     networks: [frontend, backend]
@@ -110,6 +137,8 @@ services:
         condition: service_completed_successfully
       mailpit:
         condition: service_started
+      storage:
+        condition: service_healthy
 
   frontend:
     <<: *service
@@ -130,3 +159,4 @@ networks:
 
 volumes:
   postgresql-data:
+  storage-data:

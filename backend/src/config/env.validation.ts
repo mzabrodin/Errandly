@@ -21,6 +21,12 @@ const port = z.coerce.number().int().min(1).max(65535);
 /** Local compose database; production must set DATABASE_URL explicitly */
 export const DEV_DATABASE_URL = 'postgresql://errandly:errandly@localhost:5432/errandly';
 
+export const DEV_STORAGE = {
+  S3_ENDPOINT: 'http://localhost:8333',
+  S3_ACCESS_KEY_ID: 'errandly',
+  S3_SECRET_ACCESS_KEY: 'errandly-dev-secret',
+} as const;
+
 const envSchema = z.object({
   NODE_ENV: z.enum(NodeEnv).default(NodeEnv.Development),
   PORT: port.default(3000),
@@ -44,14 +50,33 @@ const envSchema = z.object({
   SMTP_FROM: z.string().default('Errandly <no-reply@errandly.local>'),
   // Dev endpoint /api/dev/mail for the frontend mock API; works only with a local SMTP host
   MAIL_DEV_API: z.stringbool().default(false),
+
+  // Dev defaults point at SeaweedFS; in production, unset means AWS S3 and its credential chain
+  S3_ENDPOINT: z.url({ protocol: /^https?$/ }).optional(),
+  S3_REGION: z.string().min(1).default('us-east-1'),
+  S3_BUCKET: z.string().min(1).default('avatars'),
+  S3_ACCESS_KEY_ID: z.string().min(1).optional(),
+  S3_SECRET_ACCESS_KEY: z.string().min(1).optional(),
 });
 
+const isProduction = (env: { NODE_ENV: NodeEnv }): boolean => env.NODE_ENV === NodeEnv.Production;
+
+function devStorage(env: { NODE_ENV: NodeEnv }, key: keyof typeof DEV_STORAGE): string | undefined {
+  return isProduction(env) ? undefined : DEV_STORAGE[key];
+}
+
 const refinedSchema = envSchema
-  .refine((env) => env.NODE_ENV !== NodeEnv.Production || env.DATABASE_URL !== undefined, {
+  .refine((env) => !isProduction(env) || env.DATABASE_URL !== undefined, {
     message: 'DATABASE_URL is required in production',
     path: ['DATABASE_URL'],
   })
-  .transform((env) => ({ ...env, DATABASE_URL: env.DATABASE_URL ?? DEV_DATABASE_URL }));
+  .transform((env) => ({
+    ...env,
+    DATABASE_URL: env.DATABASE_URL ?? DEV_DATABASE_URL,
+    S3_ENDPOINT: env.S3_ENDPOINT ?? devStorage(env, 'S3_ENDPOINT'),
+    S3_ACCESS_KEY_ID: env.S3_ACCESS_KEY_ID ?? devStorage(env, 'S3_ACCESS_KEY_ID'),
+    S3_SECRET_ACCESS_KEY: env.S3_SECRET_ACCESS_KEY ?? devStorage(env, 'S3_SECRET_ACCESS_KEY'),
+  }));
 
 export type EnvironmentVariables = z.infer<typeof refinedSchema>;
 

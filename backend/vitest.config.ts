@@ -25,6 +25,8 @@ export default defineConfig({
         'src/**/*.repository.ts',
         'src/**/*.store.ts',
         'src/db/tables.ts',
+        // The S3 adapter; the e2e tests run it against SeaweedFS
+        'src/common/storage/s3-object-storage.ts',
       ],
       thresholds: { lines: 70, functions: 70, branches: 70, statements: 70 },
     },
