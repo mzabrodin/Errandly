@@ -10,10 +10,12 @@ import { EventBus } from './events/event-bus.js';
 import { EventDispatcher } from './events/event-dispatcher.js';
 import { EventPublicationStore } from './events/event-publication.store.js';
 import { rateLimits } from './http/rate-limit.js';
+import { ObjectStorage } from './storage/object-storage.js';
+import { S3ObjectStorage } from './storage/s3-object-storage.js';
 
 /**
- * Shared kernel available to every module: the clock, the event bus, the global exception
- * handler and per-IP rate limits. Needs DatabaseModule and ScheduleModule.
+ * Shared kernel available to every module: the clock, the event bus, object storage, the global
+ * exception handler and per-IP rate limits. Needs DatabaseModule and ScheduleModule.
  */
 @Global()
 @Module({
@@ -29,6 +31,7 @@ import { rateLimits } from './http/rate-limit.js';
   ],
   providers: [
     { provide: Clock, useClass: SystemClock },
+    { provide: ObjectStorage, useClass: S3ObjectStorage },
     { provide: APP_FILTER, useClass: ApiExceptionFilter },
     // Registered before the auth module's SessionGuard, so floods are cut off first
     { provide: APP_GUARD, useClass: ThrottlerGuard },
@@ -36,6 +39,6 @@ import { rateLimits } from './http/rate-limit.js';
     EventBus,
     EventDispatcher,
   ],
-  exports: [Clock, EventBus],
+  exports: [Clock, EventBus, ObjectStorage],
 })
 export class CommonModule {}
