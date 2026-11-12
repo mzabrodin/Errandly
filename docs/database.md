@@ -43,6 +43,10 @@ npm run db:check -w backend       # перевірити узгодженіст�
 - Лише для розробки й тестів: з `NODE_ENV=production` команда відмовляється працювати. Seed ніколи не входить у міграції й не запускається під час старту.
 - Дані будуються чистою функцією `buildSeed(now)` (`db/seed-data.ts`) з unit-тестами. Таблиці для очищення seed знаходить у схемі сам, тож нова таблиця не забудеться.
 
+## Файли поза базою
+
+Аватарки лежать не в PostgreSQL, а в S3-сумісному сховищі (сервіс `storage` у compose — SeaweedFS, том `storage-data`). У базі — лише ключ файлу (`users.uploaded_avatar_key`). Резервну копію бази (NFR-REL) треба робити разом із копією тому `storage-data`, інакше відновлена база посилатиметься на файли, яких немає.
+
 ## Реєстр подій
 
 `event_publications` — технічна таблиця шини подій: рядок на кожного слухача після коміту, з кількістю спроб, часом наступної спроби й останньою помилкою. Виконані рядки можна періодично видаляти; ті, на яких слухач здався (`completed_at` і `next_attempt_at` порожні), варто переглядати. Механізм описано в [architecture.md](architecture.md#події).
@@ -50,6 +54,6 @@ npm run db:check -w backend       # перевірити узгодженіст�
 ## Тести з базою
 
 - Unit-тести (`*.spec.ts`) базу не використовують: репозиторії й порти підміняються фейками.
-- E2E (`test/*.e2e-spec.ts`): `test/setup/global-setup.ts` піднімає через Testcontainers один PostgreSQL 18 на запуск і застосовує міграції з нуля. Потрібен запущений Docker; `E2E_DATABASE_URL` натомість вказує на наявну базу (її таблиці буде очищено).
-- `test/support/test-app.ts` (`createTestApp`) запускає весь `AppModule` з `FixedClock`, `RecordingMailTransport` (записує листи, `failNext()` імітує збій SMTP) і швидким argon2. `reset()` очищає всі таблиці (`db/tables.ts#truncateAll`) перед кожним тестом, `deliverEvents()` доставляє події після коміту.
+- E2E (`test/*.e2e-spec.ts`): `test/setup/global-setup.ts` піднімає через Testcontainers один PostgreSQL 18 і один SeaweedFS на запуск і застосовує міграції з нуля. Потрібен запущений Docker; `E2E_DATABASE_URL` і `E2E_S3_ENDPOINT` натомість вказують на наявні сервіси (таблиці бази буде очищено).
+- `test/support/test-app.ts` (`createTestApp`) запускає весь `AppModule` з `FixedClock`, `RecordingMailTransport` (записує листи, `failNext()` імітує збій SMTP), `FlakyObjectStorage` (справжній SeaweedFS, `failNext()` імітує збій сховища) і швидким argon2. `reset()` очищає всі таблиці (`db/tables.ts#truncateAll`) перед кожним тестом, `deliverEvents()` доставляє події після коміту.
 - Дані створюють фабрики з `test/support/factories.ts` (`createUser`, `signIn`). Тести не покладаються на демо-дані.

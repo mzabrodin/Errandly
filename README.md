@@ -72,7 +72,7 @@ docker compose up -d --build
 - API: <http://localhost:3000/api>
 - Mailpit (усі листи з dev-середовища): <http://localhost:8025>
 
-Перед стартом бекенду одноразовий сервіс `migrate` застосовує нові міграції. Демо-дані в Docker не завантажуються.
+Перед стартом бекенду одноразовий сервіс `migrate` застосовує нові міграції. Демо-дані в Docker не завантажуються. Аватарки зберігає сервіс `storage` ([SeaweedFS](https://github.com/seaweedfs/seaweedfs), S3-сумісне сховище) у томі `storage-data`; акаунт у хмарі не потрібен.
 
 Значення за замовчуванням підходять для розробки. Щоб змінити порти чи паролі, скопіюйте `.env.example` у `.env` (наприклад, `POSTGRES_PORT=5433`, якщо порт 5432 зайнятий).
 
@@ -81,7 +81,7 @@ docker compose up -d --build
 ```bash
 npm install
 cp backend/.env.example backend/.env
-docker compose up -d postgresql mailpit   # лише залежності
+docker compose up -d postgresql mailpit storage   # лише залежності
 npm run db:migrate                        # схема бази
 npm run db:seed                           # демо-дані (лише для розробки)
 npm run dev:backend                       # http://localhost:3000, Swagger UI: /api/docs
@@ -169,6 +169,9 @@ Swagger UI (`/api/docs`) доступний лише в режимі розро�
 | `POSTGRES_USER` / `POSTGRES_PASSWORD` / `_DB` | облікові дані бази в compose                                 | так    | `.env`                  |
 | `SMTP_HOST` / `SMTP_PORT` / `SMTP_SECURE`     | поштовий сервер (за замовчуванням Mailpit)                   | ні     | `backend/.env`, `.env`  |
 | `SMTP_USER` / `SMTP_PASS` / `SMTP_FROM`       | облікові дані пошти (Gmail: app password)                    | так    | `backend/.env`, `.env`  |
+| `S3_ENDPOINT`                                 | S3-сховище аватарок (за замовчуванням локальний SeaweedFS)   | ні     | `backend/.env`, compose |
+| `S3_ACCESS_KEY_ID` / `S3_SECRET_ACCESS_KEY`   | ключі сховища (у розробці — `errandly` / dev-пароль)         | так    | `backend/.env`, `.env`  |
+| `S3_REGION` / `S3_BUCKET`                     | необов'язкові: регіон (`us-east-1`) і бакет (`avatars`)      | ні     | `backend/.env`          |
 | `TOKEN_ENCRYPTION_KEY`                        | шифрування Google-токенів (буде додано)                      | так    | `backend/.env`          |
 | `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET`   | OAuth-клієнт Google (буде додано)                            | так    | `backend/.env`          |
 | `VITE_API_URL`                                | адреса API для фронтенду, якщо не той самий origin           | ні     | `frontend/.env`         |
