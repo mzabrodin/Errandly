@@ -1,0 +1,60 @@
+@startuml deployment
+skinparam shadowing false
+skinparam defaultFontName "Inter, Segoe UI, Arial"
+skinparam ArrowColor #1F6F64
+skinparam NodeBorderColor #1F6F64
+skinparam ArtifactBorderColor #1F6F64
+skinparam ArtifactBackgroundColor #FFFFFF
+skinparam DatabaseBorderColor #1F6F64
+skinparam NoteBackgroundColor #FFFFE0
+
+node "Пристрій користувача" as device {
+  node "Браузер\n(Chrome, Firefox, Edge, Safari)" as browser {
+    artifact "React SPA" as spa
+  }
+}
+
+node "Сервер (Docker Compose)" as host {
+  node "frontend\nnginx" as nginx {
+    artifact "статика SPA" as static
+  }
+  node "backend\nnode:24-alpine" as backend {
+    artifact "NestJS API\n(backend/dist/main.js)" as api
+  }
+  node "migrate\n(одноразовий)" as migrate {
+    artifact "migrate.js" as migrations
+  }
+  node "postgresql\npostgres:18-alpine" as pg {
+    database "errandly" as db
+  }
+  node "storage\nSeaweedFS 4.48 (weed mini)" as storage {
+    database "бакет avatars" as bucket
+  }
+  node "mailpit\n(лише розробка)" as mailpit
+  database "том postgresql-data" as pgvol
+  database "том storage-data" as s3vol
+}
+
+cloud "Інтернет" {
+  node "Google OAuth 2.0" as oauth
+  node "Google Calendar API v3" as gcal
+  node "Gmail SMTP\n(production)" as gmail
+}
+
+browser --> nginx : HTTPS :8080 (TLS у production)
+nginx --> backend : /api, мережа frontend
+backend --> pg : TCP 5432, мережа backend
+backend --> storage : S3 API :8333, мережа backend
+backend --> mailpit : SMTP :1025
+backend --> gmail : SMTPS :465
+backend --> oauth : HTTPS
+backend --> gcal : HTTPS
+migrate --> pg : міграції перед стартом backend
+pg --> pgvol
+storage --> s3vol
+
+note bottom of host
+  nginx не бачить базу, сховище й Mailpit (окремі мережі).
+  Перезапуск контейнерів не видаляє дані: вони в томах (SYS-04).
+end note
+@enduml

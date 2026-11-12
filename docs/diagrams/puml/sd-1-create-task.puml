@@ -1,0 +1,78 @@
+@startuml sd-1-create-task
+skinparam shadowing false
+skinparam defaultFontName "Inter, Segoe UI, Arial"
+skinparam TitleFontStyle bold
+skinparam maxMessageSize 220
+skinparam ResponseMessageBelowArrow true
+autonumber
+
+actor "Адміністратор" as Admin
+participant "React SPA" as SPA
+participant "TasksController" as Ctrl
+participant "TasksService" as Svc
+participant "GroupsApi" as Groups
+participant "AssignmentStrategy\n(LeastLoadRotation)" as Strategy
+participant "TasksRepository" as Repo
+database "PostgreSQL" as DB
+participant "EventDispatcher" as Disp
+participant "notifications\n(слухач)" as Notif
+participant "MailService" as Mail
+participant "calendar\n(слухач)" as Cal
+participant "Google Calendar API" as Google
+
+note over Ctrl, Google
+  Модулі tasks, notifications і calendar заплановані (зараз контролери відповідають 501).
+  Потік відповідає docs/architecture.md: доступ через GroupsApi, побічні дії через події після коміту.
+end note
+
+Admin -> SPA : Заповнює форму: назва, складність,\nтермін, повторюваність, виконавець (необов'язково)
+SPA -> Ctrl : POST /api/groups/:groupId/tasks (CreateTaskDto)
+alt Дані некоректні (FR-20)
+  Ctrl --> SPA : 400 VALIDATION + fields (ValidationPipe)
+  SPA --> Admin : Підсвічує поля форми
+else Дані коректні
+  Ctrl -> Svc : create(groupId, userId, input)
+  Svc -> DB : BEGIN
+  Svc -> Groups : requireAdmin(groupId, userId, tx)
+  alt Не учасник або не адміністратор (SYS-07)
+    Groups --> Svc : DomainError
+    Svc -> DB : ROLLBACK
+    Svc --> Ctrl : 403 FORBIDDEN / ADMIN_ONLY
+    Ctrl --> SPA : 403
+  else Адміністратор
+    Svc -> Svc : розгорнути серію на 4 тижні (FR-21)
+    alt assigneeId = null (автоматично)
+      Svc -> Groups : members(groupId, tx) з відсутностями
+      Svc -> Repo : навантаження учасників за 4 тижні
+      Repo -> DB : SELECT сума складності
+      loop Для кожного екземпляра
+        Svc -> Strategy : pick(кандидати, задача)
+        Strategy --> Svc : найменше навантаження, ротація\n(або null → «Не призначено», FR-29)
+      end
+    else Виконавця обрано вручну (FR-30)
+      Svc -> Groups : перевірити, що це учасник групи
+      Svc -> Svc : manuallyAssigned = true
+    end
+    Svc -> Repo : insertSeries + insertTasks (tx)
+    Repo -> DB : INSERT task_series, tasks
+    Svc -> DB : INSERT event_publications (task.assigned)
+    Svc -> DB : COMMIT
+    Svc --> Ctrl : TaskDto (перший екземпляр)
+    Ctrl --> SPA : 201
+    SPA --> Admin : Задача в списку й календарі групи
+  end
+end
+
+== Після коміту, з повторами (SD-4) ==
+Disp -> Notif : task.assigned
+Notif -> DB : INSERT notifications (taskAssigned)
+opt Лист увімкнено в налаштуваннях (FR-38)
+  Notif -> Mail : send('taskAssigned', email, data, мова виконавця)
+end
+Disp -> Cal : task.assigned
+opt Виконавець підключив Google Calendar (FR-33)
+  Cal -> Google : events.insert / update (з нагадуванням)
+  Google --> Cal : eventId
+  Cal -> DB : INSERT calendar_event_links
+end
+@enduml

@@ -1,0 +1,88 @@
+@startuml components
+skinparam shadowing false
+skinparam defaultFontName "Inter, Segoe UI, Arial"
+skinparam TitleFontStyle bold
+skinparam RoundCorner 12
+skinparam ClassBackgroundColor #FFFFFF
+skinparam ClassBorderColor #1F6F64
+skinparam ObjectBackgroundColor #FFFFFF
+skinparam ObjectBorderColor #1F6F64
+skinparam ComponentBackgroundColor #FFFFFF
+skinparam ComponentBorderColor #1F6F64
+skinparam NoteBackgroundColor #FFFFE0
+
+actor "Користувач\n(браузер)" as user
+
+package "Frontend SPA (React 19, TypeScript, Vite)" {
+  [app\nроутер і провайдери] as app
+  [pages, features\nекрани й сценарії] as pages
+  [shared\nAPI-клієнт (openapi-fetch), TanStack Query, i18n] as shared
+}
+[MSW\nмок-API (лише розробка)] as msw
+
+node "nginx\nстатика SPA, проксі /api, X-Request-Id" as nginx
+
+package "Backend REST API (NestJS 12, TypeScript)" {
+  [HTTP API\nконтролери, guards, OpenAPI-контракт] as http
+  [auth\nсесії, пароль, листи] as auth
+  [users\nпрофіль, аватарки] as users
+  [groups\nгрупи, запрошення, ролі, відсутності] as groups
+  [tasks\nзадачі, серії, розподіл] as tasks
+  [notifications\nсповіщення, нагадування] as notifications
+  [calendar\nGoogle Calendar] as calendar
+  [stats] as stats
+  [mail\nшаблони uk/en] as mail
+  [Спільне ядро\nEventBus, EventDispatcher,\nClock, помилки, валідація] as kernel
+  [config, logger\nzod env, pino] as config
+}
+
+database "PostgreSQL 18" as pg
+database "SeaweedFS\nS3-сховище аватарок" as s3
+cloud "SMTP\nMailpit у dev, Gmail у prod" as smtp
+cloud "Google OAuth 2.0" as oauth
+cloud "Google Calendar API" as gcal
+
+user --> nginx : HTTPS
+nginx --> app : віддає SPA
+app --> pages
+pages --> shared
+shared ..> msw : VITE_USE_MOCKS=true
+shared --> nginx : REST JSON,\ncookie-сесія
+nginx --> http : /api
+
+http --> auth
+http --> users
+http --> groups
+http --> tasks
+http --> notifications
+http --> calendar
+http --> stats
+auth --> users
+groups --> users
+tasks --> groups
+calendar --> tasks
+notifications --> tasks
+notifications --> groups
+notifications --> mail
+stats --> tasks
+auth --> mail
+groups --> mail
+kernel <.. auth : події
+kernel <.. groups : події
+kernel <.. tasks : події
+
+auth --> pg : SQL
+users --> pg : SQL
+groups --> pg : SQL
+tasks --> pg : SQL
+kernel --> pg : event_publications
+users --> s3 : S3 API
+mail --> smtp : SMTP
+auth --> oauth : вхід (заплановано)
+calendar --> gcal : OAuth та REST
+
+note bottom of tasks
+  tasks, calendar, notifications і stats —
+  поки що лише контролери (501)
+end note
+@enduml
