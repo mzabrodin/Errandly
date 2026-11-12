@@ -13,5 +13,6 @@ export class UserDto {
   /** UI and email language */
   @ApiProperty({ enum: LOCALES, enumName: 'Locale' })
   locale!: Locale;
+  /** The uploaded photo, else the Google photo, else null */
   avatarUrl!: string | null;
 }

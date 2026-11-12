@@ -21,7 +21,8 @@ export const users = pgTable(
     /** IANA time zone used to show times and send reminders */
     timezone: text().notNull().default('Europe/Kyiv'),
     locale: localeEnum().notNull().default(DEFAULT_LOCALE),
-    avatarUrl: text(),
+    providerAvatarUrl: text(),
+    uploadedAvatarKey: text(),
     createdAt: createdAt(),
     updatedAt: updatedAt(),
   },

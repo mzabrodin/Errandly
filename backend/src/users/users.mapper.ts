@@ -1,4 +1,5 @@
 import type { UserDto } from './dto/user.dto.js';
+import { avatarUrlOf } from './users.rules.js';
 import type { UserRow } from './users.schema.js';
 
 export function toUserDto(row: UserRow): UserDto {
@@ -9,6 +10,6 @@ export function toUserDto(row: UserRow): UserDto {
     emailVerified: row.emailVerifiedAt !== null,
     timezone: row.timezone,
     locale: row.locale,
-    avatarUrl: row.avatarUrl,
+    avatarUrl: avatarUrlOf(row),
   };
 }

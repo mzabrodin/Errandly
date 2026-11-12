@@ -14,6 +14,8 @@ export interface DomainEventMap {
   'auth.passwordResetRequested': { userId: string };
   /** users: an account was deleted (NFR-LEG-02) */
   'user.deleted': { userId: string };
+  /** users: an uploaded avatar was replaced, removed or its account deleted */
+  'user.avatarDiscarded': { key: string };
   /** groups: a group was created; `userId` is its first admin (FR-10) */
   'group.created': { groupId: string; userId: string };
   /** groups: an admin gave or took the admin role (FR-16) */

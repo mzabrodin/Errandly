@@ -37,7 +37,11 @@ export class UsersService {
    */
   async deleteAccount(userId: string): Promise<void> {
     await this.db.transaction(async (tx) => {
+      const user = await this.users.lockById(userId, tx);
       await this.bus.publish(tx, 'user.deleted', { userId });
+      if (user !== undefined && user.uploadedAvatarKey !== null) {
+        await this.bus.publish(tx, 'user.avatarDiscarded', { key: user.uploadedAvatarKey });
+      }
       await this.users.delete(userId, tx);
     });
   }

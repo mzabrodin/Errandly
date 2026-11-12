@@ -148,7 +148,7 @@
             "cookie": []
           }
         ],
-        "summary": "Uploads an avatar image (field `file`). Errors: 400 VALIDATION (file type), 413 FILE_TOO_LARGE.",
+        "summary": "Uploads a JPEG, PNG, WebP or GIF (field `file`). Errors: 400 VALIDATION (file required/type), 413 FILE_TOO_LARGE.",
         "tags": [
           "me"
         ]
@@ -183,7 +183,7 @@
             "cookie": []
           }
         ],
-        "summary": "Removes the avatar.",
+        "summary": "Removes the uploaded photo; the Google photo or initials show again.",
         "tags": [
           "me"
         ]
@@ -1985,7 +1985,8 @@
           },
           "avatarUrl": {
             "type": "string",
-            "nullable": true
+            "nullable": true,
+            "description": "The uploaded photo, else the Google photo, else null"
           }
         },
         "required": [

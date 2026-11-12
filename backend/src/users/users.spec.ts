@@ -19,7 +19,8 @@ function row(overrides: Partial<UserRow> = {}): UserRow {
     emailVerifiedAt: null,
     timezone: 'Europe/Kyiv',
     locale: 'uk',
-    avatarUrl: null,
+    providerAvatarUrl: null,
+    uploadedAvatarKey: null,
     createdAt: new Date('2026-01-01T00:00:00Z'),
     updatedAt: new Date('2026-01-01T00:00:00Z'),
     ...overrides,
@@ -33,6 +34,10 @@ class FakeRepository {
 
   findById(id: string) {
     return Promise.resolve(this.rows.get(id));
+  }
+
+  lockById(id: string) {
+    return this.findById(id);
   }
 
   findByIds(ids: readonly string[]) {
@@ -118,6 +123,17 @@ describe('UsersApi', () => {
     expect(repository.rows.get('u2')?.emailVerifiedAt).toBe(first);
     await expect(api.markEmailVerified('nobody', new Date())).resolves.toBeNull();
   });
+
+  it('shows the uploaded photo first, then the sign-in provider photo, then none', async () => {
+    const google = 'https://lh3.googleusercontent.com/a/photo';
+    const key = '0190a1b2-c3d4-7e5f-8a9b-0c1d2e3f4a5b.webp';
+    repository.rows.set('u1', row());
+
+    await expect(api.setProviderAvatar('u1', google)).resolves.toMatchObject({ avatarUrl: google });
+    repository.rows.set('u1', row({ providerAvatarUrl: google, uploadedAvatarKey: key }));
+    await expect(api.findById('u1')).resolves.toMatchObject({ avatarUrl: `/api/avatars/${key}` });
+    await expect(api.setProviderAvatar('nobody', null)).resolves.toBeNull();
+  });
 });
 
 function setup() {
@@ -177,6 +193,18 @@ describe('UsersService', () => {
 
     expect(published).toEqual([['user.deleted', { userId: 'u1' }]]);
     expect(repository.deleted).toEqual(['u1']);
+  });
+
+  it('discards the uploaded photo with the account (NFR-LEG-02)', async () => {
+    const { repository, published, service } = setup();
+    repository.rows.set('u1', row({ uploadedAvatarKey: 'k.webp' }));
+
+    await service.deleteAccount('u1');
+
+    expect(published).toEqual([
+      ['user.deleted', { userId: 'u1' }],
+      ['user.avatarDiscarded', { key: 'k.webp' }],
+    ]);
   });
 });
 

@@ -50,9 +50,9 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Uploads an avatar image (field `file`). Errors: 400 VALIDATION (file type), 413 FILE_TOO_LARGE. */
+        /** Uploads a JPEG, PNG, WebP or GIF (field `file`). Errors: 400 VALIDATION (file required/type), 413 FILE_TOO_LARGE. */
         post: operations["AvatarController_uploadAvatar"];
-        /** Removes the avatar. */
+        /** Removes the uploaded photo; the Google photo or initials show again. */
         delete: operations["AvatarController_deleteAvatar"];
         options?: never;
         head?: never;
@@ -668,6 +668,7 @@ export interface components {
             emailVerified: boolean;
             /** @description IANA time zone, e.g. Europe/Kyiv */
             timezone: string;
+            /** @description The uploaded photo, else the Google photo, else null */
             avatarUrl: string | null;
         };
         AvatarUploadDto: {
