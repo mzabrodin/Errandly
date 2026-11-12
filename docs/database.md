@@ -1,6 +1,6 @@
 # База даних
 
-PostgreSQL 18, [Drizzle ORM](https://orm.drizzle.team) 0.45 і драйвер `pg`. Сутності та зв'язки описано в [domain.md](domain.md). Drizzle обрано за схему в TypeScript із повністю виведеними типами, нативний ESM без кодогенерації та читабельні SQL-міграції.
+PostgreSQL 18, [Drizzle ORM](https://orm.drizzle.team) 0.45 і драйвер `pg`. Таблиці та зв'язки описано в [data-model.md](data-model.md). Drizzle обрано за схему в TypeScript із повністю виведеними типами, нативний ESM без кодогенерації та читабельні SQL-міграції.
 
 ## Команди
 
