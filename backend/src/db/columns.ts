@@ -6,7 +6,7 @@ import {
   type PgUUIDBuilderInitial,
 } from 'drizzle-orm/pg-core';
 
-// Column builders shared by every module schema. They are single-use, hence factories
+// Drizzle column builders are single-use, hence factories
 
 type Timestamp = PgTimestampBuilderInitial<''>;
 

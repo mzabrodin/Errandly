@@ -5,7 +5,6 @@ import type { CookieOptions, Request, Response } from 'express';
 import { NodeEnv, type EnvironmentVariables } from '../../config/env.validation.js';
 import { API_PREFIX } from '../../config/urls.js';
 
-/** HttpOnly cookie with the raw session token; only its SHA-256 is stored (SYS-24) */
 export const SESSION_COOKIE = 'errandly_session';
 
 function cookieOptions(secure: boolean): CookieOptions {

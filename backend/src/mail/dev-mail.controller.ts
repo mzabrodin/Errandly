@@ -44,11 +44,7 @@ class SendDevMailDto {
   locale?: MailLocale;
 }
 
-/**
- * Development only: lets the frontend mock API send emails to Mailpit
- * and previews the templates. Enabled by MAIL_DEV_API=true and works only
- * with a local SMTP host, so it cannot become an open mail relay.
- */
+/** For the frontend mock API; only with a local SMTP host, so it cannot become an open relay */
 @ApiExcludeController()
 @Public()
 @Controller('dev/mail')

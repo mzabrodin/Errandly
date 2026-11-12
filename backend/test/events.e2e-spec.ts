@@ -9,8 +9,6 @@ import { EventDispatcher } from './../src/common/events/event-dispatcher.js';
 import { eventPublications } from './../src/common/events/event-publications.schema.js';
 import { DATABASE, type Database } from './../src/db/database.js';
 
-// The event publication registry against a real PostgreSQL: rows commit with the change,
-// are delivered after commit and retried when a listener fails
 describe('Events (e2e)', () => {
   let app: INestApplication;
   let db: Database;

@@ -18,18 +18,12 @@ export interface GroupMember {
   absences: DateRange[];
 }
 
-/**
- * Public API of the groups module: access checks and members for tasks, stats and
- * notifications (NFR-SEC-04, SYS-07). `db` lets a caller run it inside its own transaction.
- */
+/** Access checks for other modules (NFR-SEC-04, SYS-07); `db` joins the caller's transaction */
 @Injectable()
 export class GroupsApi {
   constructor(private readonly repository: GroupsRepository) {}
 
-  /**
-   * The caller's role, or 403 FORBIDDEN. An unknown group answers the same, so the answer
-   * never tells an outsider whether a group exists.
-   */
+  /** An unknown group is FORBIDDEN too, so outsiders can't tell whether it exists */
   async requireMember(groupId: string, userId: string, db?: DbExecutor): Promise<GroupRole> {
     const membership = await this.repository.findMembership(groupId, userId, db);
     if (!membership) throw new DomainError('FORBIDDEN');
@@ -43,7 +37,6 @@ export class GroupsApi {
     }
   }
 
-  /** Current members with their absences, in join order */
   async members(groupId: string, db?: DbExecutor): Promise<GroupMember[]> {
     const [members, absences] = await Promise.all([
       this.repository.membersOf(groupId, db),

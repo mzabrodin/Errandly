@@ -8,7 +8,7 @@ import type { UserDto } from './dto/user.dto.js';
 import { toUserDto } from './users.mapper.js';
 import { UsersRepository, type UserChanges } from './users.repository.js';
 
-/** The signed-in user's own profile and account (FR-38, NFR-COMP-03, NFR-LEG-02) */
+/** FR-38, NFR-COMP-03, NFR-LEG-02 */
 @Injectable()
 export class UsersService {
   constructor(
@@ -31,10 +31,7 @@ export class UsersService {
     return toUserDto(row);
   }
 
-  /**
-   * Deletes the account; sessions, credentials and memberships cascade. Listeners of
-   * `user.deleted` run in the same transaction and can veto it (groups: LAST_ADMIN).
-   */
+  /** `user.deleted` listeners run in this transaction and can veto it (groups: LAST_ADMIN) */
   async deleteAccount(userId: string): Promise<void> {
     await this.db.transaction(async (tx) => {
       const user = await this.users.lockById(userId, tx);

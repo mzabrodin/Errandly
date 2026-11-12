@@ -58,10 +58,7 @@ export const taskSeries = pgTable(
   ],
 );
 
-/**
- * A concrete instance with a due date. Its status is computed, never stored:
- * done → overdue → unassigned → planned
- */
+/** Status is computed, never stored: done → overdue → unassigned → planned */
 export const tasks = pgTable(
   'tasks',
   {

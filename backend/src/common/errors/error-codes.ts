@@ -1,7 +1,6 @@
 import { HttpStatus } from '@nestjs/common';
 
-// Machine-readable error codes in every error body: { code, fields?, retryAfterSeconds?, groups? }.
-// The frontend maps them to localized messages, so renaming one is a breaking change.
+// The frontend maps these to localized messages, so renaming one is a breaking change.
 
 /** The single place that decides the HTTP status of each code; services never pick statuses */
 export const ERROR_STATUS = {
@@ -40,7 +39,6 @@ function isErrorCode(value: string): value is ErrorCode {
 
 export const ERROR_CODES: readonly ErrorCode[] = Object.keys(ERROR_STATUS).filter(isErrorCode);
 
-/** Codes inside `fields` of a VALIDATION error, one per invalid property */
 export const FIELD_CODES = [
   'required',
   'tooLong',

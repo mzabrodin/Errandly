@@ -57,7 +57,6 @@ function mostImportant(codes: FieldCode[]): FieldCode {
   return codes.toSorted((a, b) => PRIORITY.indexOf(a) - PRIORITY.indexOf(b))[0] ?? 'invalid';
 }
 
-/** Turns class-validator errors into 400 `{ code: 'VALIDATION', fields: { name: 'required' } }` */
 export function validationExceptionFactory(errors: ValidationError[]): DomainError {
   const fields: Record<string, string> = {};
   for (const error of errors) {

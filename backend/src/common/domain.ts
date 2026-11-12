@@ -1,5 +1,4 @@
-// Domain vocabulary shared by the database schema, DTOs and validators.
-// Values must match the frontend contract (docs/api.md, shared/api/types.ts).
+// Shared by the database schema, DTOs and validators; values are part of the API contract.
 
 /** UI and email languages; `uk` is the default (FR-38) */
 export const LOCALES = ['uk', 'en'] as const;
@@ -16,7 +15,6 @@ export type TaskStatus = (typeof TASK_STATUSES)[number];
 export const RECURRENCE_TYPES = ['once', 'daily', 'weekly', 'monthly'] as const;
 export type RecurrenceType = (typeof RECURRENCE_TYPES)[number];
 
-/** Edits and deletes of a recurring task apply to one instance or to the whole series */
 export const EDIT_SCOPES = ['one', 'series'] as const;
 export type EditScope = (typeof EDIT_SCOPES)[number];
 
@@ -47,7 +45,6 @@ export type EmailTokenPurpose = (typeof EMAIL_TOKEN_PURPOSES)[number];
 export const AUTH_PROVIDERS = ['google'] as const;
 export type AuthProvider = (typeof AUTH_PROVIDERS)[number];
 
-/** Calendars tasks can be synced to; each one has a CalendarGateway */
 export const CALENDAR_PROVIDERS = ['google'] as const;
 export type CalendarProvider = (typeof CALENDAR_PROVIDERS)[number];
 
@@ -63,7 +60,6 @@ export type NotificationEvent = (typeof NOTIFICATION_EVENTS)[number];
 export const NOTIFICATION_CHANNELS = ['email'] as const;
 export type NotificationChannel = (typeof NOTIFICATION_CHANNELS)[number];
 
-/** Defaults when a user has no row for an event and channel */
 export const DEFAULT_NOTIFICATION_PREFERENCES: Record<NotificationEvent, boolean> = {
   taskAssigned: true,
   taskDueSoon: true,
@@ -75,7 +71,6 @@ export const DEFAULT_NOTIFICATION_PREFERENCES: Record<NotificationEvent, boolean
 export const REMINDER_MINUTES = [15, 30, 60, 180, 1440] as const;
 export const DEFAULT_REMINDER_MINUTES = 60;
 
-/** Member colours, picked by join position and cycling */
 export const MEMBER_COLORS = [
   '#e6f36b',
   '#8ec3ea',

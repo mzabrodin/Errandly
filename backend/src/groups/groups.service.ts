@@ -104,10 +104,7 @@ export class GroupsService implements OnModuleInit {
     if (members.length === 1) await this.repository.deleteGroup(groupId, tx);
   }
 
-  /**
-   * Account deletion leaves every group, so open tasks are redistributed first. The only
-   * admin of a group with other members blocks it: 409 LAST_ADMIN with the group names.
-   */
+  /** The only admin of a group with other members blocks the deletion (LAST_ADMIN) */
   private async leaveAllGroups(userId: string, tx: DbExecutor): Promise<void> {
     const memberships = await this.repository.membershipsOfUser(userId, tx);
     const blocking: string[] = [];

@@ -19,12 +19,9 @@ export interface NewEmailToken {
   expiresAt: Date;
 }
 
-/** The only place that queries the auth tables */
 @Injectable()
 export class AuthRepository {
   constructor(@Inject(DATABASE) private readonly db: Database) {}
-
-  // Credentials
 
   async findCredentials(
     userId: string,
@@ -38,7 +35,6 @@ export class AuthRepository {
     return row;
   }
 
-  /** Sets the password (creating the row for accounts without one) and clears any lockout */
   async savePassword(
     userId: string,
     passwordHash: string,
@@ -64,8 +60,6 @@ export class AuthRepository {
       .where(eq(passwordCredentials.userId, userId));
   }
 
-  // Sessions
-
   async insertSession(
     session: Pick<SessionRow, 'id' | 'userId' | 'expiresAt' | 'lastSeenAt'>,
     db: DbExecutor = this.db,
@@ -86,7 +80,6 @@ export class AuthRepository {
     await this.db.delete(sessions).where(eq(sessions.id, id));
   }
 
-  /** Ends every session of the user, except `keepId` (the one making the request) */
   async deleteSessionsOfUser(
     userId: string,
     keepId: string | null,
@@ -98,13 +91,11 @@ export class AuthRepository {
       .where(keepId === null ? ofUser : and(ofUser, ne(sessions.id, keepId)));
   }
 
-  // One-time email tokens
-
   async insertEmailToken(token: NewEmailToken, db: DbExecutor = this.db): Promise<void> {
     await db.insert(emailTokens).values(token);
   }
 
-  /** Retires the user's unused tokens of this purpose, so only the newest link works */
+  /** Only the newest link works */
   async retireEmailTokens(
     userId: string,
     purpose: EmailTokenPurpose,
@@ -123,10 +114,7 @@ export class AuthRepository {
       );
   }
 
-  /**
-   * Uses up a valid token in one statement, so two concurrent requests cannot both use it.
-   * Returns the owner, or null for an unknown, expired, used or wrong-purpose token.
-   */
+  /** One statement, so two concurrent requests cannot both use the token */
   async consumeEmailToken(
     tokenHash: string,
     purpose: EmailTokenPurpose,

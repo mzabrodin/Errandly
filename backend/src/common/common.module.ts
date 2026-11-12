@@ -13,10 +13,7 @@ import { rateLimits } from './http/rate-limit.js';
 import { ObjectStorage } from './storage/object-storage.js';
 import { S3ObjectStorage } from './storage/s3-object-storage.js';
 
-/**
- * Shared kernel available to every module: the clock, the event bus, object storage, the global
- * exception handler and per-IP rate limits. Needs DatabaseModule and ScheduleModule.
- */
+/** Needs DatabaseModule and ScheduleModule */
 @Global()
 @Module({
   imports: [

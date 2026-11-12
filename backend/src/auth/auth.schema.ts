@@ -16,20 +16,17 @@ import { users } from '../users/users.schema.js';
 export const authProviderEnum = pgEnum('auth_provider', AUTH_PROVIDERS);
 export const emailTokenPurposeEnum = pgEnum('email_token_purpose', EMAIL_TOKEN_PURPOSES);
 
-/** Email and password sign-in; absent for accounts that only use an external provider */
+/** Absent for accounts that only sign in with Google */
 export const passwordCredentials = pgTable('password_credentials', {
   userId: uuid()
     .primaryKey()
     .references(() => users.id, { onDelete: 'cascade' }),
-  /** Argon2id PHC string `$argon2id$v=19$m=…,t=…,p=…$salt$hash` (Argon2PasswordHasher) */
   passwordHash: text().notNull(),
-  /** Lockout after 5 failed logins in a row (ACCOUNT_LOCKED) */
   failedLogins: smallint().notNull().default(0),
   lockedUntil: timestamptz(),
   updatedAt: updatedAt(),
 });
 
-/** A linked external account (Google today; Apple or Microsoft = a new enum value) */
 export const authIdentities = pgTable(
   'auth_identities',
   {
@@ -38,9 +35,9 @@ export const authIdentities = pgTable(
       .notNull()
       .references(() => users.id, { onDelete: 'cascade' }),
     provider: authProviderEnum().notNull(),
-    /** The provider's stable account id (`sub` claim for Google) */
+    /** `sub` claim for Google */
     providerUserId: text().notNull(),
-    /** Email the provider reported; informational, the profile email lives in users */
+    /** Informational; the profile email lives in users */
     email: varchar({ length: LIMITS.email }),
     createdAt: createdAt(),
     lastUsedAt: timestamptz(),
@@ -51,11 +48,10 @@ export const authIdentities = pgTable(
   ],
 );
 
-/** Cookie sessions; the cookie holds a random token and only its SHA-256 is stored (SYS-24) */
 export const sessions = pgTable(
   'sessions',
   {
-    /** SHA-256 of the session token, hex */
+    /** SHA-256 of the cookie token (SYS-24) */
     id: text().primaryKey(),
     userId: uuid()
       .notNull()
@@ -67,7 +63,6 @@ export const sessions = pgTable(
   (t) => [index('sessions_user_id_idx').on(t.userId)],
 );
 
-/** One-time tokens from email links: verification and password reset */
 export const emailTokens = pgTable(
   'email_tokens',
   {
@@ -76,7 +71,6 @@ export const emailTokens = pgTable(
       .notNull()
       .references(() => users.id, { onDelete: 'cascade' }),
     purpose: emailTokenPurposeEnum().notNull(),
-    /** SHA-256 of the token from the link, hex */
     tokenHash: text().notNull(),
     expiresAt: timestamptz().notNull(),
     usedAt: timestamptz(),

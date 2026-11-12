@@ -13,10 +13,7 @@ export interface NewUser {
   locale: Locale;
 }
 
-/**
- * Public API of the users module for other modules (auth, groups, notifications).
- * Returns DTOs, never rows; `db` lets a caller run it inside its own transaction.
- */
+/** Returns DTOs, never rows; `db` joins the caller's transaction */
 @Injectable()
 export class UsersApi {
   constructor(private readonly users: UsersRepository) {}
@@ -26,7 +23,6 @@ export class UsersApi {
     return row ? toUserDto(row) : null;
   }
 
-  /** Users by id, keyed by id; unknown ids are left out */
   async findMany(ids: readonly string[], db?: DbExecutor): Promise<Map<string, UserDto>> {
     const rows = await this.users.findByIds(ids, db);
     return new Map(rows.map((row) => [row.id, toUserDto(row)]));
@@ -42,7 +38,7 @@ export class UsersApi {
     return toUserDto(await this.users.insert(user, db));
   }
 
-  /** Confirms the email; an already confirmed one keeps its original time */
+  /** An already confirmed email keeps its original time */
   async markEmailVerified(id: string, at: Date, db?: DbExecutor): Promise<UserDto | null> {
     const row = await this.users.findById(id, db);
     if (!row) return null;

@@ -13,11 +13,7 @@ import { UsersApi } from '../users/index.js';
 import { AuthRepository } from './auth.repository.js';
 import { firstName, RESET_TOKEN_TTL_MS, VERIFY_TOKEN_TTL_MS } from './auth.rules.js';
 
-/**
- * Verification and reset emails, sent after commit with retries (a mail failure never
- * undoes the registration: "лист зберігається для повторної спроби"). Each delivery issues
- * a fresh token and retires the older ones, so a retry needs no raw token stored anywhere.
- */
+/** Each delivery issues a fresh token, so no raw token is ever stored and retries are safe */
 @Injectable()
 export class AuthEmails implements OnModuleInit {
   private readonly appUrl: string;

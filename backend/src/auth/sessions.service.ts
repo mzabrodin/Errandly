@@ -7,7 +7,6 @@ import type { DbExecutor } from '../db/database.js';
 import { AuthRepository } from './auth.repository.js';
 import { sessionExpiry, shouldRefreshSession } from './auth.rules.js';
 
-/** What goes into the cookie */
 export interface IssuedSession {
   token: string;
   expiresAt: Date;
@@ -15,11 +14,11 @@ export interface IssuedSession {
 
 export interface Authenticated {
   user: RequestUser;
-  /** Set when the expiry slid forward, so the cookie must be sent again */
+  /** Set when the expiry slid forward: the cookie must be sent again */
   refreshed: IssuedSession | null;
 }
 
-/** Cookie sessions: a random token in the cookie, its SHA-256 in `sessions` (SYS-06, SYS-24) */
+/** SYS-06, SYS-24 */
 @Injectable()
 export class SessionService {
   constructor(
@@ -63,7 +62,6 @@ export class SessionService {
     if (token !== undefined) await this.repository.deleteSession(hashToken(token));
   }
 
-  /** Signs the user out everywhere, except the session `keepId` when given */
   async revokeAll(userId: string, keepId: string | null, db?: DbExecutor): Promise<void> {
     await this.repository.deleteSessionsOfUser(userId, keepId, db);
   }

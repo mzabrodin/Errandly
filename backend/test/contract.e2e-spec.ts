@@ -3,8 +3,6 @@ import type TestAgent from 'supertest/lib/agent.js';
 import { createUser, signIn } from './support/factories.js';
 import { createTestApp, type TestApp } from './support/test-app.js';
 
-// The request contract: validation answers in the frontend's error format, and valid requests
-// reach the handler (501 for the stubs that have no service yet)
 describe('API contract (e2e)', () => {
   let t: TestApp;
   let anya: TestAgent;

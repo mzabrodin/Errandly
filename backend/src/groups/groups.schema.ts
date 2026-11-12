@@ -27,7 +27,7 @@ export const groups = pgTable('groups', {
   createdAt: createdAt(),
 });
 
-/** User-to-group link with a role. A group always keeps at least one admin (LAST_ADMIN, enforced in the service) */
+/** A group always keeps at least one admin (LAST_ADMIN, enforced in the service) */
 export const memberships = pgTable(
   'memberships',
   {
@@ -38,7 +38,6 @@ export const memberships = pgTable(
       .notNull()
       .references(() => users.id, { onDelete: 'cascade' }),
     role: groupRoleEnum().notNull().default('member'),
-    /** Hex colour of the member in the calendar */
     color: varchar({ length: 7 }).notNull(),
     joinedAt: createdAt(),
   },
@@ -48,7 +47,7 @@ export const memberships = pgTable(
   ],
 );
 
-/** Invite links; the link holds a random token and only its SHA-256 is stored */
+/** Only the SHA-256 of the link's token is stored */
 export const invites = pgTable(
   'invites',
   {
@@ -83,7 +82,6 @@ export const absences = pgTable(
     createdAt: createdAt(),
   },
   (t) => [
-    // Leaving the group removes the member's absences too
     foreignKey({
       name: 'absences_membership_fk',
       columns: [t.groupId, t.userId],

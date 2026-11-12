@@ -42,7 +42,6 @@ export async function createUser(db: Database, overrides: UserOverrides = {}): P
   return user;
 }
 
-/** A signed-in client for the user */
 export async function signIn(
   testApp: TestApp,
   email: string,

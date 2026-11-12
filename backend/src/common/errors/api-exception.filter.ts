@@ -29,7 +29,7 @@ const HTTP_STATUS_CODES: Partial<Record<number, ErrorCode>> = {
 const UNIQUE_VIOLATION = '23505';
 const FOREIGN_KEY_VIOLATION = '23503';
 
-/** SQLSTATE of a pg error, also when Drizzle wraps it in `cause` */
+/** Drizzle may wrap the pg error in `cause` */
 export function postgresErrorCode(error: unknown): string | undefined {
   for (let current = error; current instanceof Error; current = current.cause) {
     const code: unknown = Reflect.get(current, 'code');
@@ -38,10 +38,7 @@ export function postgresErrorCode(error: unknown): string | undefined {
   return undefined;
 }
 
-/**
- * True when `error` is a unique violation of `constraint`. Repositories use it to turn a race
- * the service's own check missed into the business error (EMAIL_TAKEN) instead of 409 CONFLICT.
- */
+/** Turns a race the service's own check missed into its business error (EMAIL_TAKEN) */
 export function isUniqueViolation(error: unknown, constraint: string): boolean {
   for (let current = error; current instanceof Error; current = current.cause) {
     if (
@@ -61,7 +58,6 @@ export function errorCodeOf(response: object): ErrorCode | undefined {
   return errorCodes.get(response);
 }
 
-/** Maps any exception to an HTTP status and a contract body */
 export function toApiError(exception: unknown): { status: number; body: ApiErrorDto } {
   if (exception instanceof DomainError) {
     return {
@@ -81,10 +77,7 @@ export function toApiError(exception: unknown): { status: number; body: ApiError
   return { status: HttpStatus.INTERNAL_SERVER_ERROR, body: { code: 'INTERNAL' } };
 }
 
-/**
- * The global exception handler (Spring's @RestControllerAdvice): every error leaves the API
- * as `{ code, fields?, retryAfterSeconds?, groups? }` (docs/api.md). Registered as APP_FILTER.
- */
+/** Every error leaves the API as `{ code, fields?, retryAfterSeconds?, groups? }` (docs/api.md) */
 @Catch()
 export class ApiExceptionFilter implements ExceptionFilter {
   private readonly logger = new Logger(ApiExceptionFilter.name);

@@ -5,7 +5,6 @@ import type { AbsenceRow, GroupRow, MembershipRow } from './groups.schema.js';
 
 export interface GroupParts {
   group: GroupRow;
-  /** The caller's role */
   role: GroupRole;
   members: readonly MembershipRow[];
   absences: readonly AbsenceRow[];

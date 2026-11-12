@@ -52,7 +52,7 @@ export const notifications = pgTable(
   (t) => [index('notifications_user_created_idx').on(t.userId, t.createdAt.desc())],
 );
 
-/** Per-user scalar settings; a missing row means the defaults */
+/** A missing row means the defaults */
 export const notificationSettings = pgTable(
   'notification_settings',
   {
@@ -66,10 +66,7 @@ export const notificationSettings = pgTable(
   (t) => [check('notification_settings_reminder_positive', sql`${t.reminderMinutes} > 0`)],
 );
 
-/**
- * One row per switched event and channel; a missing row means DEFAULT_NOTIFICATION_PREFERENCES.
- * A new notification kind or channel (push) is an enum value, not a new column.
- */
+/** Only overrides of DEFAULT_NOTIFICATION_PREFERENCES; a new event or channel is an enum value */
 export const notificationPreferences = pgTable(
   'notification_preferences',
   {
