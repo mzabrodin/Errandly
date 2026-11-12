@@ -7,7 +7,10 @@ import { DATABASE, type Database, type DbExecutor } from '../db/database.js';
 import { users, type NewUserRow, type UserRow } from './users.schema.js';
 
 export type UserChanges = Partial<
-  Pick<NewUserRow, 'name' | 'timezone' | 'locale' | 'emailVerifiedAt' | 'avatarUrl'>
+  Pick<
+    NewUserRow,
+    'name' | 'timezone' | 'locale' | 'emailVerifiedAt' | 'providerAvatarUrl' | 'uploadedAvatarKey'
+  >
 >;
 
 /** The only place that queries `users` */
@@ -17,6 +20,11 @@ export class UsersRepository {
 
   async findById(id: string, db: DbExecutor = this.db): Promise<UserRow | undefined> {
     const [row] = await db.select().from(users).where(eq(users.id, id)).limit(1);
+    return row;
+  }
+
+  async lockById(id: string, tx: DbExecutor): Promise<UserRow | undefined> {
+    const [row] = await tx.select().from(users).where(eq(users.id, id)).limit(1).for('update');
     return row;
   }
 

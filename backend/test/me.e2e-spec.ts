@@ -68,10 +68,4 @@ describe('Profile and account (e2e)', () => {
       .send({ email: user.email, password: PASSWORD })
       .expect(401);
   });
-
-  it('keeps the avatar endpoints as stubs until storage is decided', async () => {
-    const agent = await signIn(t, (await createUser(t.db)).email);
-
-    await agent.delete('/api/me/avatar').expect(501);
-  });
 });

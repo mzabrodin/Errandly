@@ -50,4 +50,13 @@ export class UsersApi {
     const updated = await this.users.update(id, { emailVerifiedAt: at }, db);
     return updated ? toUserDto(updated) : null;
   }
+
+  async setProviderAvatar(
+    id: string,
+    url: string | null,
+    db?: DbExecutor,
+  ): Promise<UserDto | null> {
+    const row = await this.users.update(id, { providerAvatarUrl: url }, db);
+    return row ? toUserDto(row) : null;
+  }
 }
