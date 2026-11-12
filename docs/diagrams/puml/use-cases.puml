@@ -1,0 +1,78 @@
+@startuml use-cases
+skinparam shadowing false
+skinparam defaultFontName "Inter, Segoe UI, Arial"
+skinparam UsecaseBackgroundColor #DCEEEA
+skinparam UsecaseBorderColor #1F6F64
+skinparam ArrowColor #1F6F64
+skinparam packageStyle rectangle
+left to right direction
+
+actor "Гість" as Guest
+actor "Учасник групи" as Member
+actor "Адміністратор групи" as Admin
+actor "Google Calendar" as Google <<система>>
+actor "Поштовий сервіс" as Mail <<система>>
+actor "Планувальник" as Scheduler <<система>>
+
+Admin -|> Member
+
+rectangle Errandly {
+  usecase "Зареєструватися\n(FR-01–04)" as UC_Register
+  usecase "Увійти / вийти\n(FR-05–07, FR-09)" as UC_Login
+  usecase "Відновити пароль\n(FR-08)" as UC_Reset
+  usecase "Прийняти запрошення\n(FR-12–14)" as UC_Accept
+
+  usecase "Створити групу\n(FR-10)" as UC_CreateGroup
+  usecase "Вказати відсутність\n(FR-17)" as UC_Absence
+  usecase "Вийти з групи\n(FR-16)" as UC_Leave
+  usecase "Переглядати задачі й календар\n(FR-23, FR-37)" as UC_View
+  usecase "Позначити задачу виконаною\n(FR-24)" as UC_Complete
+  usecase "Переглядати статистику\n(FR-39)" as UC_Stats
+  usecase "Підключити Google Calendar\n(FR-32)" as UC_Connect
+  usecase "Налаштувати сповіщення\n(FR-38)" as UC_Settings
+
+  usecase "Запросити учасника\n(FR-11)" as UC_Invite
+  usecase "Керувати учасниками й ролями\n(FR-15–16)" as UC_Members
+  usecase "Створити задачу\n(UC-01, FR-19–21)" as UC_CreateTask
+  usecase "Редагувати / видалити задачу\n(FR-22)" as UC_EditTask
+  usecase "Призначити виконавця вручну\n(FR-30)" as UC_Assign
+
+  usecase "Автоматично розподілити задачу\n(FR-27–29)" as UC_Auto
+  usecase "Синхронізувати подію в календарі\n(FR-33–35)" as UC_Sync
+  usecase "Надіслати сповіщення й нагадування\n(FR-38)" as UC_Notify
+}
+
+Guest --> UC_Register
+Guest --> UC_Login
+Guest --> UC_Reset
+Guest --> UC_Accept
+
+Member --> UC_CreateGroup
+Member --> UC_Absence
+Member --> UC_Leave
+Member --> UC_View
+Member --> UC_Complete
+Member --> UC_Stats
+Member --> UC_Connect
+Member --> UC_Settings
+
+Admin --> UC_Invite
+Admin --> UC_Members
+Admin --> UC_CreateTask
+Admin --> UC_EditTask
+Admin --> UC_Assign
+
+UC_CreateTask ..> UC_Auto : <<include>>
+UC_Auto ..> UC_Notify : <<include>>
+UC_Auto ..> UC_Sync : <<include>>
+UC_Members ..> UC_Auto : <<include>>\nперерозподіл
+UC_Invite ..> UC_Notify : <<include>>\nлист
+
+UC_Sync --> Google
+UC_Connect --> Google
+UC_Notify --> Mail
+UC_Register --> Mail
+UC_Reset --> Mail
+Scheduler --> UC_Notify
+Scheduler --> UC_Sync
+@enduml

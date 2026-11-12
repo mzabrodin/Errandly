@@ -1,0 +1,67 @@
+@startuml sd-4-reminders-and-sync
+skinparam shadowing false
+skinparam defaultFontName "Inter, Segoe UI, Arial"
+skinparam TitleFontStyle bold
+skinparam maxMessageSize 220
+skinparam ResponseMessageBelowArrow true
+autonumber
+
+participant "Планувальник\n(@nestjs/schedule)" as Cron
+participant "Нагадування\n(notifications)" as Reminders
+database "PostgreSQL" as DB
+participant "EventDispatcher" as Disp
+participant "EventPublicationStore" as Store
+participant "calendar\n(слухач)" as Cal
+participant "MailService" as Mail
+participant "Google Calendar API" as Google
+
+note over Cron, Google
+  EventDispatcher і реєстр event_publications реалізовано; нагадування, прострочення
+  й синхронізація календаря заплановані. Поповнення серій щодня до 4 тижнів — так само за розкладом (FR-21).
+end note
+
+== Нагадування та прострочення ==
+Cron -> Reminders : запуск за розкладом
+Reminders -> DB : задачі, де настав (dueAt − reminderMinutes),\nа нагадування ще не було
+loop Для кожної задачі
+  Reminders -> DB : INSERT notifications (taskDueSoon)
+  opt Сповіщення не вимкнено (FR-38)
+    Reminders -> Mail : send('taskDueSoon', email, data, мова виконавця)
+  end
+end
+Reminders -> DB : невиконані задачі з dueAt у минулому, ще не позначені
+loop Для кожної простроченої задачі
+  Reminders -> DB : INSERT notifications (taskOverdue)
+  opt Сповіщення не вимкнено
+    Reminders -> Mail : send('taskOverdue', email, data)
+  end
+end
+opt Користувач увімкнув тижневий підсумок
+  Reminders -> Mail : send('weeklyDigest', email, data)
+end
+
+== Події після коміту (кожні EVENTS_POLL_INTERVAL_MS) ==
+Disp -> Store : claimDue(now, limit, now + 5 хв)
+Store -> DB : SELECT … FOR UPDATE SKIP LOCKED,\nnext_attempt_at = оренда
+Store --> Disp : публікації до доставки
+loop По одній (ліміти Google API)
+  Disp -> Cal : calendar.syncTask(event)
+  Cal -> Google : events.insert / update / delete
+  alt Успіх
+    Google --> Cal : OK
+    Cal -> DB : calendar_event_links, lastSyncedAt = now
+    Disp -> Store : complete(id)
+  else Помилка (503, мережа)
+    Google --> Cal : помилка
+    Disp -> Store : fail(id): attempts + 1,\nнаступна спроба через 30 с / 2 хв / 8 хв / 32 хв
+    opt П'ята невдала спроба (SYS-21)
+      Disp -> Store : здатися (next_attempt_at = null)
+      Cal -> DB : syncStatus = paused
+      note right of Cal
+        У налаштуваннях з'явиться банер
+        про призупинену синхронізацію (FR-35)
+      end note
+    end
+  end
+end
+@enduml

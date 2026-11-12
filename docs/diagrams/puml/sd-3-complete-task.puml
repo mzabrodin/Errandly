@@ -1,0 +1,74 @@
+@startuml sd-3-complete-task
+skinparam shadowing false
+skinparam defaultFontName "Inter, Segoe UI, Arial"
+skinparam TitleFontStyle bold
+skinparam maxMessageSize 220
+skinparam ResponseMessageBelowArrow true
+autonumber
+
+actor "Виконавець" as User
+participant "React SPA" as SPA
+participant "TasksController" as Ctrl
+participant "TasksService" as Svc
+participant "GroupsApi" as Groups
+database "PostgreSQL" as DB
+participant "EventDispatcher" as Disp
+participant "calendar\n(слухач)" as Cal
+
+note over Ctrl, Cal
+  Модуль tasks запланований (зараз контролер відповідає 501). Коди помилок — з контракту API.
+end note
+
+== Позначити виконаною (FR-24) ==
+User -> SPA : Позначає задачу виконаною
+SPA -> Ctrl : POST /api/tasks/:taskId/complete
+Ctrl -> Svc : complete(taskId, userId)
+Svc -> DB : прочитати task
+alt Задачі немає
+  Svc --> Ctrl : NOT_FOUND
+  Ctrl --> SPA : 404
+else Задача є
+  Svc -> Groups : requireMember(groupId, userId)
+  alt Не учасник групи
+    Groups --> Svc : FORBIDDEN
+    Ctrl --> SPA : 403
+  else Користувач не виконавець
+    Svc --> Ctrl : NOT_ASSIGNEE
+    Ctrl --> SPA : 403
+  else Задачу вже виконано
+    Svc --> Ctrl : TaskDto (повторний запит нічого не змінює)
+    Ctrl --> SPA : 200
+  else Дозволено
+    Svc -> DB : BEGIN; completedAt = now, completedBy = userId
+    Svc -> DB : INSERT event_publications (task.completed, done = true)
+    Svc -> DB : COMMIT
+    Svc --> Ctrl : TaskDto (status = done)
+    Ctrl --> SPA : 200
+    SPA --> User : Задача позначена виконаною
+  end
+end
+
+== Скасувати виконання ==
+User -> SPA : Скасовує виконання
+SPA -> Ctrl : DELETE /api/tasks/:taskId/complete
+Ctrl -> Svc : undoComplete(taskId, userId)
+alt Адміністратор (будь-коли)
+  Svc -> DB : completedAt = null, статус обчислюється знову
+  Svc --> Ctrl : TaskDto
+  Ctrl --> SPA : 200
+else Виконавець, минуло не більше 24 годин
+  Svc -> DB : completedAt = null, статус обчислюється знову
+  Svc --> Ctrl : TaskDto
+  Ctrl --> SPA : 200
+else Минуло понад 24 години
+  Svc --> Ctrl : UNDO_EXPIRED
+  Ctrl --> SPA : 409
+else Не виконавець і не адміністратор
+  Svc --> Ctrl : NOT_ASSIGNEE
+  Ctrl --> SPA : 403
+end
+
+== Після коміту ==
+Disp -> Cal : task.completed
+Cal -> Cal : позначити подію в календарі виконавця
+@enduml

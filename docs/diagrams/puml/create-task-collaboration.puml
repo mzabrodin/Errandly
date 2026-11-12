@@ -1,0 +1,49 @@
+@startuml create-task-collaboration
+skinparam shadowing false
+skinparam defaultFontName "Inter, Segoe UI, Arial"
+skinparam TitleFontStyle bold
+skinparam RoundCorner 12
+skinparam ClassBackgroundColor #FFFFFF
+skinparam ClassBorderColor #1F6F64
+skinparam ObjectBackgroundColor #FFFFFF
+skinparam ObjectBorderColor #1F6F64
+skinparam ComponentBackgroundColor #FFFFFF
+skinparam ComponentBorderColor #1F6F64
+skinparam NoteBackgroundColor #FFFFE0
+
+object "admin : Адміністратор" as admin
+object "form : TaskForm" as form
+object "tc : TasksController" as tc
+object "ts : TasksService" as ts
+object "groups : GroupsApi" as groups
+object "strategy : LeastLoadRotationStrategy" as strategy
+object "tasks : TasksRepository" as tasks
+object "bus : EventBus" as bus
+object "dispatcher : EventDispatcher" as dispatcher
+object "notifications : NotificationsListener" as notifications
+object "mail : MailService" as mail
+object "calendar : CalendarSyncListener" as calendar
+object "gateway : GoogleCalendarGateway" as gateway
+
+admin --> form : 1: submit()
+form --> tc : 2: POST /api/groups/:groupId/tasks
+tc --> ts : 2.1: create(groupId, userId, input)
+ts --> groups : 2.1.1: requireAdmin(groupId, userId, tx)
+ts --> groups : 2.1.2: members(groupId, tx)
+ts --> tasks : 2.1.3: workload(groupId, 4 тижні)
+ts --> strategy : 2.1.4: pick(candidates, task)
+ts --> tasks : 2.1.5: insertSeries, insertTasks(tx)
+ts --> bus : 2.1.6: publish(tx, 'task.assigned')
+bus ..> dispatcher : event_publications (у тій самій транзакції)
+dispatcher --> notifications : 3: task.assigned (після коміту)
+notifications --> mail : 3.1: send('taskAssigned')
+dispatcher --> calendar : 4: task.assigned (після коміту)
+calendar --> gateway : 4.1: upsertEvent(connection, event)
+
+note right of ts
+  Центр кооперації: усе в одній транзакції,
+  а сповіщення й календар — після коміту
+  через EventDispatcher, з повторами.
+  Відповіді не показано.
+end note
+@enduml
