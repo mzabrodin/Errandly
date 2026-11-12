@@ -11,11 +11,7 @@ import { MailService } from '../mail/index.js';
 import { UsersApi } from '../users/index.js';
 import { GroupsRepository } from './groups.repository.js';
 
-/**
- * Emailed invites (FR-11), sent after commit with retries. Each delivery creates the
- * recipient's own link (expiring with the admin's link) and revokes earlier emailed links to
- * that address, so a retry never needs a raw token stored anywhere.
- */
+/** FR-11: each delivery issues a fresh link, so no raw token is ever stored */
 @Injectable()
 export class InviteEmails implements OnModuleInit {
   private readonly appUrl: string;

@@ -1,14 +1,9 @@
-// The published language between modules: what happened, never what to do next.
-// Payloads are stored as JSON (event_publications), so they hold ids, ISO strings and plain values.
-// Who publishes and who listens: docs/architecture.md, "Events".
+// What happened, never what to do next. Payloads are stored as JSON: ids, ISO strings, plain values.
 
 import type { GroupRole } from '../domain.js';
 
 export interface DomainEventMap {
-  /**
-   * auth: an account needs its email confirmed (registration or "send again"). The listener
-   * issues a fresh token when it sends, so a retried email never needs a stored raw token.
-   */
+  /** auth: registration or "send again"; the listener issues a fresh token per delivery */
   'auth.emailVerificationRequested': { userId: string };
   /** auth: someone asked to reset the password of an existing account (FR-08) */
   'auth.passwordResetRequested': { userId: string };
@@ -20,15 +15,12 @@ export interface DomainEventMap {
   'group.created': { groupId: string; userId: string };
   /** groups: an admin gave or took the admin role (FR-16) */
   'group.roleChanged': { groupId: string; userId: string; role: GroupRole; actorId: string };
-  /**
-   * groups: an admin asked to email an invite (FR-11). The listener issues the recipient's own
-   * link when it sends, so a retried email never needs a stored raw token.
-   */
+  /** groups: FR-11; the listener issues the recipient's own link per delivery */
   'group.inviteEmailRequested': {
     groupId: string;
     email: string;
     invitedBy: string;
-    /** ISO time; the emailed link expires with the link the admin got */
+    /** The same expiry as the admin's link */
     expiresAt: string;
   };
   /** groups: someone accepted an invite (SD-2) */

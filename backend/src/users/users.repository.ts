@@ -13,7 +13,6 @@ export type UserChanges = Partial<
   >
 >;
 
-/** The only place that queries `users` */
 @Injectable()
 export class UsersRepository {
   constructor(@Inject(DATABASE) private readonly db: Database) {}
@@ -42,7 +41,7 @@ export class UsersRepository {
     return row;
   }
 
-  /** Throws EMAIL_TAKEN when the email is in use, also when a concurrent sign-up won the race */
+  /** EMAIL_TAKEN also when a concurrent sign-up won the race */
   async insert(values: NewUserRow, db: DbExecutor = this.db): Promise<UserRow> {
     try {
       const [row] = await db.insert(users).values(values).returning();

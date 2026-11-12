@@ -1,5 +1,3 @@
-// Group invariants as pure functions; services apply them, tests pin them down.
-
 import { MEMBER_COLORS, memberColor, type GroupRole } from '../common/domain.js';
 import { DomainError } from '../common/errors/domain-error.js';
 
@@ -26,10 +24,7 @@ export function assertCanChangeRole(
   }
 }
 
-/**
- * The only admin cannot leave while others stay; they hand the role over first.
- * Alone in the group they can leave, and the empty group is deleted.
- */
+/** Alone in the group the only admin may leave; the empty group is then deleted */
 export function isLastAdminWithOthers(members: readonly Member[], userId: string): boolean {
   const self = members.find((member) => member.userId === userId);
   return self?.role === 'admin' && adminCount(members) === 1 && members.length > 1;

@@ -68,7 +68,6 @@ export class EventDispatcher implements OnApplicationBootstrap, OnApplicationShu
     }
   }
 
-  /** Delivers due publications one by one; returns how many were taken */
   async dispatchDue(): Promise<number> {
     const now = this.clock.now();
     const due = await this.store.claimDue(now, BATCH_SIZE, new Date(now.getTime() + LEASE_MS));

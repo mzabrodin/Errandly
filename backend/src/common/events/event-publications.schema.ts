@@ -3,16 +3,11 @@ import { index, jsonb, pgTable, smallint, text } from 'drizzle-orm/pg-core';
 
 import { createdAt, id, timestamptz } from '../../db/columns.js';
 
-/**
- * Event publication registry (as in Spring Modulith): one row per event and after-commit
- * listener, written in the publisher's transaction, so a side effect is never lost and never
- * rolls the business change back. EventDispatcher delivers due rows and retries with backoff.
- */
+/** One row per event and after-commit listener, written in the publisher's transaction (outbox) */
 export const eventPublications = pgTable(
   'event_publications',
   {
     id: id(),
-    /** Stable listener id, e.g. `calendar.syncTask` */
     listener: text().notNull(),
     eventType: text().notNull(),
     payload: jsonb().$type<unknown>().notNull(),

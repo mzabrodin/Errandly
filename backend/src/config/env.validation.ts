@@ -34,11 +34,10 @@ const envSchema = z.object({
   APP_URL: z.url({ protocol: /^https?$/ }).default('http://localhost:5173'),
   LOG_LEVEL: z.enum(LogLevel).default(LogLevel.Info),
   DATABASE_URL: z.url({ protocol: /^postgres(ql)?$/ }).optional(),
-  /** How often after-commit events are delivered from event_publications; 0 turns it off */
+  /** 0 turns after-commit delivery off */
   EVENTS_POLL_INTERVAL_MS: z.coerce.number().int().min(0).default(2000),
-  /** Requests per minute from one IP to any route (NFR-SEC-07) */
+  /** Per IP (NFR-SEC-07) */
   RATE_LIMIT_PER_MINUTE: z.coerce.number().int().min(1).default(100),
-  /** Requests per minute from one IP to sign-in, password reset and verification emails */
   AUTH_RATE_LIMIT_PER_MINUTE: z.coerce.number().int().min(1).default(10),
 
   // Defaults point at Mailpit (docker compose up -d mailpit)

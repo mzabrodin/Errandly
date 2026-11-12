@@ -1,9 +1,5 @@
 import { Injectable } from '@nestjs/common';
 
-/**
- * The current time as a dependency. Task status, the 24-hour undo window, reminders and
- * retries all depend on "now", so tests inject a FixedClock instead of mocking Date.
- */
 export abstract class Clock {
   abstract now(): Date;
 }
@@ -15,7 +11,6 @@ export class SystemClock extends Clock {
   }
 }
 
-/** For tests: time stands still until `set` or `advance` moves it */
 export class FixedClock extends Clock {
   private current: Date;
 

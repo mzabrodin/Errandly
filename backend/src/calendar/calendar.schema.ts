@@ -18,10 +18,7 @@ import { users } from '../users/users.schema.js';
 export const calendarProviderEnum = pgEnum('calendar_provider', CALENDAR_PROVIDERS);
 export const syncStatusEnum = pgEnum('sync_status', SYNC_STATUSES);
 
-/**
- * A connected external calendar; a separate OAuth flow from sign-in (SYS-18). Provider-agnostic:
- * Outlook or Apple = a new enum value and a CalendarGateway, same tables.
- */
+/** A separate OAuth flow from sign-in (SYS-18) */
 export const calendarConnections = pgTable(
   'calendar_connections',
   {
@@ -30,13 +27,11 @@ export const calendarConnections = pgTable(
       .notNull()
       .references(() => users.id, { onDelete: 'cascade' }),
     provider: calendarProviderEnum().notNull(),
-    /** The external account, shown in the settings */
     accountEmail: varchar({ length: LIMITS.email }).notNull(),
     /** OAuth tokens, encrypted with TOKEN_ENCRYPTION_KEY before they are stored */
     refreshTokenEncrypted: text().notNull(),
     accessTokenEncrypted: text(),
     accessTokenExpiresAt: timestamptz(),
-    /** The calendar the events are written to */
     calendarId: text().notNull().default('primary'),
     syncStatus: syncStatusEnum().notNull().default('ok'),
     /** Consecutive failures; the 5th one pauses the sync (SYS-21) */

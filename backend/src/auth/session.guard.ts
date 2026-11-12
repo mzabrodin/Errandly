@@ -13,10 +13,7 @@ import {
 import type { EnvironmentVariables } from '../config/env.validation.js';
 import { SessionService } from './sessions.service.js';
 
-/**
- * Global guard (APP_GUARD), default-deny: every route needs a valid session unless it is
- * marked @Public() (SYS-07). Public routes still learn who is calling when a cookie is sent.
- */
+/** Default-deny (SYS-07); @Public() routes still learn who is calling when a cookie is sent */
 @Injectable()
 export class SessionGuard implements CanActivate {
   private readonly secure: boolean;

@@ -21,18 +21,10 @@ interface AnyInTransactionListener {
 
 export interface RegisteredListener {
   eventType: EventType;
-  /** Payload as stored in event_publications */
   run: (payload: unknown) => Promise<void>;
 }
 
-/**
- * In-process event bus with two delivery modes (docs/architecture.md, "Events"):
- * - `onInTransaction`: reactions that must be consistent with the change (redistribute tasks
- *   when a member leaves). Same transaction; a failure undoes everything.
- * - `onAfterCommit`: side effects (calendar sync, emails, in-app notifications). Persisted in
- *   the same transaction, delivered by EventDispatcher after commit, retried with backoff.
- * Modules register listeners in `onModuleInit`; the publisher never knows who listens.
- */
+/** In-process event bus; the two delivery modes are described in docs/architecture.md, "Events" */
 @Injectable()
 export class EventBus {
   private readonly inTransaction = new Map<EventType, AnyInTransactionListener['handle'][]>();

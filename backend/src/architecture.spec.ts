@@ -1,13 +1,10 @@
-// Module boundaries of the modular monolith (docs/architecture.md), checked like Spring Modulith's
-// ApplicationModules.verify(): a module is a black box behind its index.ts, and modules do not
-// depend on each other in a cycle.
+// Like Spring Modulith's ApplicationModules.verify(): modules talk only through index.ts, without cycles
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const SRC = path.dirname(fileURLToPath(import.meta.url));
 
-/** Business modules: each owns its tables, services and HTTP routes */
 const MODULES = [
   'auth',
   'users',
@@ -20,7 +17,6 @@ const MODULES = [
   'health',
 ] as const;
 
-/** Shared kernel and infrastructure; anyone may use them, they use no module */
 const SHARED = ['common', 'config', 'db', 'logger'] as const;
 
 type Area = (typeof MODULES)[number] | (typeof SHARED)[number] | 'root';

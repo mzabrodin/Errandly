@@ -33,12 +33,9 @@ export interface NewInvite {
   expiresAt: Date;
 }
 
-/** The only place that queries groups, memberships, invites and absences */
 @Injectable()
 export class GroupsRepository {
   constructor(@Inject(DATABASE) private readonly db: Database) {}
-
-  // Groups
 
   async insertGroup(name: string, createdBy: string, db: DbExecutor = this.db): Promise<GroupRow> {
     const [row] = await db.insert(groups).values({ name, createdBy }).returning();
@@ -56,7 +53,6 @@ export class GroupsRepository {
     await db.delete(groups).where(eq(groups.id, id));
   }
 
-  /** The user's groups with their role and the member count, oldest membership first */
   groupsOfUser(userId: string): Promise<GroupSummaryRow[]> {
     const counts = this.db
       .select({ groupId: memberships.groupId, memberCount: count().as('member_count') })
@@ -77,8 +73,6 @@ export class GroupsRepository {
       .orderBy(asc(memberships.joinedAt), asc(groups.id));
   }
 
-  // Memberships
-
   async findMembership(
     groupId: string,
     userId: string,
@@ -92,10 +86,7 @@ export class GroupsRepository {
     return row;
   }
 
-  /**
-   * Members in join order. `lock` takes row locks until the transaction ends, so two
-   * concurrent role changes cannot both see "another admin is left" (LAST_ADMIN).
-   */
+  /** `lock`: two concurrent role changes must not both see "another admin is left" (LAST_ADMIN) */
   membersOf(
     groupId: string,
     db: DbExecutor = this.db,
@@ -109,7 +100,6 @@ export class GroupsRepository {
     return lock ? query.for('update') : query;
   }
 
-  /** Every membership of the user, with the group name, locked for an account deletion */
   membershipsOfUser(userId: string, db: DbExecutor = this.db): Promise<UserMembershipRow[]> {
     return db
       .select({
@@ -153,8 +143,6 @@ export class GroupsRepository {
       .where(and(eq(memberships.groupId, groupId), eq(memberships.userId, userId)));
   }
 
-  // Invites
-
   async insertInvite(invite: NewInvite, db: DbExecutor = this.db): Promise<InviteRow> {
     const [row] = await db.insert(invites).values(invite).returning();
     if (!row) throw new Error('INSERT … RETURNING returned no row');
@@ -185,8 +173,6 @@ export class GroupsRepository {
       );
   }
 
-  // Absences
-
   absencesOf(groupId: string, db: DbExecutor = this.db): Promise<AbsenceRow[]> {
     return db
       .select()
@@ -202,7 +188,6 @@ export class GroupsRepository {
     await db.insert(absences).values(absence);
   }
 
-  /** Deletes the user's own absence; false when there is none with that id in the group */
   async deleteAbsence(id: string, groupId: string, userId: string): Promise<boolean> {
     const deleted = await this.db
       .delete(absences)

@@ -6,13 +6,11 @@ import * as schema from './schema.js';
 
 export type Database = NodePgDatabase<typeof schema>;
 
-/** The handle inside `db.transaction(async (tx) => …)` */
 export type Transaction = Parameters<Parameters<Database['transaction']>[0]>[0];
 
 /** Repositories accept either, so a service decides the transaction boundary */
 export type DbExecutor = Database | Transaction;
 
-/** Injection tokens; repositories inject `DATABASE` and never touch the pool */
 export const DATABASE = Symbol('DATABASE');
 export const PG_POOL = Symbol('PG_POOL');
 

@@ -57,10 +57,7 @@ export class AuthService {
     });
   }
 
-  /**
-   * FR-05–06. A locked account answers 423 even to the right password; the 5th wrong one
-   * in a row locks it for 15 minutes. Unknown emails and wrong passwords look the same.
-   */
+  /** FR-05–06: a locked account answers 423 even to the right password */
   async login(input: LoginDto): Promise<SignedIn> {
     const user = await this.users.findByEmail(input.email);
     const credentials = user ? await this.repository.findCredentials(user.id) : undefined;

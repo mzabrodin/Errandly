@@ -45,7 +45,6 @@ interface SeriesSpec {
   assigneeId: string | null;
 }
 
-/** A task row whose generated fields are already known */
 type SeedTask = NewTaskRow & { id: string; assigneeId: string | null };
 
 interface Member {
@@ -53,7 +52,6 @@ interface Member {
   name: string;
 }
 
-/** Midnight UTC of the day `days` away from `now`, plus `hour` hours */
 function dayAt(now: Date, days: number, hour = 0): Date {
   return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + days, hour));
 }
@@ -62,12 +60,10 @@ function isoDate(date: Date): string {
   return date.toISOString().slice(0, 10);
 }
 
-/** ISO weekday: 1 = Monday … 7 = Sunday */
 function isoWeekday(date: Date): number {
   return ((date.getUTCDay() + 6) % 7) + 1;
 }
 
-/** Due dates of a series from its first instance up to `until` (FR-21) */
 export function occurrences(spec: SeriesSpec, first: Date, until: Date): Date[] {
   if (spec.recurrence === 'once') return [first];
   const result: Date[] = [];
@@ -170,10 +166,7 @@ function seriesSpecs(anyaId: string): { room: SeriesSpec[]; flat: SeriesSpec[] }
   };
 }
 
-/**
- * Picks the available member with the lowest difficulty load over the previous 4 weeks
- * (a simplified FR-27; the real algorithm belongs to the Assignment module)
- */
+/** A simplified FR-27; the real algorithm belongs to the Assignment module */
 function pickAssignee(
   members: Member[],
   absent: (userId: string, day: string) => boolean,
@@ -254,7 +247,6 @@ function buildTasks(
   return { series, tasks };
 }
 
-/** A few notifications for Anya, so the bell is not empty */
 function buildNotifications(
   now: Date,
   userId: string,
@@ -297,7 +289,7 @@ function buildNotifications(
   ];
 }
 
-/** Builds the whole demo dataset relative to `now`; ids are generated here so rows can reference each other */
+/** Ids are generated here so rows can reference each other */
 export function buildSeed(now: Date, passwordHash: string): SeedData {
   const ids = { anya: randomUUID(), bohdan: randomUUID(), marta: randomUUID(), oleh: randomUUID() };
   const users = PEOPLE.map((person) => ({

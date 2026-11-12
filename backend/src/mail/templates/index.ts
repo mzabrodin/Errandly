@@ -308,7 +308,6 @@ function isMissing(value: unknown): boolean {
   return value === undefined || value === null || value === '';
 }
 
-/** Validates one field; returns an error or null */
 function validateField(
   rawKey: string,
   type: FieldType,
@@ -321,7 +320,6 @@ function validateField(
   return validators[type](value) ? null : `${key} must be a valid ${type}`;
 }
 
-/** Validates template data; returns a list of errors (empty means valid) */
 export function validateTemplateData(name: TemplateName, data: Record<string, unknown>): string[] {
   const fields: Record<string, FieldType> = templates[name].fields;
   const errors: string[] = [];

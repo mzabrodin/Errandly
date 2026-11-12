@@ -8,7 +8,6 @@ import {
   type NewEventPublicationRow,
 } from './event-publications.schema.js';
 
-/** Repository of the event publication registry */
 @Injectable()
 export class EventPublicationStore {
   constructor(@Inject(DATABASE) private readonly db: Database) {}
@@ -19,10 +18,7 @@ export class EventPublicationStore {
     await executor.insert(eventPublications).values(rows);
   }
 
-  /**
-   * Takes up to `limit` due publications and pushes their next attempt to `leaseUntil`, so another
-   * instance (SKIP LOCKED) or the next tick does not deliver them twice while they run.
-   */
+  /** The lease keeps another instance (SKIP LOCKED) or the next tick from delivering them twice */
   claimDue(now: Date, limit: number, leaseUntil: Date): Promise<EventPublicationRow[]> {
     const due = this.db
       .select({ id: eventPublications.id })
