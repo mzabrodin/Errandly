@@ -33,7 +33,8 @@ erDiagram
     timestamptz email_verified_at
     text timezone "IANA"
     locale locale "uk | en"
-    text avatar_url
+    text provider_avatar_url "фото від Google"
+    text uploaded_avatar_key "своє фото в сховищі"
   }
   password_credentials {
     uuid user_id PK
@@ -140,7 +141,7 @@ erDiagram
 
 ### users
 
-- **User** — людина: профіль, мова інтерфейсу й листів, часовий пояс. Те, як людина входить, сюди не входить: новий спосіб входу не змінює таблицю `users`.
+- **User** — людина: профіль, мова інтерфейсу й листів, часовий пояс, аватарка. Те, як людина входить, сюди не входить: новий спосіб входу не змінює таблицю `users`. Аватарка — своє завантажене фото (`uploaded_avatar_key`, файл в об'єктному сховищі), інакше фото від Google (`provider_avatar_url`), інакше ініціали.
 
 ### auth
 

@@ -127,7 +127,7 @@ sequenceDiagram
   participant D as EventDispatcher
   participant N as notifications (після коміту)
 
-  G->>DB: BEGIN; DELETE membership
+  G->>DB: BEGIN, DELETE membership
   G->>T: publish group.memberLeft
   T->>DB: перерозподіл задач (FR-15)
   G->>DB: INSERT event_publications (notifications.memberRemoved)
@@ -148,7 +148,7 @@ sequenceDiagram
   participant C as calendar (після коміту)
   participant Gc as Google Calendar API
 
-  T->>DB: BEGIN; UPDATE tasks SET assignee_id
+  T->>DB: BEGIN, UPDATE tasks SET assignee_id
   T->>DB: INSERT event_publications ×2 (calendar, notifications)
   T->>DB: COMMIT — користувач уже бачить нового виконавця
   D->>C: syncAssignment(event)
@@ -168,6 +168,7 @@ Payload — лише id, ISO-рядки й прості значення (`commo
 | `auth.emailVerificationRequested` | `auth`   | `auth` — новий токен і лист `verifyEmail` (після коміту, з повторами)                                                                               |
 | `auth.passwordResetRequested`     | `auth`   | `auth` — новий токен на 1 год і лист `resetPassword` (після коміту, з повторами)                                                                    |
 | `user.deleted`                    | `users`  | `groups` — `LAST_ADMIN`, якщо користувач — єдиний адмін групи з іншими учасниками, інакше вийти з усіх груп (у транзакції; далі `group.memberLeft`) |
+| `user.avatarDiscarded`            | `users`  | `users` — видалити файл фото зі сховища (після коміту, з повторами): заміна, видалення фото чи акаунта                                              |
 | `group.created`                   | `groups` | `notifications` — `groupCreated` (після коміту, буде додано)                                                                                        |
 | `group.roleChanged`               | `groups` | `notifications` — `roleGranted`/`roleRevoked` (після коміту, буде додано)                                                                           |
 | `group.inviteEmailRequested`      | `groups` | `groups` — окреме посилання й лист `invite` одержувачу (після коміту, з повторами)                                                                  |
@@ -211,12 +212,13 @@ flowchart LR
 
 Зовнішні залежності сховані за абстрактними класами, які в Nest водночас є токенами DI. Сервіси залежать від порту, а реалізацію підставляє модуль. У тестах підставляється фейк.
 
-| Порт              | Реалізація              | Навіщо                                                                                 |
-| ----------------- | ----------------------- | -------------------------------------------------------------------------------------- |
-| `Clock`           | `SystemClock`           | статус, вікно скасування 24 год, повтори; у тестах `FixedClock`                        |
-| `PasswordHasher`  | `Argon2PasswordHasher`  | argon2id з параметрами OWASP (NFR-SEC-01); алгоритм можна замінити без змін у сервісах |
-| `MailTransport`   | `SmtpMailTransport`     | SMTP (Mailpit, Gmail); HTTP-провайдер — інша реалізація                                |
-| `CalendarGateway` | `GoogleCalendarGateway` | `CalendarGateways.for(provider)` обирає шлюз за провайдером; Outlook — новий клас      |
+| Порт              | Реалізація              | Навіщо                                                                                                           |
+| ----------------- | ----------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| `Clock`           | `SystemClock`           | статус, вікно скасування 24 год, повтори; у тестах `FixedClock`                                                  |
+| `PasswordHasher`  | `Argon2PasswordHasher`  | argon2id з параметрами OWASP (NFR-SEC-01); алгоритм можна замінити без змін у сервісах                           |
+| `MailTransport`   | `SmtpMailTransport`     | SMTP (Mailpit, Gmail); HTTP-провайдер — інша реалізація                                                          |
+| `ObjectStorage`   | `S3ObjectStorage`       | файли поза базою (аватарки) через S3 API: SeaweedFS у compose; R2, AWS S3 чи Supabase Storage — лише інші `S3_*` |
+| `CalendarGateway` | `GoogleCalendarGateway` | `CalendarGateways.for(provider)` обирає шлюз за провайдером; Outlook — новий клас                                |
 
 ## Логування
 
