@@ -1,3 +1,5 @@
+import { addMonths } from 'date-fns';
+
 import type {
   AppNotification,
   GroupRole,
@@ -138,8 +140,8 @@ export function occurrences(recurrence: Recurrence, firstDueAt: Date, until: Dat
     } else {
       monthOffset += 1;
       result.push(new Date(cursor));
-      cursor.setTime(firstDueAt.getTime());
-      cursor.setMonth(firstDueAt.getMonth() + monthOffset);
+      // Like the backend: a date past the month's end falls on its last day
+      cursor.setTime(addMonths(firstDueAt, monthOffset).getTime());
     }
   }
   return result;
