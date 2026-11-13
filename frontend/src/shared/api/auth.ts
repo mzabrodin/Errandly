@@ -7,6 +7,7 @@ import {
 } from '@tanstack/react-query';
 
 import { currentLocale } from '../i18n';
+import { deviceTimeZone } from '../lib/dates';
 import { api, ApiError, unwrap } from './client';
 import type { User } from './types';
 
@@ -38,7 +39,11 @@ export function useRegister(): UseMutationResult<User, Error, RegisterInput> {
   return useMutation({
     // The account starts in the language the user signed up in, so the verification email matches
     mutationFn: (input: RegisterInput) =>
-      unwrap(api.POST('/api/auth/register', { body: { ...input, locale: currentLocale() } })),
+      unwrap(
+        api.POST('/api/auth/register', {
+          body: { ...input, locale: currentLocale(), timezone: deviceTimeZone() },
+        }),
+      ),
     onSuccess: (user) => queryClient.setQueryData(sessionKey, user),
   });
 }

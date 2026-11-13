@@ -59,7 +59,7 @@ export interface Db {
 }
 
 const STORAGE_KEY = 'errandly-mock-db';
-const DB_VERSION = 4;
+const DB_VERSION = 5;
 const DAY_MS = 24 * 60 * 60 * 1000;
 export const HORIZON_DAYS = 28;
 
@@ -228,6 +228,7 @@ function seedUsers(db: Db): void {
       ...person,
       emailVerified: true,
       timezone: 'Europe/Kyiv',
+      timezoneAuto: true,
       locale: 'uk',
       password: 'Pass1234',
       failedLogins: 0,
@@ -504,6 +505,7 @@ export function publicUser({
   email,
   emailVerified,
   timezone,
+  timezoneAuto,
   locale,
   avatarUrl,
 }: DbUser): User {
@@ -513,6 +515,7 @@ export function publicUser({
     email,
     emailVerified,
     timezone,
+    timezoneAuto,
     locale,
     avatarUrl: avatarUrl ?? null,
   };

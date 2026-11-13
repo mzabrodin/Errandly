@@ -29,7 +29,7 @@ import {
 } from '../../shared/api/settings';
 import type { Settings, SettingsPatch, User } from '../../shared/api/types';
 import { changeLocale, currentLocale, isLocale, type Locale } from '../../shared/i18n';
-import { formatRelative } from '../../shared/lib/dates';
+import { deviceTimeZone, formatRelative } from '../../shared/lib/dates';
 import { setPrefs, usePrefs } from '../../shared/lib/prefs';
 import { isValidPassword } from '../../shared/lib/validation';
 import { Button, ButtonLink } from '../../shared/ui/Button';
@@ -77,6 +77,8 @@ const TIMEZONES = [
   'America/Toronto',
   'Asia/Tokyo',
 ];
+// A Select value no IANA zone can take
+const AUTOMATIC = 'auto';
 const NOTIFICATIONS = ['assigned', 'dueSoon', 'overdue', 'weeklyDigest'] as const;
 
 function Section({
@@ -109,17 +111,21 @@ function ProfileSection({ user }: { user: User }): JSX.Element {
   const toast = useToast();
   const update = useUpdateProfile();
   const [name, setName] = useState(user.name);
-  const [timezone, setTimezone] = useState(user.timezone);
+  const [zoneChoice, setZoneChoice] = useState(user.timezoneAuto ? AUTOMATIC : user.timezone);
   const [nameError, setNameError] = useState<string>();
-  const changed = name.trim() !== user.name || timezone !== user.timezone;
-  const zones = TIMEZONES.includes(user.timezone) ? TIMEZONES : [user.timezone, ...TIMEZONES];
+  const device = deviceTimeZone();
+  const auto = zoneChoice === AUTOMATIC;
+  const timezone = auto ? device : zoneChoice;
+  const changed =
+    name.trim() !== user.name || auto !== user.timezoneAuto || timezone !== user.timezone;
+  const zones = [...new Set([user.timezone, device, ...TIMEZONES])].toSorted();
 
   const submit = (event: FormEvent) => {
     event.preventDefault();
     if (name.trim() === '') return setNameError(t('auth.errors.nameRequired'));
     setNameError(undefined);
     update.mutate(
-      { name: name.trim(), timezone },
+      { name: name.trim(), timezone, timezoneAuto: auto },
       { onSuccess: () => toast(t('settings.profileSaved')) },
     );
   };
@@ -160,9 +166,12 @@ function ProfileSection({ user }: { user: User }): JSX.Element {
             {(props) => (
               <Select
                 {...props}
-                value={timezone}
-                onChange={(event) => setTimezone(event.target.value)}
+                value={zoneChoice}
+                onChange={(event) => setZoneChoice(event.target.value)}
               >
+                <option value={AUTOMATIC}>
+                  {t('settings.timezoneAuto', { zone: device.replace('_', ' ') })}
+                </option>
                 {zones.map((zone) => (
                   <option key={zone} value={zone}>
                     {zone.replace('_', ' ')}

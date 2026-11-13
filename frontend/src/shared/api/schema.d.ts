@@ -658,6 +658,7 @@ export interface components {
             name?: string;
             /** @description IANA time zone, e.g. Europe/Kyiv */
             timezone?: string;
+            timezoneAuto?: boolean;
         };
         UserDto: {
             /** @description UI and email language */
@@ -668,6 +669,8 @@ export interface components {
             emailVerified: boolean;
             /** @description IANA time zone, e.g. Europe/Kyiv */
             timezone: string;
+            /** @description Whether `timezone` follows the device (the frontend updates it) or was chosen by hand */
+            timezoneAuto: boolean;
             /** @description The uploaded photo, else the Google photo, else null */
             avatarUrl: string | null;
         };
@@ -686,6 +689,8 @@ export interface components {
             email: string;
             /** @description At least 8 characters with a letter and a digit (FR-01) */
             password: string;
+            /** @description The device's IANA time zone; becomes the profile time zone */
+            timezone?: string;
         };
         LoginDto: {
             email: string;

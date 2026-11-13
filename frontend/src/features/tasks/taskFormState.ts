@@ -1,9 +1,18 @@
-import { addDays, addHours, setHours, setMinutes, startOfHour } from 'date-fns';
 import type { TFunction } from 'i18next';
 
 import { ApiError } from '../../shared/api/client';
 import type { Recurrence, Task, TaskInput } from '../../shared/api/types';
-import { toLocalInputValue } from '../../shared/lib/dates';
+import {
+  addDays,
+  addHours,
+  atTime,
+  fromLocalInputValue,
+  isoWeekday,
+  now,
+  startOfHour,
+  toIso,
+  toLocalInputValue,
+} from '../../shared/lib/dates';
 
 export type RecurrenceType = Recurrence['type'];
 
@@ -27,32 +36,23 @@ export type SetField = <K extends keyof FormState>(key: K, value: FormState[K]) 
 
 export type Errors = Partial<Record<'title' | 'dueAt' | 'weekdays', string>>;
 
-export function isoWeekday(date: Date): number {
-  return ((date.getDay() + 6) % 7) + 1;
-}
-
 export function initialState(task: Task | null, defaultDay?: Date): FormState {
   if (task) {
     return {
       title: task.title,
       description: task.description,
-      dueAt: toLocalInputValue(new Date(task.dueAt)),
+      dueAt: toLocalInputValue(task.dueAt),
       difficulty: task.difficulty,
       recurrenceType: task.recurrence.type,
       weekdays:
-        task.recurrence.type === 'weekly'
-          ? task.recurrence.weekdays
-          : [isoWeekday(new Date(task.dueAt))],
+        task.recurrence.type === 'weekly' ? task.recurrence.weekdays : [isoWeekday(task.dueAt)],
       assigneeId: task.manuallyAssigned && task.assigneeId !== null ? task.assigneeId : '',
     };
   }
   // Day from the calendar or tomorrow; time 19:00 (or the next hour if it is already late today)
-  let tomorrowEvening = setMinutes(
-    setHours(startOfHour(defaultDay ?? addDays(new Date(), 1)), 19),
-    0,
-  );
+  let tomorrowEvening = atTime(defaultDay ?? addDays(now(), 1), 19, 0);
   if (tomorrowEvening.getTime() < Date.now()) {
-    tomorrowEvening = startOfHour(addHours(new Date(), 2));
+    tomorrowEvening = startOfHour(addHours(now(), 2));
   }
   return {
     title: '',
@@ -63,6 +63,13 @@ export function initialState(task: Task | null, defaultDay?: Date): FormState {
     weekdays: [isoWeekday(tomorrowEvening)],
     assigneeId: '',
   };
+}
+
+/** Until weekdays are picked by hand, they follow the due date */
+export function withDueAt(state: FormState, dueAt: string, weekdaysTouched: boolean): FormState {
+  const weekdays =
+    weekdaysTouched || dueAt === '' ? state.weekdays : [isoWeekday(fromLocalInputValue(dueAt))];
+  return { ...state, dueAt, weekdays };
 }
 
 function toRecurrence(state: FormState): Recurrence {
@@ -76,7 +83,7 @@ export function toTaskInput(state: FormState): TaskInput {
   return {
     title: state.title.trim(),
     description: state.description.trim(),
-    dueAt: new Date(state.dueAt).toISOString(),
+    dueAt: toIso(fromLocalInputValue(state.dueAt)),
     difficulty: state.difficulty,
     recurrence: toRecurrence(state),
     assigneeId: state.assigneeId === '' ? null : state.assigneeId,
@@ -90,7 +97,7 @@ export function validateForm(state: FormState, dueChanged: boolean, t: TFunction
   if (title === '') next.title = t('taskForm.errors.titleRequired');
   else if (title.length > 100) next.title = t('taskForm.errors.titleTooLong');
   if (state.dueAt === '') next.dueAt = t('taskForm.errors.dueRequired');
-  else if (dueChanged && new Date(state.dueAt).getTime() < Date.now()) {
+  else if (dueChanged && fromLocalInputValue(state.dueAt).getTime() < Date.now()) {
     next.dueAt = t('taskForm.errors.dueInPast');
   }
   if (state.recurrenceType === 'weekly' && state.weekdays.length === 0) {

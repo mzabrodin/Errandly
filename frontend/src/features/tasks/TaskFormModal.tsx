@@ -1,11 +1,12 @@
 import { clsx } from 'clsx';
+import type { TFunction } from 'i18next';
 import { useState, type FormEvent, type JSX } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { errorMessage } from '../../shared/api/errors';
 import { useCreateTask, useUpdateTask } from '../../shared/api/tasks';
 import type { EditScope, Task } from '../../shared/api/types';
-import { toLocalInputValue } from '../../shared/lib/dates';
+import { deviceTimeZone, displayTimeZone, now, toLocalInputValue } from '../../shared/lib/dates';
 import { Button } from '../../shared/ui/Button';
 import { Field, FormError, Input, Select, Textarea } from '../../shared/ui/Field';
 import { Modal } from '../../shared/ui/Modal';
@@ -15,12 +16,12 @@ import { useCurrentGroup } from '../groups/useCurrentGroup';
 import styles from './TaskFormModal.module.css';
 import {
   initialState,
-  isoWeekday,
   isRecurrenceType,
   RECURRENCE_TYPES,
   serverFieldError,
   toTaskInput,
   validateForm,
+  withDueAt,
   type Errors,
   type FormState,
   type SetField,
@@ -109,7 +110,7 @@ function TaskForm({
   const [state, setState] = useState(() => initialState(task, defaultDay));
   const [errors, setErrors] = useState<Errors>({});
   const [scope, setScope] = useState<EditScope>('one');
-  const [minDue] = useState(() => toLocalInputValue(new Date()));
+  const [minDue] = useState(() => toLocalInputValue(now()));
   const isEdit = task !== null;
   const recurring = task !== null && task.recurrence.type !== 'once';
   // Recurrence can only be changed for the whole series
@@ -119,7 +120,7 @@ function TaskForm({
   const [weekdaysTouched, setWeekdaysTouched] = useState(false);
 
   // Only a new due date cannot be in the past; an overdue task can still be edited
-  const dueChanged = !isEdit || state.dueAt !== toLocalInputValue(new Date(task.dueAt));
+  const dueChanged = !isEdit || state.dueAt !== toLocalInputValue(task.dueAt);
 
   const submit = (event: FormEvent): void => {
     event.preventDefault();
@@ -164,22 +165,18 @@ function TaskForm({
         />
 
         <div className={styles.row}>
-          <Field label={t('taskForm.dueAt')} error={errors.dueAt ?? fieldError('dueAt')}>
+          <Field
+            label={t('taskForm.dueAt')}
+            hint={zoneHint(t)}
+            error={errors.dueAt ?? fieldError('dueAt')}
+          >
             {(props) => (
               <DueInput
                 fieldProps={props}
                 min={minDue}
                 value={state.dueAt}
                 onChange={(value) =>
-                  setState((current) => ({
-                    ...current,
-                    dueAt: value,
-                    // Until weekdays are picked by hand, follow the date
-                    weekdays:
-                      weekdaysTouched || value === ''
-                        ? current.weekdays
-                        : [isoWeekday(new Date(value))],
-                  }))
+                  setState((current) => withDueAt(current, value, weekdaysTouched))
                 }
               />
             )}
@@ -298,6 +295,14 @@ function DueInput({
       onChange={(event) => onChange(event.target.value)}
     />
   );
+}
+
+/** Someone with a manual zone away from it sees which clock the time is on */
+function zoneHint(t: TFunction): string | undefined {
+  const zone = displayTimeZone();
+  return zone === deviceTimeZone()
+    ? undefined
+    : t('taskForm.zoneHint', { zone: zone.replace('_', ' ') });
 }
 
 function RepeatField({

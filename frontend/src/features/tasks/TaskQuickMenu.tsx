@@ -82,7 +82,7 @@ function QuickMenuHead({
       <div className={styles.meta}>
         <span>
           <Clock size={13} />
-          {formatDate(new Date(task.dueAt), 'd MMM')}, {formatTime(task.dueAt)}
+          {formatDate(task.dueAt, 'd MMM')}, {formatTime(task.dueAt)}
         </span>
         {assignee ? (
           <span>

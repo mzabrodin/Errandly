@@ -10,20 +10,12 @@ import {
   emptyResponse,
   error,
   groupName,
+  isValidTimeZone,
   redistributeOpenTasks,
   type DbUserRecord,
 } from './common';
 
 type SettingsPatch = Partial<Pick<Settings, 'reminderMinutes' | 'notifications'>>;
-
-function isValidTimeZone(timeZone: string): boolean {
-  try {
-    new Intl.DateTimeFormat('uk-UA', { timeZone }).format();
-    return true;
-  } catch {
-    return false;
-  }
-}
 
 // Mocks store it as a data URL; the server will put the file in storage and return a link
 function readAsDataUrl(file: Blob): Promise<string> {
@@ -92,12 +84,12 @@ const settingsHandlers = [
 ];
 
 const profileHandlers = [
-  http.patch<never, { name?: string; timezone?: string; locale?: string }>(
+  http.patch<never, { name?: string; timezone?: string; timezoneAuto?: boolean; locale?: string }>(
     `${API}/me`,
     async ({ request }) => {
       const user = currentUser();
       if (!user) return error(401, 'UNAUTHENTICATED');
-      const { name, timezone, locale } = await request.json();
+      const { name, timezone, timezoneAuto, locale } = await request.json();
       if (name !== undefined) {
         if (name.trim() === '') return error(400, 'VALIDATION', { fields: { name: 'required' } });
         if (name.trim().length > 60)
@@ -109,6 +101,12 @@ const profileHandlers = [
           return error(400, 'VALIDATION', { fields: { timezone: 'invalid' } });
         }
         user.timezone = timezone;
+      }
+      if (timezoneAuto !== undefined) {
+        if (typeof timezoneAuto !== 'boolean') {
+          return error(400, 'VALIDATION', { fields: { timezoneAuto: 'type' } });
+        }
+        user.timezoneAuto = timezoneAuto;
       }
       if (locale !== undefined) {
         if (!isLocale(locale)) return error(400, 'VALIDATION', { fields: { locale: 'invalid' } });

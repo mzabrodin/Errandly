@@ -1,7 +1,5 @@
-import { startOfDay } from 'date-fns';
-
 import type { Task, TaskStatus } from '../../shared/api/types';
-import { groupByDay } from '../../shared/lib/dates';
+import { groupByDay, startOfDay } from '../../shared/lib/dates';
 
 export type TaskScope = 'mine' | 'all';
 
@@ -35,7 +33,7 @@ export function arrangeTasks(
         : visible;
     return {
       overdue: [],
-      days: groupByDay(ordered, (task) => new Date(task.dueAt)),
+      days: groupByDay(ordered, (task) => task.dueAt),
     };
   }
 
@@ -46,7 +44,7 @@ export function arrangeTasks(
       visible.filter(
         (task) => task.status !== 'overdue' && new Date(task.dueAt).getTime() >= today,
       ),
-      (task) => new Date(task.dueAt),
+      (task) => task.dueAt,
     ),
   };
 }

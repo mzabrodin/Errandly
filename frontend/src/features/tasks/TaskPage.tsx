@@ -77,9 +77,7 @@ function SeriesHistory({ task }: { task: Task }): JSX.Element | null {
                   className={styles.rowLink}
                   aria-current={current ? 'page' : undefined}
                 >
-                  <span className={styles.rowDate}>
-                    {formatDate(new Date(item.dueAt), 'd MMM, EEEEEE')}
-                  </span>
+                  <span className={styles.rowDate}>{formatDate(item.dueAt, 'd MMM, EEEEEE')}</span>
                   <span className={styles.rowWho}>
                     {assignee ? (
                       <>
@@ -200,7 +198,6 @@ function TaskFacts({ task }: { task: Task }): JSX.Element {
   const { membersById } = useCurrentGroup();
   const recurrence = useRecurrenceLabel(task);
   const assignee = task.assigneeId === null ? undefined : membersById.get(task.assigneeId);
-  const due = new Date(task.dueAt);
 
   return (
     <dl className={styles.facts}>
@@ -210,7 +207,7 @@ function TaskFacts({ task }: { task: Task }): JSX.Element {
           {t('taskPage.when')}
         </dt>
         <dd>
-          {formatDate(due, 'd MMMM, EEEE')}
+          {formatDate(task.dueAt, 'd MMMM, EEEE')}
           <span className={styles.time}>{formatTime(task.dueAt)}</span>
         </dd>
       </div>
@@ -340,7 +337,7 @@ function TaskDetails({ backTo, backLabel, ...rest }: TaskDetailsProps): JSX.Elem
               <p className={styles.completed}>
                 <Check size={16} />
                 {t('taskPage.completedAt', {
-                  date: `${formatDate(new Date(task.completedAt), 'd MMMM')}, ${formatTime(task.completedAt)}`,
+                  date: `${formatDate(task.completedAt, 'd MMMM')}, ${formatTime(task.completedAt)}`,
                 })}
               </p>
             )}

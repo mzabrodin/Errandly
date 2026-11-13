@@ -1,10 +1,9 @@
-import { isSameDay } from 'date-fns';
 import { Check, Plane, RefreshCw } from 'lucide-react';
 import { useState, type JSX } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import type { Group, Task } from '../../shared/api/types';
-import { toDateInputValue } from '../../shared/lib/dates';
+import { isSameDay, toDateInputValue } from '../../shared/lib/dates';
 import { Avatar } from '../../shared/ui/Avatar';
 import styles from './TasksAside.module.css';
 import { toStringList } from './translationList';
@@ -32,7 +31,7 @@ export function TasksAside({ group, tasks, today, userId }: TasksAsideProps): JS
       return next;
     });
   const day = toDateInputValue(today);
-  const todayTasks = tasks.filter((task) => isSameDay(new Date(task.dueAt), today));
+  const todayTasks = tasks.filter((task) => isSameDay(task.dueAt, today));
 
   return (
     <aside className={styles.aside}>

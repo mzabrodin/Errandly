@@ -4,7 +4,7 @@ import { isLocale } from '../../shared/i18n';
 import { isValidPassword } from '../../shared/lib/validation';
 import { db, id, persist, publicUser } from '../db';
 import { sendMail } from '../mailer';
-import { API, currentUser, emptyResponse, error } from './common';
+import { API, currentUser, emptyResponse, error, isValidTimeZone } from './common';
 
 const LOCK_MS = 15 * 60 * 1000;
 
@@ -12,6 +12,7 @@ interface RegisterBody {
   name?: string;
   email?: string;
   password?: string;
+  timezone?: string;
   locale?: string;
 }
 
@@ -27,11 +28,12 @@ export const authHandlers = [
   }),
 
   http.post<never, RegisterBody>(`${API}/auth/register`, async ({ request }) => {
-    const { name = '', email = '', password = '', locale } = await request.json();
+    const { name = '', email = '', password = '', locale, timezone } = await request.json();
     const fields: Record<string, string> = {};
     if (name.trim() === '') fields['name'] = 'required';
     if (!email.includes('@')) fields['email'] = 'invalid';
     if (!isValidPassword(password)) fields['password'] = 'weak';
+    if (timezone !== undefined && !isValidTimeZone(timezone)) fields['timezone'] = 'invalid';
     if (Object.keys(fields).length > 0) return error(400, 'VALIDATION', { fields });
 
     const normalized = email.trim().toLowerCase();
@@ -42,7 +44,8 @@ export const authHandlers = [
       name: name.trim(),
       email: normalized,
       emailVerified: false,
-      timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+      timezone: timezone ?? 'Europe/Kyiv',
+      timezoneAuto: true,
       locale: isLocale(locale) ? locale : 'uk',
       password,
       failedLogins: 0,
