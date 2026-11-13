@@ -1,0 +1,41 @@
+@startuml sd-3-1-complete-task
+skinparam shadowing false
+skinparam defaultFontName "Inter, Segoe UI, Arial"
+skinparam maxMessageSize 220
+skinparam ResponseMessageBelowArrow true
+autonumber
+
+actor "Виконавець" as User
+participant "React SPA" as SPA
+participant "TasksController" as Ctrl
+participant "TasksService" as Svc
+participant "GroupsApi" as Groups
+participant "TasksRepository" as Repo
+participant "EventBus" as Bus
+
+User -> SPA : Позначає задачу виконаною
+SPA -> Ctrl : POST /api/tasks/:taskId/complete
+Ctrl -> Svc : complete(taskId, userId)
+Svc -> Repo : findTask(taskId)
+alt Задачі немає
+  Ctrl --> SPA : 404 NOT_FOUND
+else Задача є
+  Svc -> Groups : requireMember(groupId, userId)
+  alt Не учасник групи
+    Ctrl --> SPA : 403 FORBIDDEN
+  else Учасник
+    group транзакція
+      Svc -> Repo : lockTask(taskId)
+      alt Не виконавець
+        Ctrl --> SPA : 403 NOT_ASSIGNEE
+      else Уже виконано
+        Ctrl --> SPA : 200 TaskDto (без змін)
+      else Виконавець (FR-24)
+        Svc -> Repo : updateTask(completedAt = now, completedBy)
+        Svc -> Bus : publish(task.completed, done = true)
+        Ctrl --> SPA : 200 TaskDto (status = done)
+      end
+    end
+  end
+end
+@enduml

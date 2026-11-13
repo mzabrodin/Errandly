@@ -1,0 +1,178 @@
+@startuml domain-model
+skinparam shadowing false
+skinparam defaultFontName "Inter, Segoe UI, Arial"
+skinparam TitleFontStyle bold
+skinparam RoundCorner 12
+skinparam ClassBackgroundColor #FFFFFF
+skinparam ClassBorderColor #1F6F64
+skinparam ObjectBackgroundColor #FFFFFF
+skinparam ObjectBorderColor #1F6F64
+skinparam ComponentBackgroundColor #FFFFFF
+skinparam ComponentBorderColor #1F6F64
+skinparam NoteBackgroundColor #FFFFE0
+hide empty methods
+left to right direction
+
+package users {
+  class User {
+    +id : UUID
+    +name : String
+    +email : String
+    +emailVerifiedAt : DateTime?
+    +timezone : String
+    +locale : Locale
+    +providerAvatarUrl : String?
+    +uploadedAvatarKey : String?
+  }
+}
+
+package auth {
+  class PasswordCredentials {
+    +passwordHash : String
+    +failedLogins : Int
+    +lockedUntil : DateTime?
+  }
+  class AuthIdentity {
+    +provider : AuthProvider
+    +providerUserId : String
+  }
+  class Session {
+    +id : String <<SHA-256>>
+    +expiresAt : DateTime
+    +lastSeenAt : DateTime
+  }
+  class EmailToken {
+    +purpose : EmailTokenPurpose
+    +tokenHash : String
+    +expiresAt : DateTime
+    +usedAt : DateTime?
+  }
+}
+
+package groups {
+  class Group {
+    +id : UUID
+    +name : String
+  }
+  class Membership {
+    +role : GroupRole
+    +color : String
+    +joinedAt : DateTime
+  }
+  class Absence {
+    +startsOn : Date
+    +endsOn : Date
+    +covers(date) : Boolean
+  }
+  class Invite {
+    +tokenHash : String
+    +email : String?
+    +expiresAt : DateTime
+    +revokedAt : DateTime?
+    +isActive(now) : Boolean
+  }
+}
+
+package tasks {
+  class TaskSeries {
+    +title : String
+    +description : String
+    +difficulty : Int
+    +recurrenceType : RecurrenceType
+    +weekdays : List<Int>
+    +startsAt : DateTime
+    +materializedUntil : DateTime
+    +timezone : String
+    +assigneeId : UUID?
+    +endedAt : DateTime?
+  }
+  class Task {
+    +title : String
+    +dueAt : DateTime
+    +difficulty : Int
+    +manuallyAssigned : Boolean
+    +completedAt : DateTime?
+    +status() : TaskStatus
+  }
+  class MemberStats <<обчислюється>> {
+    +tasksDone : Int
+    +tasksOverdue : Int
+    +workload : Int
+  }
+}
+
+package notifications {
+  class Notification {
+    +type : NotificationType
+    +data : JSON
+    +readAt : DateTime?
+  }
+  class NotificationSettings {
+    +reminderMinutes : Int
+  }
+  class NotificationPreference {
+    +event : NotificationEvent
+    +channel : NotificationChannel
+    +enabled : Boolean
+  }
+}
+
+package calendar {
+  class CalendarConnection {
+    +provider : CalendarProvider
+    +accountEmail : String
+    +refreshTokenEncrypted : String
+    +syncStatus : SyncStatus
+    +failedAttempts : Int
+    +lastSyncedAt : DateTime?
+  }
+  class CalendarEventLink {
+    +externalEventId : String
+    +syncedAt : DateTime
+  }
+}
+
+enum GroupRole {
+  admin
+  member
+}
+enum TaskStatus {
+  planned
+  unassigned
+  overdue
+  done
+}
+enum RecurrenceType {
+  once
+  daily
+  weekly
+  monthly
+}
+enum SyncStatus {
+  ok
+  paused
+}
+
+User "1" -- "0..1" PasswordCredentials : вхід паролем
+User "1" -- "0..*" AuthIdentity : зовнішні акаунти
+User "1" -- "0..*" Session
+User "1" -- "0..*" EmailToken
+User "1" -- "0..*" Membership : є учасником
+Group "1" *-- "1..*" Membership : складається з
+Membership "1" *-- "0..*" Absence : має
+Group "1" *-- "0..*" Invite : видає
+Group "1" *-- "0..*" TaskSeries : містить
+TaskSeries "1" *-- "1..*" Task : породжує
+Task "0..*" -- "0..1" User : виконавець
+Group ..> MemberStats : обчислює
+User "1" -- "0..*" Notification : отримує
+User "1" -- "0..1" NotificationSettings
+User "1" -- "0..*" NotificationPreference
+User "1" -- "0..*" CalendarConnection : підключає
+CalendarConnection "1" *-- "0..*" CalendarEventLink
+Task "1" -- "0..*" CalendarEventLink : відображається
+Membership --> GroupRole
+Task ..> TaskStatus
+TaskSeries --> RecurrenceType
+CalendarConnection --> SyncStatus
+@enduml

@@ -1,0 +1,58 @@
+@startuml sd-0-2-sign-in
+skinparam shadowing false
+skinparam defaultFontName "Inter, Segoe UI, Arial"
+skinparam maxMessageSize 220
+skinparam ResponseMessageBelowArrow true
+autonumber
+
+actor "Користувач" as User
+participant "React SPA" as SPA
+participant "AuthController" as Ctrl
+participant "SessionGuard" as Guard
+participant "AuthService" as Svc
+participant "UsersApi" as Users
+participant "PasswordHasher" as Hasher
+participant "AuthRepository" as Repo
+participant "SessionService" as Sessions
+
+== Вхід (FR-05–06) ==
+User -> SPA : Email і пароль
+SPA -> Ctrl : POST /api/auth/login
+Ctrl -> Svc : login(dto)
+Svc -> Users : findByEmail(email)
+Svc -> Repo : findCredentials(userId)
+alt Невідомий email
+  Svc -> Hasher : verify(password, фіктивний хеш)
+  note right : однаковий час відповіді\nдля відомих і невідомих email
+  Ctrl --> SPA : 401 INVALID_CREDENTIALS
+else Обліковий запис заблоковано
+  Ctrl --> SPA : 423 ACCOUNT_LOCKED + retryAfterSeconds
+else Пароль хибний
+  Svc -> Repo : saveLoginAttempts: +1, на 5-й — блокування на 15 хв
+  Ctrl --> SPA : 401 INVALID_CREDENTIALS (на 5-й — 423)
+else Пароль правильний
+  Svc -> Repo : saveLoginAttempts: скинути лічильник
+  Svc -> Sessions : create(userId)
+  Ctrl --> SPA : 200 User + cookie errandly_session
+end
+
+== Кожен наступний запит (SYS-06–07) ==
+SPA -> Guard : будь-який /api/... з cookie
+Guard -> Sessions : authenticate(token)
+alt Сесії немає або вона прострочена
+  Sessions -> Repo : deleteSession (прострочену)
+  Guard --> SPA : 401 UNAUTHENTICATED
+else Чинна сесія
+  opt Минула година від останнього продовження
+    Sessions -> Repo : touchSession: ще 30 днів
+    Guard --> SPA : оновлена cookie
+  end
+  Guard -> Ctrl : запит іде далі з користувачем
+end
+
+== Вихід (FR-09) ==
+User -> SPA : «Вийти»
+SPA -> Ctrl : POST /api/auth/logout
+Ctrl -> Sessions : revoke(token)
+Ctrl --> SPA : 204, cookie очищено
+@enduml

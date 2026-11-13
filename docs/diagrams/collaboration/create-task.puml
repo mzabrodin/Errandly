@@ -1,0 +1,51 @@
+@startuml create-task
+skinparam shadowing false
+skinparam defaultFontName "Inter, Segoe UI, Arial"
+skinparam TitleFontStyle bold
+skinparam RoundCorner 12
+skinparam ClassBackgroundColor #FFFFFF
+skinparam ClassBorderColor #1F6F64
+skinparam ObjectBackgroundColor #FFFFFF
+skinparam ObjectBorderColor #1F6F64
+skinparam ComponentBackgroundColor #FFFFFF
+skinparam ComponentBorderColor #1F6F64
+skinparam NoteBackgroundColor #FFFFE0
+
+object "admin : Адміністратор" as admin
+object "form : TaskForm" as form
+object "tc : TasksController" as tc
+object "ts : TasksService" as ts
+object "users : UsersApi" as users
+object "groups : GroupsApi" as groups
+object "planner : TaskPlanner" as planner
+object "strategy : LeastLoadRotationStrategy" as strategy
+object "tasks : TasksRepository" as tasks
+object "bus : EventBus" as bus
+object "dispatcher : EventDispatcher" as dispatcher
+object "notifications : слухач (буде додано)" as notifications
+object "calendar : слухач (буде додано)" as calendar
+
+admin --> form : 1: submit()
+form --> tc : 2: POST /api/groups/:groupId/tasks
+tc --> ts : 2.1: create(groupId, userId, input)
+ts --> groups : 2.1.1: requireAdmin(groupId, userId, tx)
+ts --> users : 2.1.2: findById(userId): часовий пояс
+ts --> tasks : 2.1.3: insertSeries(tx)
+ts --> planner : 2.1.4: materialize(series, 4 тижні, tx)
+planner --> groups : 2.1.4.1: members(groupId, tx)
+planner --> users : 2.1.4.2: findMany(ids): імена
+planner --> tasks : 2.1.4.3: assignmentHistory(…)
+planner --> strategy : 2.1.4.4: pick(candidates, history, task)
+planner --> tasks : 2.1.4.5: insertTasks(tx)
+planner --> bus : 2.1.4.6: publish(tx, 'task.assigned')
+bus ..> dispatcher : event_publications (у тій самій транзакції)
+dispatcher --> notifications : 3: task.assigned (після коміту)
+dispatcher --> calendar : 4: task.assigned (після коміту)
+
+note right of ts
+  Центр кооперації: усе в одній транзакції,
+  а сповіщення й календар — після коміту
+  через EventDispatcher, з повторами.
+  Відповіді не показано.
+end note
+@enduml

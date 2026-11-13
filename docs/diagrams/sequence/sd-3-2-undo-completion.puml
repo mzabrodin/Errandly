@@ -1,0 +1,38 @@
+@startuml sd-3-2-undo-completion
+skinparam shadowing false
+skinparam defaultFontName "Inter, Segoe UI, Arial"
+skinparam maxMessageSize 220
+skinparam ResponseMessageBelowArrow true
+autonumber
+
+actor "Виконавець або адміністратор" as User
+participant "React SPA" as SPA
+participant "TasksController" as Ctrl
+participant "TasksService" as Svc
+participant "GroupsApi" as Groups
+participant "TasksRepository" as Repo
+participant "EventBus" as Bus
+
+User -> SPA : Скасовує виконання
+SPA -> Ctrl : DELETE /api/tasks/:taskId/complete
+Ctrl -> Svc : undoComplete(taskId, userId)
+Svc -> Repo : findTask(taskId)
+note right of Repo : немає — 404, не учасник — 403,\nяк на SD-3.1
+group транзакція
+  Svc -> Groups : requireMember: роль
+  Svc -> Repo : lockTask(taskId)
+  alt Адміністратор (будь-коли)
+    Svc -> Repo : updateTask(completedAt = null)
+    Svc -> Bus : publish(task.completed, done = false)
+    Ctrl --> SPA : 200 TaskDto (статус обчислюється знову)
+  else Виконавець, минуло не більше 24 годин
+    Svc -> Repo : updateTask(completedAt = null)
+    Svc -> Bus : publish(task.completed, done = false)
+    Ctrl --> SPA : 200 TaskDto
+  else Виконавець, минуло понад 24 години
+    Ctrl --> SPA : 409 UNDO_EXPIRED
+  else Не виконавець і не адміністратор
+    Ctrl --> SPA : 403 NOT_ASSIGNEE
+  end
+end
+@enduml

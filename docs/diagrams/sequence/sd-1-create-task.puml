@@ -1,0 +1,49 @@
+@startuml sd-1-create-task
+skinparam shadowing false
+skinparam defaultFontName "Inter, Segoe UI, Arial"
+skinparam maxMessageSize 220
+skinparam ResponseMessageBelowArrow true
+autonumber
+
+actor "Адміністратор" as Admin
+participant "React SPA" as SPA
+participant "TasksController" as Ctrl
+participant "TasksService" as Svc
+participant "GroupsApi" as Groups
+participant "TaskPlanner" as Planner
+participant "TasksRepository" as Repo
+participant "EventBus" as Bus
+participant "notifications, calendar\n(слухачі, буде додано)" as Listeners
+
+Admin -> SPA : Назва, складність, термін,\nповторюваність, виконавець (необов'язково)
+SPA -> Ctrl : POST /api/groups/:groupId/tasks
+alt Дані некоректні (FR-20)
+  Ctrl --> SPA : 400 VALIDATION + fields
+else Дані коректні
+  Ctrl -> Svc : create(groupId, userId, input)
+  group транзакція
+    Svc -> Groups : requireAdmin(groupId, userId)
+    alt Не учасник або не адміністратор (SYS-07)
+      Ctrl --> SPA : 403 FORBIDDEN / ADMIN_ONLY
+    else Адміністратор
+      opt Виконавця обрано вручну (FR-30)
+        Svc -> Groups : members(groupId): чи це учасник
+      end
+      Svc -> Repo : insertSeries(правило, пояс адміністратора, виконавець)
+      Svc -> Planner : materialize(серія, на 4 тижні вперед)
+      note right of Planner
+        Дати — за годинником серії (FR-21).
+        Виконавець кожного екземпляра —
+        див. діаграму активності розподілу.
+      end note
+      Planner -> Repo : insertTasks(екземпляри)
+      Planner -> Bus : publish(task.assigned) на кожен екземпляр
+      Ctrl --> SPA : 201 TaskDto (перший екземпляр)
+    end
+  end
+end
+
+== Після коміту, з повторами (SD-4) ==
+Bus -> Listeners : task.assigned
+note right of Listeners : сповіщення, лист і подія\nв Google Calendar
+@enduml

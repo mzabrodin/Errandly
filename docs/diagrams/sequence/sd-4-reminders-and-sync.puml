@@ -1,0 +1,55 @@
+@startuml sd-4-reminders-and-sync
+skinparam shadowing false
+skinparam defaultFontName "Inter, Segoe UI, Arial"
+skinparam maxMessageSize 220
+skinparam ResponseMessageBelowArrow true
+autonumber
+
+participant "Планувальник\n(@nestjs/schedule)" as Cron
+participant "SeriesTopUp" as TopUp
+participant "Нагадування\n(notifications, буде додано)" as Reminders
+participant "MailService" as Mail
+participant "EventDispatcher" as Disp
+participant "EventPublicationStore" as Store
+participant "calendar\n(слухач, буде додано)" as Cal
+participant "Google Calendar API" as Google
+
+== Поповнення серій (FR-21, SYS-12, SYS-25) ==
+Cron -> TopUp : щогодини й під час старту
+TopUp -> TopUp : кожна серія — до 4 тижнів уперед,\nповторний запуск нічого не дублює
+
+== Нагадування та прострочення (FR-38) ==
+Cron -> Reminders : за розкладом
+loop Задачі, для яких настав час нагадування
+  Reminders -> Reminders : сповіщення taskDueSoon
+  opt Сповіщення не вимкнено
+    Reminders -> Mail : send('taskDueSoon', мова виконавця)
+  end
+end
+loop Нові прострочені задачі
+  Reminders -> Reminders : сповіщення taskOverdue
+  opt Сповіщення не вимкнено
+    Reminders -> Mail : send('taskOverdue')
+  end
+end
+opt Увімкнено тижневий підсумок
+  Reminders -> Mail : send('weeklyDigest')
+end
+
+== Події після коміту (кожні EVENTS_POLL_INTERVAL_MS) ==
+Disp -> Store : claimDue(now, ліміт, оренда 5 хв)
+note right of Store : зайняті іншим екземпляром\nпублікації пропускаються
+loop По одній (ліміти Google API)
+  Disp -> Cal : calendar.syncTask(event)
+  Cal -> Google : events.insert / update / delete
+  alt Успіх
+    Disp -> Store : complete(id)
+  else Помилка (503, мережа)
+    Disp -> Store : fail(id): наступна спроба\nчерез 30 с / 2 хв / 8 хв / 32 хв
+    opt П'ята невдача (SYS-21)
+      Cal -> Cal : syncStatus = paused
+      note right of Cal : банер у налаштуваннях (FR-35)
+    end
+  end
+end
+@enduml

@@ -1,0 +1,66 @@
+@startuml user-lifecycle
+skinparam shadowing false
+skinparam defaultFontName "Inter, Segoe UI, Arial"
+skinparam TitleFontStyle bold
+skinparam RoundCorner 12
+skinparam ArrowColor #1F6F64
+skinparam ActivityBackgroundColor #DCEEEA
+skinparam ActivityBorderColor #1F6F64
+skinparam ActivityDiamondBackgroundColor #FFFFFF
+skinparam ActivityDiamondBorderColor #1F6F64
+skinparam NoteBackgroundColor #FFFFE0
+
+start
+fork
+  if (Є чинна сесія (cookie errandly_session)?) then (ні)
+    :ref SD-0.1–0.3: Автентифікація
+    (реєстрація, вхід, відновлення пароля,
+    вхід через Google — заплановано);
+  else (так)
+  endif
+  if (Email підтверджено?) then (ні)
+    :Підтвердити email за посиланням з листа
+    (без цього не можна створити групу
+    чи прийняти запрошення, FR-04);
+  else (так)
+  endif
+  if (Користувач уже в групі?) then (ні)
+    if (Є посилання-запрошення?) then (так)
+      :ref SD-2.2: Приєднання до групи;
+    else (ні)
+      :Створити групу
+      (автор стає адміністратором); <<#FFFFFF>>
+    endif
+  else (так)
+  endif
+  repeat
+    :Робочий екран групи
+    (календар, задачі, статистика); <<#FFFFFF>>
+    switch (Що робить користувач?)
+    case (адмін планує)
+      :ref SD-1: Створення задачі
+      (розподіл, сповіщення, календар);
+    case (адмін запрошує)
+      :ref SD-2.1: Запрошення учасника;
+    case (виконавець)
+      :ref SD-3.1–3.2: Виконання задачі та скасування;
+    case (персональні дані)
+      :Профіль і налаштування: мова, аватарка,
+      нагадування, Google Calendar, відсутності; <<#FFFFFF>>
+    case (склад групи)
+      :Ролі, вихід із групи, видалення акаунта
+      (LAST_ADMIN не дає лишити групу без адміністратора); <<#FFFFFF>>
+    case (нічого)
+    endswitch
+  repeat while (Продовжити роботу?) is (так) not (ні)
+  :Вихід (сесію видалено); <<#FFFFFF>>
+fork again
+  :ref SD-4: Події після коміту (EventDispatcher),
+  нагадування, прострочення, синхронізація календаря;
+  note right
+    Паралельний системний процес.
+    Лише змінює дані, які бачать користувачі.
+  end note
+end fork
+stop
+@enduml
