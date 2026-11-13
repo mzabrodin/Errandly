@@ -28,7 +28,7 @@ async function join(admin: Person, groupId: string, member: Person): Promise<voi
   await member.agent.post(`/api/invites/${token}/accept`).expect(200);
 }
 
-describe('Groups (e2e)', () => {
+describe('Groups (integration)', () => {
   let t: TestApp;
 
   beforeAll(async () => {

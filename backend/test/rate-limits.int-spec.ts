@@ -1,8 +1,8 @@
 import type { TestApp } from './support/test-app.js';
 
-// NFR-SEC-07: per-IP limits. The other e2e files raise them, so this one lowers them before the
+// NFR-SEC-07: per-IP limits. The other integration files raise them, so this one lowers them before the
 // app module is imported (ConfigModule reads the environment when AppModule loads).
-describe('Rate limits (e2e)', () => {
+describe('Rate limits (integration)', () => {
   let t: TestApp;
 
   beforeAll(async () => {

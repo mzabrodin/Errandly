@@ -17,7 +17,7 @@ import { GroupsService } from './groups.service.js';
 import { InviteEmails } from './invite-emails.js';
 import { InvitesService } from './invites.service.js';
 
-// An in-memory stand-in for GroupsRepository; the e2e tests run the real queries
+// An in-memory stand-in for GroupsRepository; the integration tests run the real queries
 
 const NOW = new Date('2026-11-09T12:00:00.000Z');
 

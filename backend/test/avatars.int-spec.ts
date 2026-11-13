@@ -21,7 +21,7 @@ function upload(agent: TestAgent, image: Buffer): Test {
   return agent.post('/api/me/avatar').attach('file', image, 'me.jpg');
 }
 
-describe('Avatars (e2e)', () => {
+describe('Avatars (integration)', () => {
   let t: TestApp;
 
   beforeAll(async () => {

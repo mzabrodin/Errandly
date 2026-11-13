@@ -1,7 +1,7 @@
 import { createUser, PASSWORD, signIn } from './support/factories.js';
 import { createTestApp, type TestApp } from './support/test-app.js';
 
-describe('Profile and account (e2e)', () => {
+describe('Profile and account (integration)', () => {
   let t: TestApp;
 
   beforeAll(async () => {

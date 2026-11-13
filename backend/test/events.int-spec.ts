@@ -9,7 +9,7 @@ import { EventDispatcher } from './../src/common/events/event-dispatcher.js';
 import { eventPublications } from './../src/common/events/event-publications.schema.js';
 import { DATABASE, type Database } from './../src/db/database.js';
 
-describe('Events (e2e)', () => {
+describe('Events (integration)', () => {
   let app: INestApplication;
   let db: Database;
   let bus: EventBus;

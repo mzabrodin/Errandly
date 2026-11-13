@@ -13,7 +13,7 @@ function sessionCookie(headers: Record<string, unknown>): string | undefined {
   return cookies.find((cookie: string) => cookie.startsWith('errandly_session='));
 }
 
-describe('Auth (e2e)', () => {
+describe('Auth (integration)', () => {
   let t: TestApp;
 
   beforeAll(async () => {

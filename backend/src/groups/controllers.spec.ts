@@ -5,7 +5,7 @@ import type { GroupsService } from './groups.service.js';
 import { InvitesController } from './invites.controller.js';
 import type { InvitesService } from './invites.service.js';
 
-// Controllers only pass the caller and the inputs on; the e2e tests run them for real
+// Controllers only pass the caller and the inputs on; the integration tests run them for real
 
 function recorder(calls: unknown[][]): object {
   return new Proxy(

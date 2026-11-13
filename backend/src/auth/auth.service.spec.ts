@@ -10,7 +10,7 @@ import type { LoginAttempts } from './auth.rules.js';
 import { AuthService } from './auth.service.js';
 import type { SessionService } from './sessions.service.js';
 
-// In-memory stand-ins for the database-facing collaborators; the e2e tests cover the real ones
+// In-memory stand-ins for the database-facing collaborators; the integration tests cover the real ones
 
 const NOW = new Date('2026-11-09T12:00:00.000Z');
 

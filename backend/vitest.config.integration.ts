@@ -5,15 +5,15 @@ export default defineConfig({
   test: {
     globals: true,
     root: './',
-    include: ['**/*.e2e-spec.ts'],
-    // One PostgreSQL 18 per run (Testcontainers, or E2E_DATABASE_URL), migrated from zero
+    include: ['**/*.int-spec.ts'],
+    // One PostgreSQL 18 per run (Testcontainers, or INTEGRATION_DATABASE_URL), migrated from zero
     globalSetup: ['./test/setup/global-setup.ts'],
     setupFiles: ['reflect-metadata', './test/setup/env.ts'],
     env: {
       NODE_ENV: 'test',
       // Tests drive EventDispatcher.dispatchDue() themselves instead of racing the poller
       EVENTS_POLL_INTERVAL_MS: '0',
-      // Every test signs in from the same address; rate-limits.e2e-spec.ts lowers them again
+      // Every test signs in from the same address; rate-limits.int-spec.ts lowers them again
       RATE_LIMIT_PER_MINUTE: '100000',
       AUTH_RATE_LIMIT_PER_MINUTE: '100000',
     },
