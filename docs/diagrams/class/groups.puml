@@ -1,0 +1,82 @@
+@startuml groups
+skinparam shadowing false
+skinparam defaultFontName "Inter, Segoe UI, Arial"
+skinparam RoundCorner 12
+skinparam ClassBackgroundColor #FFFFFF
+skinparam ClassBorderColor #1F6F64
+skinparam packageStyle rectangle
+hide empty members
+
+package Controllers {
+  class GroupsController {
+    +list()
+    +create(dto)
+    +get(groupId)
+    +updateMember(groupId, userId, dto)
+    +removeMember(groupId, userId)
+    +leave(groupId)
+  }
+  class InvitesController {
+    +create(groupId, dto)
+    +info(token)
+    +accept(token)
+  }
+  class AbsencesController {
+    +create(groupId, dto)
+    +remove(groupId, absenceId)
+  }
+}
+
+package Services {
+  class GroupsService {
+    +create(userId, name)
+    +get(groupId, userId)
+    +changeRole(groupId, actorId, userId, role)
+    +removeMember(groupId, actorId, userId)
+    +leave(groupId, userId)
+  }
+  class InvitesService {
+    +create(groupId, actorId, email)
+    +info(token, viewerId)
+    +accept(token, userId)
+  }
+  class AbsencesService {
+    +add(groupId, userId, from, to)
+    +remove(groupId, userId, absenceId)
+  }
+  class InviteEmails <<слухач>> {
+    +send(groupId, email, invitedBy, expiresAt)
+  }
+  class GroupsApi <<фасад>> {
+    +requireMember(groupId, userId)
+    +requireAdmin(groupId, userId)
+    +members(groupId)
+  }
+}
+
+package Repositories {
+  class GroupsRepository
+}
+
+class UsersApi <<з іншого модуля>>
+class MailService <<з іншого модуля>>
+class EventBus <<спільне ядро>>
+
+GroupsController ..> GroupsService
+InvitesController ..> InvitesService
+AbsencesController ..> AbsencesService
+GroupsService ..> GroupsRepository
+GroupsService ..> GroupsApi
+GroupsService ..> UsersApi
+GroupsService ..> EventBus
+InvitesService ..> GroupsApi
+InvitesService ..> GroupsRepository
+InvitesService ..> UsersApi
+InvitesService ..> EventBus
+AbsencesService ..> GroupsApi
+AbsencesService ..> GroupsRepository
+AbsencesService ..> EventBus
+InviteEmails ..> GroupsRepository
+InviteEmails ..> MailService
+GroupsApi ..> GroupsRepository
+@enduml

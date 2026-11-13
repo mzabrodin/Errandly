@@ -1,0 +1,76 @@
+@startuml tasks
+skinparam shadowing false
+skinparam defaultFontName "Inter, Segoe UI, Arial"
+skinparam RoundCorner 12
+skinparam ClassBackgroundColor #FFFFFF
+skinparam ClassBorderColor #1F6F64
+skinparam packageStyle rectangle
+hide empty members
+
+package Controllers {
+  class TasksController {
+    +list(groupId, query)
+    +create(groupId, dto)
+    +get(taskId)
+    +update(taskId, scope, dto)
+    +remove(taskId, scope)
+    +complete(taskId)
+    +undoComplete(taskId)
+    +reassign(taskId, dto)
+  }
+}
+
+package Services {
+  class TasksService {
+    +list(groupId, userId, query)
+    +create(groupId, userId, input)
+    +update(taskId, userId, scope, input)
+    +remove(taskId, userId, scope)
+    +complete(taskId, userId)
+    +undoComplete(taskId, userId)
+    +reassign(taskId, userId, assigneeId)
+  }
+  class TaskPlanner {
+    +materialize(series, window, actorId, tx)
+    +reassign(groupId, tasks, tx)
+  }
+  class TaskRedistribution <<слухач>> {
+    +memberLeft(groupId, userId, tx)
+    +absenceAdded(groupId, userId, from, to, tx)
+  }
+  class SeriesTopUp <<щогодини>> {
+    +topUp()
+  }
+  abstract class AssignmentStrategy <<порт>> {
+    +pick(candidates, history, task)
+  }
+  class LeastLoadRotationStrategy
+}
+
+package Repositories {
+  class TasksRepository
+}
+
+class GroupsApi <<з іншого модуля>>
+class UsersApi <<з іншого модуля>>
+class EventBus <<спільне ядро>>
+class Clock <<спільне ядро>>
+
+TasksController ..> TasksService
+TasksService ..> TaskPlanner
+TasksService ..> TasksRepository
+TasksService ..> GroupsApi
+TasksService ..> UsersApi
+TasksService ..> EventBus
+TasksService ..> Clock
+TaskPlanner ..> AssignmentStrategy
+TaskPlanner ..> TasksRepository
+TaskPlanner ..> GroupsApi
+TaskPlanner ..> UsersApi
+TaskPlanner ..> EventBus
+TaskRedistribution ..> TaskPlanner
+TaskRedistribution ..> TasksRepository
+SeriesTopUp ..> TaskPlanner
+SeriesTopUp ..> TasksRepository
+LeastLoadRotationStrategy -up-|> AssignmentStrategy
+@enduml

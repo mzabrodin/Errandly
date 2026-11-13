@@ -1,0 +1,105 @@
+@startuml auth-users
+skinparam shadowing false
+skinparam defaultFontName "Inter, Segoe UI, Arial"
+skinparam RoundCorner 12
+skinparam ClassBackgroundColor #FFFFFF
+skinparam ClassBorderColor #1F6F64
+skinparam packageStyle rectangle
+hide empty members
+
+package Controllers {
+  class AuthController {
+    +register(dto)
+    +login(dto)
+    +logout()
+    +verifyEmail(dto)
+    +resendVerification()
+    +forgotPassword(dto)
+    +resetPassword(dto)
+  }
+  class AccountController {
+    +changePassword(dto)
+  }
+  class MeController {
+    +updateProfile(dto)
+    +deleteAccount()
+  }
+  class AvatarController {
+    +uploadAvatar(file)
+    +deleteAvatar()
+  }
+  class AvatarFilesController {
+    +file(key)
+  }
+}
+
+package Services {
+  class SessionGuard <<APP_GUARD>> {
+    +canActivate(context)
+  }
+  class AuthService {
+    +register(dto)
+    +login(dto)
+    +verifyEmail(token)
+    +forgotPassword(email)
+    +resetPassword(token, password)
+    +changePassword(user, current, next)
+  }
+  class SessionService {
+    +create(userId)
+    +authenticate(token)
+    +revoke(token)
+    +revokeAll(userId, keepId)
+  }
+  class AuthEmails <<слухач>> {
+    +sendVerification(userId)
+    +sendPasswordReset(userId)
+  }
+  class UsersService {
+    +updateProfile(userId, dto)
+    +deleteAccount(userId)
+  }
+  class AvatarsService {
+    +upload(userId, file)
+    +remove(userId)
+    +open(key)
+  }
+  class UsersApi <<фасад>> {
+    +findById(id)
+    +findMany(ids)
+    +findByEmail(email)
+    +create(user)
+    +setProviderAvatar(id, url)
+  }
+}
+
+package Repositories {
+  class AuthRepository
+  class UsersRepository
+}
+
+class PasswordHasher <<порт>>
+class ObjectStorage <<порт>>
+class MailService <<з іншого модуля>>
+class EventBus <<спільне ядро>>
+
+AuthController ..> AuthService
+AccountController ..> AuthService
+MeController ..> UsersService
+AvatarController ..> AvatarsService
+AvatarFilesController ..> AvatarsService
+SessionGuard ..> SessionService
+AuthService ..> SessionService
+AuthService ..> UsersApi
+AuthService ..> AuthRepository
+AuthService ..> PasswordHasher
+AuthService ..> EventBus
+SessionService ..> AuthRepository
+AuthEmails ..> AuthRepository
+AuthEmails ..> MailService
+UsersService ..> UsersRepository
+UsersService ..> EventBus
+AvatarsService ..> UsersRepository
+AvatarsService ..> ObjectStorage
+UsersApi ..> UsersRepository
+@enduml

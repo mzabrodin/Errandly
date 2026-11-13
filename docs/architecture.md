@@ -165,24 +165,24 @@ sequenceDiagram
 
 Payload — лише id, ISO-рядки й прості значення (`common/events/domain-events.ts`). Подія описує, **що сталося**, а не що робити далі.
 
-| Подія                             | Видавець | Слухачі (режим)                                                                                                                                     |
-| --------------------------------- | -------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `auth.emailVerificationRequested` | `auth`   | `auth` — новий токен і лист `verifyEmail` (після коміту, з повторами)                                                                               |
-| `auth.passwordResetRequested`     | `auth`   | `auth` — новий токен на 1 год і лист `resetPassword` (після коміту, з повторами)                                                                    |
-| `user.deleted`                    | `users`  | `groups` — `LAST_ADMIN`, якщо користувач — єдиний адмін групи з іншими учасниками, інакше вийти з усіх груп (у транзакції; далі `group.memberLeft`) |
-| `user.avatarDiscarded`            | `users`  | `users` — видалити файл фото зі сховища (після коміту, з повторами): заміна, видалення фото чи акаунта                                              |
-| `group.created`                   | `groups` | `notifications` — `groupCreated` (після коміту, буде додано)                                                                                        |
-| `group.roleChanged`               | `groups` | `notifications` — `roleGranted`/`roleRevoked` (після коміту, буде додано)                                                                           |
-| `group.inviteEmailRequested`      | `groups` | `groups` — окреме посилання й лист `invite` одержувачу (після коміту, з повторами)                                                                  |
-| `group.memberJoined`              | `groups` | `notifications` — `groupJoined` новачку, `memberJoined` адмінам (після коміту)                                                                      |
-| `group.memberLeft`                | `groups` | `tasks` — перерозподіл відкритих задач (у транзакції, FR-15); `notifications` — `removedFromGroup` (після коміту)                                   |
-| `group.absenceAdded`              | `groups` | `tasks` — перепризначити автоматично розподілені задачі на ці дні (у транзакції, FR-29)                                                             |
-| `task.assigned`                   | `tasks`  | `notifications` — `taskAssigned`/`taskUnassigned` і лист (після коміту); `calendar` — подія в календарі (після коміту)                              |
-| `task.changed`                    | `tasks`  | `calendar` — оновити подію (після коміту)                                                                                                           |
-| `task.completed`                  | `tasks`  | `calendar` — позначити подію (після коміту)                                                                                                         |
-| `task.deleted`                    | `tasks`  | `calendar` — видалити подію (після коміту)                                                                                                          |
+| Подія                             | Видавець | Слухачі (режим)                                                                                                                                                                                    |
+| --------------------------------- | -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `auth.emailVerificationRequested` | `auth`   | `auth` — новий токен і лист `verifyEmail` (після коміту, з повторами)                                                                                                                              |
+| `auth.passwordResetRequested`     | `auth`   | `auth` — новий токен на 1 год і лист `resetPassword` (після коміту, з повторами)                                                                                                                   |
+| `user.deleted`                    | `users`  | `groups` — `LAST_ADMIN`, якщо користувач — єдиний адмін групи з іншими учасниками, інакше вийти з усіх груп (у транзакції; далі `group.memberLeft`)                                                |
+| `user.avatarDiscarded`            | `users`  | `users` — видалити файл фото зі сховища (після коміту, з повторами): заміна, видалення фото чи акаунта                                                                                             |
+| `group.created`                   | `groups` | `notifications` — `groupCreated` (після коміту, буде додано)                                                                                                                                       |
+| `group.roleChanged`               | `groups` | `notifications` — `roleGranted`/`roleRevoked` (після коміту, буде додано)                                                                                                                          |
+| `group.inviteEmailRequested`      | `groups` | `groups` — окреме посилання й лист `invite` одержувачу (після коміту, з повторами)                                                                                                                 |
+| `group.memberJoined`              | `groups` | `notifications` — `groupJoined` новачку, `memberJoined` адмінам (після коміту)                                                                                                                     |
+| `group.memberLeft`                | `groups` | `tasks` — відкриті задачі, і ручні теж, отримують нового виконавця, серії учасника — автоматичний розподіл (у транзакції, FR-15); `notifications` — `removedFromGroup` (після коміту, буде додано) |
+| `group.absenceAdded`              | `groups` | `tasks` — автоматично розподілені задачі на ці дні отримують нового виконавця, ручні лишаються (у транзакції, FR-17, FR-29)                                                                        |
+| `task.assigned`                   | `tasks`  | `notifications` — `taskAssigned`/`taskUnassigned` і лист; `calendar` — подія в календарі (обидва після коміту, буде додано)                                                                        |
+| `task.changed`                    | `tasks`  | `calendar` — оновити подію (після коміту, буде додано)                                                                                                                                             |
+| `task.completed`                  | `tasks`  | `calendar` — позначити подію (після коміту, буде додано)                                                                                                                                           |
+| `task.deleted`                    | `tasks`  | `calendar` — видалити подію (після коміту, буде додано)                                                                                                                                            |
 
-Періодичні задачі — не події, а розклад (`@nestjs/schedule`): нагадування `taskDueSoon`, прострочення `taskOverdue`, тижневий підсумок, поповнення серій на 4 тижні вперед (SD-4).
+Періодичні задачі — не події, а розклад (`@nestjs/schedule`, вимикається `SCHEDULER_ENABLED=false`). Уже є `SeriesTopUp`: щогодини й під час старту доповнює повторювані серії до 4 тижнів уперед; повторний запуск нічого не дублює (ключ `(series_id, due_at)`), тож пропущені після збою запуски наздоганяються одразу (SYS-25). Далі буде: нагадування `taskDueSoon`, прострочення `taskOverdue`, тижневий підсумок (SD-4).
 
 ## Обробка запиту
 
@@ -214,13 +214,14 @@ flowchart LR
 
 Зовнішні залежності сховані за абстрактними класами, які в Nest водночас є токенами DI. Сервіси залежать від порту, а реалізацію підставляє модуль. У тестах підставляється фейк.
 
-| Порт              | Реалізація              | Навіщо                                                                                                           |
-| ----------------- | ----------------------- | ---------------------------------------------------------------------------------------------------------------- |
-| `Clock`           | `SystemClock`           | статус, вікно скасування 24 год, повтори; у тестах `FixedClock`                                                  |
-| `PasswordHasher`  | `Argon2PasswordHasher`  | argon2id з параметрами OWASP (NFR-SEC-01); алгоритм можна замінити без змін у сервісах                           |
-| `MailTransport`   | `SmtpMailTransport`     | SMTP (Mailpit, Gmail); HTTP-провайдер — інша реалізація                                                          |
-| `ObjectStorage`   | `S3ObjectStorage`       | файли поза базою (аватарки) через S3 API: SeaweedFS у compose; R2, AWS S3 чи Supabase Storage — лише інші `S3_*` |
-| `CalendarGateway` | `GoogleCalendarGateway` | `CalendarGateways.for(provider)` обирає шлюз за провайдером; Outlook — новий клас                                |
+| Порт                 | Реалізація                  | Навіщо                                                                                                           |
+| -------------------- | --------------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| `Clock`              | `SystemClock`               | статус, вікно скасування 24 год, повтори; у тестах `FixedClock`                                                  |
+| `PasswordHasher`     | `Argon2PasswordHasher`      | argon2id з параметрами OWASP (NFR-SEC-01); алгоритм можна замінити без змін у сервісах                           |
+| `MailTransport`      | `SmtpMailTransport`         | SMTP (Mailpit, Gmail); HTTP-провайдер — інша реалізація                                                          |
+| `ObjectStorage`      | `S3ObjectStorage`           | файли поза базою (аватарки) через S3 API: SeaweedFS у compose; R2, AWS S3 чи Supabase Storage — лише інші `S3_*` |
+| `CalendarGateway`    | `GoogleCalendarGateway`     | `CalendarGateways.for(provider)` обирає шлюз за провайдером; Outlook — новий клас                                |
+| `AssignmentStrategy` | `LeastLoadRotationStrategy` | алгоритм розподілу (FR-27–29) окремо від сервісу задач; інший алгоритм — інший клас                              |
 
 ## Логування
 

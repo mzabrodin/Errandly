@@ -1,0 +1,57 @@
+@startuml sd-0-1-registration
+skinparam shadowing false
+skinparam defaultFontName "Inter, Segoe UI, Arial"
+skinparam maxMessageSize 220
+skinparam ResponseMessageBelowArrow true
+autonumber
+
+actor "Гість" as User
+participant "React SPA" as SPA
+participant "AuthController" as Ctrl
+participant "AuthService" as Svc
+participant "PasswordHasher" as Hasher
+participant "UsersApi" as Users
+participant "AuthRepository" as Repo
+participant "SessionService" as Sessions
+participant "EventBus" as Bus
+participant "AuthEmails" as Emails
+participant "MailService" as Mail
+
+User -> SPA : Ім'я, email, пароль
+SPA -> Ctrl : POST /api/auth/register
+alt Пароль слабкий або поле порожнє (FR-03)
+  Ctrl --> SPA : 400 VALIDATION + fields
+else Дані коректні
+  Ctrl -> Svc : register(dto)
+  Svc -> Hasher : hash(password)
+  group транзакція
+    Svc -> Users : create(name, email, locale)
+    alt Email уже зайнятий (FR-02)
+      Users --> Svc : EMAIL_TAKEN
+      Ctrl --> SPA : 409
+    else Новий обліковий запис
+      Svc -> Repo : savePassword(userId, hash)
+      Svc -> Bus : publish(auth.emailVerificationRequested)
+      Svc -> Sessions : create(userId)
+    end
+  end
+  Ctrl --> SPA : 201 User + cookie errandly_session (HttpOnly)
+end
+
+== Після коміту, з повторами (SD-4) ==
+Bus -> Emails : sendVerification(userId)
+Emails -> Repo : retireEmailTokens, insertEmailToken (48 год)
+Emails -> Mail : send('verifyEmail', посилання, мова користувача)
+
+== Підтвердження email (FR-04) ==
+User -> SPA : Відкриває посилання з листа
+SPA -> Ctrl : POST /api/auth/verify-email
+Ctrl -> Svc : verifyEmail(token)
+alt Токен невідомий, прострочений або використаний
+  Ctrl --> SPA : 400 TOKEN_INVALID
+else Чинний
+  Svc -> Repo : consumeEmailToken(token)
+  Svc -> Users : markEmailVerified(userId)
+  Ctrl --> SPA : 200 User (emailVerified)
+end
+@enduml

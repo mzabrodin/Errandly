@@ -1,0 +1,74 @@
+@startuml shared-kernel
+skinparam shadowing false
+skinparam defaultFontName "Inter, Segoe UI, Arial"
+skinparam RoundCorner 12
+skinparam ClassBackgroundColor #FFFFFF
+skinparam ClassBorderColor #1F6F64
+skinparam packageStyle rectangle
+hide empty members
+
+package "Спільне ядро" {
+  class EventBus {
+    +publish(tx, type, event)
+    +onInTransaction(type, listener)
+    +onAfterCommit(type, id, listener)
+  }
+  class EventDispatcher {
+    +tick()
+    +dispatchDue()
+  }
+  class EventPublicationStore {
+    +add(tx, rows)
+    +claimDue(now, limit, leaseUntil)
+    +complete(id, at)
+    +fail(id, …)
+  }
+  abstract class Clock {
+    +now()
+  }
+  class SystemClock
+  class DomainError {
+    +code
+    +details
+  }
+  class ApiExceptionFilter <<APP_FILTER>>
+}
+
+package "Порти й адаптери" {
+  abstract class PasswordHasher {
+    +hash(password)
+    +verify(password, stored)
+  }
+  class Argon2PasswordHasher
+  abstract class MailTransport {
+    +send(mail)
+  }
+  class SmtpMailTransport
+  abstract class ObjectStorage {
+    +put(key, body, type)
+    +get(key)
+    +delete(key)
+  }
+  class S3ObjectStorage
+  abstract class CalendarGateway {
+    +upsertEvent(connection, event)
+    +deleteEvent(connection, id)
+  }
+  class GoogleCalendarGateway
+}
+
+class MailService {
+  +send(template, to, data, locale)
+}
+
+EventBus ..> EventPublicationStore
+EventDispatcher ..> EventPublicationStore
+EventDispatcher ..> EventBus
+ApiExceptionFilter ..> DomainError
+MailService ..> MailTransport
+SystemClock -up-|> Clock
+Argon2PasswordHasher -up-|> PasswordHasher
+SmtpMailTransport -up-|> MailTransport
+S3ObjectStorage -up-|> ObjectStorage
+GoogleCalendarGateway -up-|> CalendarGateway
+@enduml

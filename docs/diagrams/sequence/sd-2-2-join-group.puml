@@ -1,0 +1,48 @@
+@startuml sd-2-2-join-group
+skinparam shadowing false
+skinparam defaultFontName "Inter, Segoe UI, Arial"
+skinparam maxMessageSize 220
+skinparam ResponseMessageBelowArrow true
+autonumber
+
+actor "Гість" as Guest
+participant "React SPA" as SPA
+participant "InvitesController" as Ctrl
+participant "InvitesService" as Svc
+participant "UsersApi" as Users
+participant "GroupsRepository" as Repo
+participant "EventBus" as Bus
+
+Guest -> SPA : Відкриває /invite/:token
+SPA -> Ctrl : GET /api/invites/:token
+Ctrl -> Svc : info(token, viewerId)
+Svc -> Repo : findInviteByHash
+alt Прострочене або відкликане (FR-13)
+  Ctrl --> SPA : 410 INVITE_INVALID
+  SPA --> Guest : «Запрошення недійсне»
+else Дійсне
+  Ctrl --> SPA : 200 { groupName, invitedBy, alreadyMember }
+  opt Гість не увійшов (FR-12)
+    SPA --> Guest : Вхід або реєстрація, потім назад до запрошення
+  end
+  Guest -> SPA : «Приєднатися»
+  SPA -> Ctrl : POST /api/invites/:token/accept
+  Ctrl -> Svc : accept(token, userId)
+  Svc -> Users : findById(userId)
+  alt Email не підтверджено (FR-04)
+    Ctrl --> SPA : 403 EMAIL_NOT_VERIFIED
+  else Підтверджено
+    group транзакція
+      Svc -> Repo : membersOf(groupId, з блокуванням)
+      alt Уже учасник (FR-14)
+        Svc -> Svc : нічого не змінювати
+      else Новий учасник
+        Svc -> Repo : insertMembership(роль member, перший вільний колір)
+        Svc -> Bus : publish(group.memberJoined)
+      end
+    end
+    Ctrl --> SPA : 200 { groupId }
+    SPA --> Guest : Робочий екран групи
+  end
+end
+@enduml

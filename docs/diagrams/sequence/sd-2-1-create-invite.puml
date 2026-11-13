@@ -1,0 +1,39 @@
+@startuml sd-2-1-create-invite
+skinparam shadowing false
+skinparam defaultFontName "Inter, Segoe UI, Arial"
+skinparam maxMessageSize 220
+skinparam ResponseMessageBelowArrow true
+autonumber
+
+actor "Адміністратор" as Admin
+participant "React SPA" as SPA
+participant "InvitesController" as Ctrl
+participant "InvitesService" as Svc
+participant "GroupsApi" as Groups
+participant "GroupsRepository" as Repo
+participant "EventBus" as Bus
+participant "InviteEmails" as Emails
+participant "MailService" as Mail
+
+Admin -> SPA : «Запросити», email (необов'язково)
+SPA -> Ctrl : POST /api/groups/:groupId/invites
+Ctrl -> Svc : create(groupId, actorId, email)
+group транзакція
+  Svc -> Groups : requireAdmin(groupId, actorId)
+  alt Не учасник або не адміністратор
+    Ctrl --> SPA : 403 FORBIDDEN / ADMIN_ONLY
+  else Адміністратор
+    Svc -> Repo : insertInvite(хеш токена, діє 7 днів)
+    opt Email вказано (FR-11)
+      Svc -> Bus : publish(group.inviteEmailRequested)
+    end
+    Ctrl --> SPA : 201 { url, expiresAt }
+    SPA --> Admin : Посилання для копіювання
+  end
+end
+
+== Після коміту, з повторами (SD-4) ==
+Bus -> Emails : send(groupId, email, invitedBy, expiresAt)
+Emails -> Repo : revokeEmailInvites(email), insertInvite (власне посилання одержувача)
+Emails -> Mail : send('invite', email, мова одержувача)
+@enduml

@@ -55,7 +55,7 @@ backend/             REST API
 - [Предметна область](docs/domain.md): поняття, правила, інваріанти й життєві цикли
 - [Модель даних](docs/data-model.md): ER-діаграма, таблиці, переліки
 - Вимоги зі звіту: [функціональні](docs/requirements/functional.md), [нефункціональні](docs/requirements/non-functional.md), [системні](docs/requirements/system.md)
-- [Діаграми](docs/diagrams): UML-діаграми (PlantUML): прецедентів, топології, станів, активності, взаємодії, послідовності (SD-0–SD-4), кооперації, класів і компонент, оновлені під код (`.puml` і згенеровані `.svg`); як їх згенерувати — у [rendering.md](docs/diagrams/rendering.md)
+- [Діаграми](docs/diagrams): UML-діаграми (PlantUML): прецедентів, топології, станів, активності, взаємодії, послідовності (SD-0.1–SD-4), кооперації, класів і компонент, оновлені під код (`.puml` і згенеровані `.svg`); як їх згенерувати — у [rendering.md](docs/diagrams/rendering.md)
 - [База даних](docs/database.md): угоди, міграції, демо-дані
 - [API](docs/api.md): поведінка ендпоінтів і коди помилок
 

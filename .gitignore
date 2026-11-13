@@ -31,4 +31,4 @@ npm-debug.log*
 *.pdf
 
 # PlantUML PNG exports for the course report
-docs/diagrams/png/
+docs/diagrams/**/png/

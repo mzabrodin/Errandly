@@ -1,0 +1,27 @@
+@startuml task
+skinparam shadowing false
+skinparam defaultFontName "Inter, Segoe UI, Arial"
+skinparam ArrowColor #1F6F64
+skinparam StateBackgroundColor #DCEEEA
+skinparam StateBorderColor #1F6F64
+
+state "Заплановано" as Planned
+state "Не призначено" as Unassigned
+state "Прострочено" as Overdue
+state "Виконано" as Done
+
+[*] --> Planned : створено з виконавцем
+[*] --> Unassigned : немає доступних учасників (FR-29)
+Unassigned --> Planned : адмін призначив вручну
+Planned --> Unassigned : виконавець вийшов із групи,\nзамінити нікому
+Planned --> Overdue : термін минув (FR-25)
+Unassigned --> Overdue : термін минув
+Planned --> Done : виконавець позначив (FR-24)
+Overdue --> Done : виконавець позначив
+Done --> Planned : скасування: виконавець ≤ 24 год,\nадмін будь-коли [термін не минув]
+Done --> Overdue : скасування [термін минув]
+Planned --> [*] : видалено (scope=one або series)
+Unassigned --> [*] : видалено
+Overdue --> [*] : видалено
+Done --> [*] : видалено лише scope=one\n(серія зберігає виконані)
+@enduml

@@ -1,0 +1,29 @@
+@startuml calendar-sync
+skinparam shadowing false
+skinparam defaultFontName "Inter, Segoe UI, Arial"
+skinparam ArrowColor #1F6F64
+skinparam StateBackgroundColor #DCEEEA
+skinparam StateBorderColor #1F6F64
+skinparam NoteBackgroundColor #FFFFE0
+
+state "Не підключено" as Disconnected
+state "ok" as Ok
+state "Повтор" as Retrying
+state "paused" as Paused
+
+[*] --> Disconnected
+Disconnected --> Ok : учасник підключив Google Calendar (FR-32)
+Ok --> Retrying : помилка API
+Retrying --> Ok : повтор успішний
+Retrying --> Retrying : помилка, наступна спроба\nчерез 30 с / 2 хв / 8 хв / 32 хв
+Retrying --> Paused : 5-та невдача або\nдоступ відкликано (SYS-20–21)
+Paused --> Ok : повторне підключення /\n«Синхронізувати зараз»
+Ok --> Disconnected : відключено, токени видалено
+Paused --> Disconnected : відключено
+
+note right of Paused
+  Користувач бачить банер
+  «Синхронізацію з календарем
+  призупинено» (FR-35)
+end note
+@enduml

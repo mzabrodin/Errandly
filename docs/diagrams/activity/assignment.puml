@@ -1,0 +1,47 @@
+@startuml assignment
+skinparam shadowing false
+skinparam defaultFontName "Inter, Segoe UI, Arial"
+skinparam RoundCorner 12
+skinparam ArrowColor #1F6F64
+skinparam ActivityBackgroundColor #DCEEEA
+skinparam ActivityBorderColor #1F6F64
+skinparam ActivityDiamondBackgroundColor #FFFFFF
+skinparam ActivityDiamondBorderColor #1F6F64
+skinparam NoteBackgroundColor #FFFFE0
+
+start
+:Новий екземпляр задачі
+(створення серії, поповнення горизонту,
+вихід учасника або його відсутність);
+if (Задачу вже виконано?) then (так)
+  :Виконавця не змінювати (FR-31);
+  stop
+else (ні)
+endif
+if (Призначено вручну і це не вихід учасника?) then (так)
+  :Залишити ручне призначення (FR-30);
+  stop
+else (ні)
+endif
+:Взяти учасників групи;
+:Прибрати тих, хто у відсутності
+в день терміну (FR-17);
+if (Є доступні учасники?) then (ні)
+  :Виконавця немає → «Не призначено»;
+  :Сповістити адміністраторів (FR-29);
+  stop
+else (так)
+endif
+:Порахувати навантаження кожного:
+сума складності задач за останні 4 тижні (FR-27);
+:Обрати учасників з найменшим навантаженням;
+if (Таких кілька?) then (так)
+  :Обрати того, хто найдовше
+  не виконував саме цю задачу (ротація, FR-28);
+else (ні)
+endif
+:Призначити виконавця;
+:Опублікувати task.assigned
+(сповіщення й календар після коміту);
+stop
+@enduml
