@@ -32,6 +32,7 @@ erDiagram
     varchar email UK "у нижньому регістрі"
     timestamptz email_verified_at
     text timezone "IANA"
+    boolean timezone_auto "стежить за пристроєм"
     locale locale "uk | en"
     text provider_avatar_url "фото від Google"
     text uploaded_avatar_key "своє фото в сховищі"
@@ -144,7 +145,7 @@ erDiagram
 
 ### users
 
-- **User** — людина: профіль, мова інтерфейсу й листів, часовий пояс, аватарка. Те, як людина входить, сюди не входить: новий спосіб входу не змінює таблицю `users`. Аватарка — своє завантажене фото (`uploaded_avatar_key`, файл в об'єктному сховищі), інакше фото від Google (`provider_avatar_url`), інакше ініціали.
+- **User** — людина: профіль, мова інтерфейсу й листів, часовий пояс, аватарка. `timezone_auto` означає, що фронтенд тримає `timezone` рівним поясу пристрою; `false` — пояс обрано вручну. Те, як людина входить, сюди не входить: новий спосіб входу не змінює таблицю `users`. Аватарка — своє завантажене фото (`uploaded_avatar_key`, файл в об'єктному сховищі), інакше фото від Google (`provider_avatar_url`), інакше ініціали.
 
 ### auth
 
