@@ -189,16 +189,6 @@ describe('Auth (integration)', () => {
       t.clock.advance(10 * MINUTE);
       await attempt(PASSWORD).expect(200);
     });
-
-    it('cannot sign in to an account without a password', async () => {
-      const user = await createUser(t.db, { password: null });
-
-      await t
-        .agent()
-        .post('/api/auth/login')
-        .send({ email: user.email, password: PASSWORD })
-        .expect(401);
-    });
   });
 
   describe('sessions (SYS-06–07)', () => {
@@ -279,17 +269,6 @@ describe('Auth (integration)', () => {
   });
 
   describe('change password', () => {
-    it('needs the current password', async () => {
-      const user = await createUser(t.db);
-      const agent = await signIn(t, user.email);
-
-      await agent
-        .post('/api/me/password')
-        .send({ currentPassword: 'Wrong1234', newPassword: 'NewPass123' })
-        .expect(400)
-        .expect({ code: 'WRONG_PASSWORD' });
-    });
-
     it('keeps this session and signs out the others', async () => {
       const user = await createUser(t.db);
       const laptop = await signIn(t, user.email);

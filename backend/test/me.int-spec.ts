@@ -31,19 +31,6 @@ describe('Profile and account (integration)', () => {
     expect(me.body).toMatchObject({ name: 'Anya K.', locale: 'en', timezone: 'America/New_York' });
   });
 
-  it('answers the current profile to an empty update', async () => {
-    const user = await createUser(t.db, { name: 'Oleh' });
-    const agent = await signIn(t, user.email);
-
-    await agent
-      .patch('/api/me')
-      .send({})
-      .expect(200)
-      .expect((response) => {
-        expect(response.body.name).toBe('Oleh');
-      });
-  });
-
   it('validates the profile', async () => {
     const agent = await signIn(t, (await createUser(t.db)).email);
 

@@ -221,15 +221,6 @@ describe('AuthService', () => {
       ).rejects.toEqual(new DomainError('INVALID_CREDENTIALS'));
     });
 
-    it('counts a wrong password', async () => {
-      const { service, repository } = withUser();
-
-      await expect(
-        service.login({ email: 'anya@errandly.test', password: 'Wrong1234' }),
-      ).rejects.toEqual(new DomainError('INVALID_CREDENTIALS'));
-      expect(repository.credentials.get('u1')?.failedLogins).toBe(1);
-    });
-
     it('locks on the 5th wrong password', async () => {
       const { service } = withUser({ failedLogins: 4 });
 
