@@ -1,5 +1,4 @@
 import { useQueries } from '@tanstack/react-query';
-import { addDays, endOfWeek, startOfDay } from 'date-fns';
 import { ArrowRight, Plus } from 'lucide-react';
 import { useState, type JSX } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -10,7 +9,16 @@ import { api, unwrap } from '../../shared/api/client';
 import { groupKeys, useGroups } from '../../shared/api/groups';
 import { taskKeys } from '../../shared/api/tasks';
 import type { Group, GroupSummary, Task } from '../../shared/api/types';
-import { formatDate, formatRelative, formatTime, weekOptions } from '../../shared/lib/dates';
+import {
+  addDays,
+  now as currentTime,
+  endOfWeek,
+  formatDate,
+  formatRelative,
+  formatTime,
+  startOfDay,
+  toIso,
+} from '../../shared/lib/dates';
 import { useDocumentTitle } from '../../shared/lib/useDocumentTitle';
 import { Avatar } from '../../shared/ui/Avatar';
 import { ButtonLink } from '../../shared/ui/Button';
@@ -62,7 +70,7 @@ function NextTask({
           className={`${styles.nextCard} ${next.status === 'overdue' ? styles.nextOverdue : ''}`}
         >
           <span className={styles.nextWhen}>
-            {formatDate(new Date(next.dueAt), 'd MMMM, EEEEEE')} · {formatTime(next.dueAt)}
+            {formatDate(next.dueAt, 'd MMMM, EEEEEE')} · {formatTime(next.dueAt)}
             <span className={styles.nextRelative}>{formatRelative(next.dueAt)}</span>
           </span>
           <span className={styles.nextTitle}>{next.title}</span>
@@ -122,10 +130,10 @@ export function HomePage(): JSX.Element {
   useDocumentTitle(t('titles.home'));
   const { data: user } = useSession();
   const { data: groups, isPending } = useGroups();
-  const [now] = useState(() => new Date());
+  const [now] = useState(currentTime);
   const [range] = useState(() => ({
-    from: startOfDay(addDays(now, -14)).toISOString(),
-    to: addDays(now, LOOKAHEAD_DAYS).toISOString(),
+    from: toIso(startOfDay(addDays(now, -14))),
+    to: toIso(addDays(now, LOOKAHEAD_DAYS)),
   }));
 
   const details = useQueries({
@@ -152,7 +160,7 @@ export function HomePage(): JSX.Element {
   const allTasks = taskLists.flatMap((query) => query.data ?? []);
   const next = pickNext(allTasks, user.id);
   const nextGroup = next && groups?.find((group) => group.id === next.groupId);
-  const weekEnd = endOfWeek(now, weekOptions).getTime();
+  const weekEnd = endOfWeek(now).getTime();
 
   return (
     <div className={styles.page}>

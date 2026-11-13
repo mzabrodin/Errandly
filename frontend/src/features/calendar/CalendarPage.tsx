@@ -1,13 +1,4 @@
 import { clsx } from 'clsx';
-import {
-  addDays,
-  addMonths,
-  addWeeks,
-  isSameDay,
-  isSameMonth,
-  isToday,
-  startOfDay,
-} from 'date-fns';
 import { Check, ChevronLeft, ChevronRight, Plane, Plus } from 'lucide-react';
 import { useMemo, useState, type JSX } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -16,12 +7,21 @@ import { errorMessage } from '../../shared/api/errors';
 import { useTasks } from '../../shared/api/tasks';
 import type { Member, Task, TaskStatus } from '../../shared/api/types';
 import {
+  addDays,
+  addMonths,
+  addWeeks,
   daysBetween,
   formatDate,
   formatShortDate,
   formatTime,
+  isSameDay,
+  isSameMonth,
+  isToday,
   monthGridRange,
+  now,
+  startOfDay,
   toDateInputValue,
+  toIso,
   weekRange,
 } from '../../shared/lib/dates';
 import { Avatar } from '../../shared/ui/Avatar';
@@ -378,9 +378,9 @@ function CalendarLegend({ members }: { members: Member[] }): JSX.Element {
 export function CalendarPage(): JSX.Element {
   const { t } = useTranslation();
   const { group } = useCurrentGroup();
-  const [todayStart] = useState(() => startOfDay(new Date()));
+  const [todayStart] = useState(() => startOfDay(now()));
   const [view, setView] = useState<View>('week');
-  const [anchor, setAnchor] = useState(() => new Date());
+  const [anchor, setAnchor] = useState<Date>(now);
 
   const range = useMemo(
     () => (view === 'week' ? weekRange(anchor) : monthGridRange(anchor)),
@@ -392,10 +392,9 @@ export function CalendarPage(): JSX.Element {
     isPending,
     error,
     refetch,
-  } = useTasks(group.id, range.from.toISOString(), range.to.toISOString());
+  } = useTasks(group.id, toIso(range.from), toIso(range.to));
 
-  const tasksOn = (day: Date): Task[] =>
-    (tasks ?? []).filter((task) => isSameDay(new Date(task.dueAt), day));
+  const tasksOn = (day: Date): Task[] => (tasks ?? []).filter((task) => isSameDay(task.dueAt, day));
 
   const shift = (direction: 1 | -1): void =>
     setAnchor((current) =>
@@ -429,7 +428,7 @@ export function CalendarPage(): JSX.Element {
         title={title}
         loading={isPending}
         onShift={shift}
-        onToday={() => setAnchor(new Date())}
+        onToday={() => setAnchor(now())}
       />
 
       <CalendarLegend members={group.members} />

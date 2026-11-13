@@ -418,7 +418,8 @@
       "dueRequired": "Enter a due date",
       "dueInPast": "The due date can’t be in the past",
       "noWeekdays": "Pick at least one day"
-    }
+    },
+    "zoneHint": "Time in {{zone}}, as set in your profile"
   },
   "weekdays": {
     "short": ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
@@ -467,7 +468,8 @@
     "verified": "verified",
     "notVerified": "not verified",
     "timezoneLabel": "Time zone",
-    "timezoneHint": "We use it to send reminders and create calendar events.",
+    "timezoneHint": "All times in Errandly, reminders and calendar events use this zone. “Automatic” follows your device.",
+    "timezoneAuto": "Automatic ({{zone}})",
     "profileSaved": "Profile updated",
     "changePassword": "Change password",
     "currentPassword": "Current password",

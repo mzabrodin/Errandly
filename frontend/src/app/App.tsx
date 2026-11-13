@@ -4,9 +4,11 @@ import { RouterProvider } from 'react-router';
 
 import { sessionKey } from '../shared/api/auth';
 import { ApiError } from '../shared/api/client';
+import { useDisplayTimeZone } from '../shared/lib/dates';
 import { ToastProvider } from '../shared/ui/Toast';
 import { LocaleSync } from './LocaleSync';
 import { router } from './router';
+import { TimezoneSync } from './TimezoneSync';
 
 function handleUnauthenticated(error: unknown) {
   // Session expired (NFR-SEC-03): send the user back to sign-in
@@ -28,11 +30,14 @@ const queryClient = new QueryClient({
 });
 
 export function App(): JSX.Element {
+  // Pages compute days and weeks while rendering, so a new zone redraws them all
+  const timeZone = useDisplayTimeZone();
   return (
     <QueryClientProvider client={queryClient}>
       <LocaleSync />
+      <TimezoneSync />
       <ToastProvider>
-        <RouterProvider router={router} />
+        <RouterProvider key={timeZone} router={router} />
       </ToastProvider>
     </QueryClientProvider>
   );

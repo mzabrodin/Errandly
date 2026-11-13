@@ -30,11 +30,35 @@
       }
     },
     {
+      "files": ["src/app/**", "src/features/**", "src/layouts/**"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "paths": [
+              {
+                "name": "date-fns",
+                "message": "Use shared/lib/dates, which works in the profile time zone."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
       "files": ["src/pages/**"],
       "rules": {
         "no-restricted-imports": [
           "error",
-          { "patterns": [{ "group": ["**/app/**"], "message": "pages must not depend on app." }] }
+          {
+            "paths": [
+              {
+                "name": "date-fns",
+                "message": "Use shared/lib/dates, which works in the profile time zone."
+              }
+            ],
+            "patterns": [{ "group": ["**/app/**"], "message": "pages must not depend on app." }]
+          }
         ]
       }
     }

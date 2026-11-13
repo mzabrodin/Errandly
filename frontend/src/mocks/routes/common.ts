@@ -107,3 +107,12 @@ export function redistributeOpenTasks(groupId: string, userId: string): void {
     task.manuallyAssigned = false;
   }
 }
+
+export function isValidTimeZone(timeZone: string): boolean {
+  try {
+    new Intl.DateTimeFormat('uk-UA', { timeZone }).format();
+    return true;
+  } catch {
+    return false;
+  }
+}

@@ -1,9 +1,8 @@
-import { endOfWeek, isSameDay, startOfWeek } from 'date-fns';
 import type { JSX } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import type { Task } from '../../shared/api/types';
-import { weekOptions } from '../../shared/lib/dates';
+import { endOfWeek, isSameDay, startOfWeek } from '../../shared/lib/dates';
 import { Cloud, FlowerFace, Hills } from '../../shared/ui/Decor';
 import styles from './TodayHero.module.css';
 
@@ -70,7 +69,7 @@ export function TodayHero({
   const { t } = useTranslation();
   const mine = tasks.filter((task) => task.assigneeId === userId);
   const todayOpen = mine.filter(
-    (task) => task.status === 'planned' && isSameDay(new Date(task.dueAt), today),
+    (task) => task.status === 'planned' && isSameDay(task.dueAt, today),
   ).length;
   const overdue = mine.filter((task) => task.status === 'overdue').length;
   // For admins: tasks nobody received (FR-29)
@@ -80,8 +79,8 @@ export function TodayHero({
       ).length
     : 0;
 
-  const weekFrom = startOfWeek(today, weekOptions).getTime();
-  const weekTo = endOfWeek(today, weekOptions).getTime();
+  const weekFrom = startOfWeek(today).getTime();
+  const weekTo = endOfWeek(today).getTime();
   const week = mine.filter((task) => {
     const due = new Date(task.dueAt).getTime();
     return due >= weekFrom && due <= weekTo;

@@ -1,5 +1,4 @@
 import { clsx } from 'clsx';
-import { addDays, startOfDay } from 'date-fns';
 import { AlertTriangle, Plus } from 'lucide-react';
 import { useMemo, useState, type JSX } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -8,7 +7,14 @@ import { useSearchParams } from 'react-router';
 import { errorMessage } from '../../shared/api/errors';
 import { useTasks } from '../../shared/api/tasks';
 import type { Task, TaskStatus } from '../../shared/api/types';
-import { formatDate, formatDayLabel } from '../../shared/lib/dates';
+import {
+  addDays,
+  formatDate,
+  formatDayLabel,
+  now,
+  startOfDay,
+  toIso,
+} from '../../shared/lib/dates';
 import { usePrefs } from '../../shared/lib/prefs';
 import { Button } from '../../shared/ui/Button';
 import { EmptyState } from '../../shared/ui/EmptyState';
@@ -36,11 +42,11 @@ function isTaskStatus(value: string | null): value is TaskStatus {
 
 function useTaskRange(): { today: Date; from: string; to: string } {
   const [range] = useState(() => {
-    const today = startOfDay(new Date());
+    const today = startOfDay(now());
     return {
       today,
-      from: addDays(today, -HISTORY_DAYS).toISOString(),
-      to: addDays(today, HORIZON_DAYS).toISOString(),
+      from: toIso(addDays(today, -HISTORY_DAYS)),
+      to: toIso(addDays(today, HORIZON_DAYS)),
     };
   });
   return range;
