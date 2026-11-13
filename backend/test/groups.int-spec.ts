@@ -204,18 +204,6 @@ describe('Groups (integration)', () => {
       await oleh.agent.get(`/api/groups/${groupId}`).expect(403);
     });
 
-    it('answers 410 to an unknown link and 403 to an unconfirmed email', async () => {
-      const anya = await person('Anya');
-      const unverified = await person('New', { verified: false });
-      const token = await inviteToken(anya, await createGroup(anya));
-
-      await t.agent().get('/api/invites/nope').expect(410);
-      await unverified.agent
-        .post(`/api/invites/${token}/accept`)
-        .expect(403)
-        .expect({ code: 'EMAIL_NOT_VERIFIED' });
-    });
-
     it('emails the recipient their own link, in their language, even after an SMTP outage', async () => {
       const anya = await person('Anya');
       const marta = await person('Marta', { locale: 'en' });

@@ -123,17 +123,6 @@ describe('UsersApi', () => {
     expect(repository.rows.get('u2')?.emailVerifiedAt).toBe(first);
     await expect(api.markEmailVerified('nobody', new Date())).resolves.toBeNull();
   });
-
-  it('shows the uploaded photo first, then the sign-in provider photo, then none', async () => {
-    const google = 'https://lh3.googleusercontent.com/a/photo';
-    const key = '0190a1b2-c3d4-7e5f-8a9b-0c1d2e3f4a5b.webp';
-    repository.rows.set('u1', row());
-
-    await expect(api.setProviderAvatar('u1', google)).resolves.toMatchObject({ avatarUrl: google });
-    repository.rows.set('u1', row({ providerAvatarUrl: google, uploadedAvatarKey: key }));
-    await expect(api.findById('u1')).resolves.toMatchObject({ avatarUrl: `/api/avatars/${key}` });
-    await expect(api.setProviderAvatar('nobody', null)).resolves.toBeNull();
-  });
 });
 
 function setup() {

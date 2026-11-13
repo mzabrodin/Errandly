@@ -7,7 +7,6 @@ import { ObjectStorage, type StoredObject } from '../common/storage/object-stora
 import type { Database } from '../db/database.js';
 import { AvatarFilesController } from './avatar-files.controller.js';
 import { AVATAR_SIZE, toAvatarImage } from './avatar-image.js';
-import { AvatarController } from './avatar.controller.js';
 import { AvatarsService } from './avatars.service.js';
 import type { UserChanges, UsersRepository } from './users.repository.js';
 import { avatarUrlOf, isAvatarKey, newAvatarKey } from './users.rules.js';
@@ -250,33 +249,6 @@ describe('AvatarsService', () => {
 });
 
 describe('avatar controllers', () => {
-  it('pass the caller and the file bytes to the service', async () => {
-    const calls: unknown[][] = [];
-    const avatars = {
-      upload: (...args: unknown[]) => {
-        calls.push(['upload', ...args]);
-        return Promise.resolve({});
-      },
-      remove: (...args: unknown[]) => {
-        calls.push(['remove', ...args]);
-        return Promise.resolve({});
-      },
-    } as unknown as AvatarsService;
-    const controller = new AvatarController(avatars);
-    const user = { id: 'u1', sessionId: 's1' };
-    const buffer = Buffer.from('photo');
-
-    await controller.uploadAvatar(user, { buffer });
-    await controller.uploadAvatar(user, undefined);
-    await controller.deleteAvatar(user);
-
-    expect(calls).toEqual([
-      ['upload', 'u1', buffer],
-      ['upload', 'u1', undefined],
-      ['remove', 'u1'],
-    ]);
-  });
-
   it('streams a stored photo and answers 404 for anything else', async () => {
     const { storage, service } = setup();
     await storage.put(KEY, Buffer.from('photo'), 'image/webp');

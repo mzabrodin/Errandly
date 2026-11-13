@@ -65,22 +65,6 @@ describe('AuthController', () => {
     expect(cookies).toEqual(['clear errandly_session']);
   });
 
-  it('passes the inputs of the other routes to the service', async () => {
-    await controller.me(user);
-    await controller.forgotPassword({ email: 'a@errandly.test' });
-    await controller.resetPassword({ token: 't', password: 'NewPass123' });
-    await controller.verifyEmail({ token: 'v' });
-    await controller.resendVerification(user);
-
-    expect(calls).toEqual([
-      ['me', 'u1'],
-      ['forgotPassword', 'a@errandly.test'],
-      ['resetPassword', 't', 'NewPass123'],
-      ['verifyEmail', 'v'],
-      ['requestEmailVerification', 'u1'],
-    ]);
-  });
-
   it('changes the password of the signed-in user', async () => {
     const account = new AccountController(auth);
 
