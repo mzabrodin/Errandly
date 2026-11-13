@@ -28,17 +28,17 @@
 
 ## Автентифікація
 
-| Метод | Шлях                        | Тіло → відповідь                                  | FR    |
-| ----- | --------------------------- | ------------------------------------------------- | ----- |
-| GET   | `/auth/me`                  | → `User` або 401                                  | —     |
-| POST  | `/auth/register`            | `{ name, email, password, locale? }` → 201 `User` | 01–04 |
-| POST  | `/auth/login`               | `{ email, password }` → `User`                    | 05–06 |
-| POST  | `/auth/logout`              | → 204                                             | 09    |
-| GET   | `/auth/google?next=`        | редирект на OAuth Google, потім на `next`         | 07    |
-| POST  | `/auth/forgot-password`     | `{ email }` → 204 (завжди)                        | 08    |
-| POST  | `/auth/reset-password`      | `{ token, password }` → 204                       | 08    |
-| POST  | `/auth/verify-email`        | `{ token }` → `User`                              | 04    |
-| POST  | `/auth/verify-email/resend` | → 204                                             | 04    |
+| Метод | Шлях                        | Тіло → відповідь                                             | FR    |
+| ----- | --------------------------- | ------------------------------------------------------------ | ----- |
+| GET   | `/auth/me`                  | → `User` або 401                                             | —     |
+| POST  | `/auth/register`            | `{ name, email, password, locale?, timezone? }` → 201 `User` | 01–04 |
+| POST  | `/auth/login`               | `{ email, password }` → `User`                               | 05–06 |
+| POST  | `/auth/logout`              | → 204                                                        | 09    |
+| GET   | `/auth/google?next=`        | редирект на OAuth Google, потім на `next`                    | 07    |
+| POST  | `/auth/forgot-password`     | `{ email }` → 204 (завжди)                                   | 08    |
+| POST  | `/auth/reset-password`      | `{ token, password }` → 204                                  | 08    |
+| POST  | `/auth/verify-email`        | `{ token }` → `User`                                         | 04    |
+| POST  | `/auth/verify-email/resend` | → 204                                                        | 04    |
 
 Посилання в листах фронтенд очікує такі: `/verify-email/:token`, `/reset-password/:token`, `/invite/:token`.
 
@@ -109,7 +109,7 @@
 
 | Метод  | Шлях                | Тіло → відповідь                                                                                | Вимоги                  |
 | ------ | ------------------- | ----------------------------------------------------------------------------------------------- | ----------------------- |
-| PATCH  | `/me`               | `{ name?, timezone?, locale? }` → `User`                                                        | NFR-COMP-03, NFR-USE-03 |
+| PATCH  | `/me`               | `{ name?, timezone?, timezoneAuto?, locale? }` → `User`                                         | NFR-COMP-03, NFR-USE-03 |
 | POST   | `/me/avatar`        | `multipart/form-data`, поле `file` (JPEG, PNG, WebP чи GIF ≤ 512 КБ) → `User` з `avatarUrl`     | —                       |
 | DELETE | `/me/avatar`        | → `User` (`avatarUrl` — фото від Google або `null`)                                             | —                       |
 | POST   | `/me/password`      | `{ currentPassword, newPassword }` → 204; 400 `WRONG_PASSWORD`                                  | FR-01 (правила пароля)  |
@@ -122,6 +122,7 @@
 - **Завантаження**: формат визначається за вмістом файлу, а не за назвою. SVG, TIFF і решта — `400 VALIDATION` (`fields.file: 'type'`), файл без поля — `fields.file: 'required'`, більше за 512 КБ або понад 40 Мп — `413 FILE_TOO_LARGE`. Бекенд перекодовує фото у WebP 256×256 без метаданих (EXIF, GPS не зберігаються, NFR-LEG-01).
 - **Файл** лежить в об'єктному сховищі (S3-сумісне, у compose — SeaweedFS), не в базі. Його віддає `GET /api/avatars/<uuid>.webp` без сесії: ключ випадковий, і бачать його лише учасники спільних груп. Кожне завантаження дає новий ключ, тож браузер кешує фото назавжди (`Cache-Control: immutable`). Цей маршрут не входить в OpenAPI: його читає `<img>`, а не клієнт API.
 - **Старий файл** видаляється після коміту (подія `user.avatarDiscarded`, з повторами): під час заміни, видалення фото й видалення акаунта (NFR-LEG-02). Якщо сховище недоступне, завантаження відповідає `500`, а попереднє фото лишається.
+- **Часовий пояс профілю**: застосунок показує всі часи, межі днів і тижнів у `User.timezone`, а не в поясі браузера. Під час реєстрації це пояс пристрою. Поки `timezoneAuto = true` (типово), фронтенд після входу сам оновлює `timezone` до поясу пристрою; вибір поясу вручну надсилає `timezoneAuto: false`. За цим поясом також надсилаються листи і з нього нова серія бере свій (див. задачі).
 
 ## Сповіщення в сервісі
 
