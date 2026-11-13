@@ -18,6 +18,7 @@ function row(overrides: Partial<UserRow> = {}): UserRow {
     email: 'anya@errandly.test',
     emailVerifiedAt: null,
     timezone: 'Europe/Kyiv',
+    timezoneAuto: true,
     locale: 'uk',
     providerAvatarUrl: null,
     uploadedAvatarKey: null,
@@ -87,6 +88,7 @@ describe('UsersApi', () => {
       email: 'anya@errandly.test',
       emailVerified: false,
       timezone: 'Europe/Kyiv',
+      timezoneAuto: true,
       locale: 'uk',
       avatarUrl: null,
     });
@@ -152,11 +154,15 @@ describe('UsersService', () => {
       name: 'Anya',
       locale: 'en',
     });
-    await service.updateProfile('u1', { name: 'Anya K.', timezone: 'Europe/Warsaw' });
+    await service.updateProfile('u1', {
+      name: 'Anya K.',
+      timezone: 'Europe/Warsaw',
+      timezoneAuto: false,
+    });
 
     expect(repository.updates).toEqual([
       { locale: 'en' },
-      { name: 'Anya K.', timezone: 'Europe/Warsaw' },
+      { name: 'Anya K.', timezone: 'Europe/Warsaw', timezoneAuto: false },
     ]);
   });
 

@@ -47,7 +47,12 @@ export class AuthService {
     const passwordHash = await this.hasher.hash(input.password);
     return this.db.transaction(async (tx) => {
       const user = await this.users.create(
-        { name: input.name, email: input.email, locale: input.locale ?? DEFAULT_LOCALE },
+        {
+          name: input.name,
+          email: input.email,
+          locale: input.locale ?? DEFAULT_LOCALE,
+          ...(input.timezone === undefined ? {} : { timezone: input.timezone }),
+        },
         tx,
       );
       await this.repository.savePassword(user.id, passwordHash, tx);

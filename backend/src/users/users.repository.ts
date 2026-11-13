@@ -9,7 +9,13 @@ import { users, type NewUserRow, type UserRow } from './users.schema.js';
 export type UserChanges = Partial<
   Pick<
     NewUserRow,
-    'name' | 'timezone' | 'locale' | 'emailVerifiedAt' | 'providerAvatarUrl' | 'uploadedAvatarKey'
+    | 'name'
+    | 'timezone'
+    | 'timezoneAuto'
+    | 'locale'
+    | 'emailVerifiedAt'
+    | 'providerAvatarUrl'
+    | 'uploadedAvatarKey'
   >
 >;
 

@@ -28,6 +28,7 @@ function row(overrides: Partial<UserRow> = {}): UserRow {
     email: 'anya@errandly.test',
     emailVerifiedAt: null,
     timezone: 'Europe/Kyiv',
+    timezoneAuto: true,
     locale: 'uk',
     providerAvatarUrl: null,
     uploadedAvatarKey: null,

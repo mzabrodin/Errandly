@@ -4,7 +4,7 @@ import { IsEmail, IsIn, IsNotEmpty, IsOptional, IsString, MaxLength } from 'clas
 import { LIMITS, LOCALES, type Locale } from '../../common/domain.js';
 import { NormalizeEmail, Trim } from '../../common/validation/transforms.js';
 import { code } from '../../common/validation/validation.js';
-import { IsPassword } from '../../common/validation/validators.js';
+import { IsPassword, IsTimeZone } from '../../common/validation/validators.js';
 
 export class RegisterDto {
   @Trim()
@@ -27,6 +27,11 @@ export class RegisterDto {
   @IsOptional()
   @IsIn(LOCALES, code('invalid'))
   locale?: Locale;
+
+  /** The device's IANA time zone; becomes the profile time zone */
+  @IsOptional()
+  @IsTimeZone()
+  timezone?: string;
 }
 
 export class LoginDto {

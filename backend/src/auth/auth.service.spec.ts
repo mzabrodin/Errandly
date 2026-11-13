@@ -66,6 +66,7 @@ class FakeUsers {
       name: 'Anya',
       emailVerified: true,
       timezone: 'Europe/Kyiv',
+      timezoneAuto: true,
       locale: 'uk',
       avatarUrl: null,
       ...user,
@@ -82,7 +83,7 @@ class FakeUsers {
     return Promise.resolve([...this.users.values()].find((u) => u.email === email) ?? null);
   }
 
-  create(user: { name: string; email: string; locale: 'uk' | 'en' }) {
+  create(user: { name: string; email: string; locale: 'uk' | 'en'; timezone?: string }) {
     if ([...this.users.values()].some((u) => u.email === user.email)) {
       return Promise.reject(new DomainError('EMAIL_TAKEN'));
     }
@@ -174,9 +175,14 @@ describe('AuthService', () => {
         email: 'anya@errandly.test',
         password: 'Pass1234',
         locale: 'en',
+        timezone: 'America/New_York',
       });
 
-      expect(user).toMatchObject({ email: 'anya@errandly.test', locale: 'en' });
+      expect(user).toMatchObject({
+        email: 'anya@errandly.test',
+        locale: 'en',
+        timezone: 'America/New_York',
+      });
       expect(repository.credentials.get(user.id)?.passwordHash).toBe('hash:Pass1234');
       expect(bus.published).toEqual([['auth.emailVerificationRequested', { userId: user.id }]]);
       expect(sessions.created).toEqual([user.id]);

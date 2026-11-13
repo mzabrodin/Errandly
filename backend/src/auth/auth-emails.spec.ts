@@ -75,6 +75,7 @@ const anya = {
   email: 'anya@errandly.test',
   emailVerified: false,
   timezone: 'Europe/Kyiv',
+  timezoneAuto: true,
   locale: 'en',
   avatarUrl: null,
 } satisfies UserDto;

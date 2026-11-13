@@ -1953,6 +1953,9 @@
           "timezone": {
             "type": "string",
             "description": "IANA time zone, e.g. Europe/Kyiv"
+          },
+          "timezoneAuto": {
+            "type": "boolean"
           }
         }
       },
@@ -1983,6 +1986,10 @@
             "type": "string",
             "description": "IANA time zone, e.g. Europe/Kyiv"
           },
+          "timezoneAuto": {
+            "type": "boolean",
+            "description": "Whether `timezone` follows the device (the frontend updates it) or was chosen by hand"
+          },
           "avatarUrl": {
             "type": "string",
             "nullable": true,
@@ -1996,6 +2003,7 @@
           "email",
           "emailVerified",
           "timezone",
+          "timezoneAuto",
           "avatarUrl"
         ]
       },
@@ -2035,6 +2043,10 @@
           "password": {
             "type": "string",
             "description": "At least 8 characters with a letter and a digit (FR-01)"
+          },
+          "timezone": {
+            "type": "string",
+            "description": "The device's IANA time zone; becomes the profile time zone"
           }
         },
         "required": [
