@@ -25,10 +25,23 @@ describe('Profile and account (integration)', () => {
       .send({ name: '  Anya K.  ', locale: 'en' })
       .expect(200);
 
-    expect(body).toMatchObject({ name: 'Anya K.', locale: 'en', timezone: 'Europe/Kyiv' });
-    await agent.patch('/api/me').send({ timezone: 'America/New_York' }).expect(200);
+    expect(body).toMatchObject({
+      name: 'Anya K.',
+      locale: 'en',
+      timezone: 'Europe/Kyiv',
+      timezoneAuto: true,
+    });
+    await agent
+      .patch('/api/me')
+      .send({ timezone: 'America/New_York', timezoneAuto: false })
+      .expect(200);
     const me = await agent.get('/api/auth/me').expect(200);
-    expect(me.body).toMatchObject({ name: 'Anya K.', locale: 'en', timezone: 'America/New_York' });
+    expect(me.body).toMatchObject({
+      name: 'Anya K.',
+      locale: 'en',
+      timezone: 'America/New_York',
+      timezoneAuto: false,
+    });
   });
 
   it('validates the profile', async () => {
@@ -36,9 +49,12 @@ describe('Profile and account (integration)', () => {
 
     await agent
       .patch('/api/me')
-      .send({ name: ' ', timezone: 'Mars/Olympus' })
+      .send({ name: ' ', timezone: 'Mars/Olympus', timezoneAuto: 'yes' })
       .expect(400)
-      .expect({ code: 'VALIDATION', fields: { name: 'required', timezone: 'invalid' } });
+      .expect({
+        code: 'VALIDATION',
+        fields: { name: 'required', timezone: 'invalid', timezoneAuto: 'type' },
+      });
   });
 
   it('deletes the account and ends its sessions', async () => {

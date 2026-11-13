@@ -9,6 +9,7 @@ export function toUserDto(row: UserRow): UserDto {
     email: row.email,
     emailVerified: row.emailVerifiedAt !== null,
     timezone: row.timezone,
+    timezoneAuto: row.timezoneAuto,
     locale: row.locale,
     avatarUrl: avatarUrlOf(row),
   };

@@ -35,7 +35,7 @@ describe('Auth (integration)', () => {
       const agent = t.agent();
       const response = await agent
         .post('/api/auth/register')
-        .send({ ...anya, locale: 'en' })
+        .send({ ...anya, locale: 'en', timezone: 'Europe/Warsaw' })
         .expect(201);
 
       expect(response.body).toMatchObject({
@@ -43,7 +43,8 @@ describe('Auth (integration)', () => {
         email: 'anya@errandly.test',
         emailVerified: false,
         locale: 'en',
-        timezone: 'Europe/Kyiv',
+        timezone: 'Europe/Warsaw',
+        timezoneAuto: true,
         avatarUrl: null,
       });
       const cookie = sessionCookie(response.headers);

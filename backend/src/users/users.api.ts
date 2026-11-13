@@ -11,6 +11,8 @@ export interface NewUser {
   /** Lowercased */
   email: string;
   locale: Locale;
+  /** IANA zone of the device; the column default otherwise */
+  timezone?: string;
 }
 
 /** Returns DTOs, never rows; `db` joins the caller's transaction */

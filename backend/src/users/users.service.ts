@@ -21,6 +21,7 @@ export class UsersService {
     const patch: UserChanges = {};
     if (changes.name !== undefined) patch.name = changes.name;
     if (changes.timezone !== undefined) patch.timezone = changes.timezone;
+    if (changes.timezoneAuto !== undefined) patch.timezoneAuto = changes.timezoneAuto;
     if (changes.locale !== undefined) patch.locale = changes.locale;
 
     const row =

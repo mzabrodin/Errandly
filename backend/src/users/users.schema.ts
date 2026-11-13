@@ -1,5 +1,5 @@
 import { sql } from 'drizzle-orm';
-import { check, pgEnum, pgTable, text, uniqueIndex, varchar } from 'drizzle-orm/pg-core';
+import { boolean, check, pgEnum, pgTable, text, uniqueIndex, varchar } from 'drizzle-orm/pg-core';
 
 import { DEFAULT_LOCALE, LIMITS, LOCALES } from '../common/domain.js';
 import { createdAt, id, timestamptz, updatedAt } from '../db/columns.js';
@@ -20,6 +20,8 @@ export const users = pgTable(
     emailVerifiedAt: timestamptz(),
     /** IANA time zone used to show times and send reminders */
     timezone: text().notNull().default('Europe/Kyiv'),
+    /** The frontend keeps `timezone` equal to the device's zone */
+    timezoneAuto: boolean().notNull().default(true),
     locale: localeEnum().notNull().default(DEFAULT_LOCALE),
     providerAvatarUrl: text(),
     uploadedAvatarKey: text(),

@@ -10,6 +10,8 @@ export class UserDto {
   emailVerified!: boolean;
   /** IANA time zone, e.g. Europe/Kyiv */
   timezone!: string;
+  /** Whether `timezone` follows the device (the frontend updates it) or was chosen by hand */
+  timezoneAuto!: boolean;
   /** UI and email language */
   @ApiProperty({ enum: LOCALES, enumName: 'Locale' })
   locale!: Locale;

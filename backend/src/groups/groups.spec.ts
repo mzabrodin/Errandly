@@ -147,6 +147,7 @@ function user(id: string, overrides: Partial<UserDto> = {}): UserDto {
     email: `${id}@errandly.test`,
     emailVerified: true,
     timezone: 'Europe/Kyiv',
+    timezoneAuto: true,
     locale: 'uk',
     avatarUrl: null,
     ...overrides,
