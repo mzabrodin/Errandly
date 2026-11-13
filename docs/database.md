@@ -54,6 +54,6 @@ npm run db:check -w backend       # перевірити узгодженіст�
 ## Тести з базою
 
 - Unit-тести (`*.spec.ts`) базу не використовують: репозиторії й порти підміняються фейками.
-- E2E (`test/*.e2e-spec.ts`): `test/setup/global-setup.ts` піднімає через Testcontainers один PostgreSQL 18 і один SeaweedFS на запуск і застосовує міграції з нуля. Потрібен запущений Docker; `E2E_DATABASE_URL` і `E2E_S3_ENDPOINT` натомість вказують на наявні сервіси (таблиці бази буде очищено).
+- Інтеграційні тести (`test/*.int-spec.ts`): `test/setup/global-setup.ts` піднімає через Testcontainers один PostgreSQL 18 і один SeaweedFS на запуск і застосовує міграції з нуля. Потрібен запущений Docker; `INTEGRATION_DATABASE_URL` і `INTEGRATION_S3_ENDPOINT` натомість вказують на наявні сервіси (таблиці бази буде очищено).
 - `test/support/test-app.ts` (`createTestApp`) запускає весь `AppModule` з `FixedClock`, `RecordingMailTransport` (записує листи, `failNext()` імітує збій SMTP), `FlakyObjectStorage` (справжній SeaweedFS, `failNext()` імітує збій сховища) і швидким argon2. `reset()` очищає всі таблиці (`db/tables.ts#truncateAll`) перед кожним тестом, `deliverEvents()` доставляє події після коміту.
 - Дані створюють фабрики з `test/support/factories.ts` (`createUser`, `signIn`). Тести не покладаються на демо-дані.

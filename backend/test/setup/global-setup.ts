@@ -1,5 +1,5 @@
-// Starts one PostgreSQL 18 and one SeaweedFS for the whole e2e run and migrates the database.
-// E2E_DATABASE_URL and E2E_S3_ENDPOINT point the tests at existing services instead (no Docker
+// Starts one PostgreSQL 18 and one SeaweedFS for the whole integration run and migrates the database.
+// INTEGRATION_DATABASE_URL and INTEGRATION_S3_ENDPOINT point the tests at existing services instead (no Docker
 // needed); every test truncates all tables, so never point them at data you want to keep.
 import { fileURLToPath } from 'node:url';
 import { PostgreSqlContainer } from '@testcontainers/postgresql';
@@ -40,7 +40,7 @@ function configured(name: string): string | undefined {
 }
 
 async function startDatabase(containers: StartedTestContainer[]): Promise<string> {
-  const existing = configured('E2E_DATABASE_URL');
+  const existing = configured('INTEGRATION_DATABASE_URL');
   if (existing !== undefined) return existing;
   const container = await new PostgreSqlContainer('postgres:18-alpine').start();
   containers.push(container);
@@ -48,7 +48,7 @@ async function startDatabase(containers: StartedTestContainer[]): Promise<string
 }
 
 async function startStorage(containers: StartedTestContainer[]): Promise<string> {
-  const existing = configured('E2E_S3_ENDPOINT');
+  const existing = configured('INTEGRATION_S3_ENDPOINT');
   if (existing !== undefined) return existing;
   const container = await new GenericContainer(SEAWEEDFS_IMAGE)
     .withCommand(['mini'])

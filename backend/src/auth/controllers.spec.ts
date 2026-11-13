@@ -6,7 +6,7 @@ import { AccountController } from './account.controller.js';
 import { AuthController } from './auth.controller.js';
 import type { AuthService } from './auth.service.js';
 
-// Controllers only map HTTP to a service call and handle the cookie; the e2e tests run them for real
+// Controllers only map HTTP to a service call and handle the cookie; the integration tests run them for real
 
 const config = { get: () => 'development' } as unknown as ConfigService<EnvironmentVariables, true>;
 const user = { id: 'u1', sessionId: 's1' };

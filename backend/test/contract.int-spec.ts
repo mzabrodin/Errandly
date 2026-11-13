@@ -3,7 +3,7 @@ import type TestAgent from 'supertest/lib/agent.js';
 import { createUser, signIn } from './support/factories.js';
 import { createTestApp, type TestApp } from './support/test-app.js';
 
-describe('API contract (e2e)', () => {
+describe('API contract (integration)', () => {
   let t: TestApp;
   let anya: TestAgent;
 

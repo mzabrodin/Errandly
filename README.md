@@ -140,7 +140,7 @@ npm run format:check
 npm run build
 npm test
 npm run test:cov -w backend
-npm run test:e2e -w backend   # Testcontainers: потрібен запущений Docker (або E2E_DATABASE_URL)
+npm run test:integration -w backend   # Testcontainers: потрібен запущений Docker (або INTEGRATION_DATABASE_URL)
 ```
 
 ## Типізований API

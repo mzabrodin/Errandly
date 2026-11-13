@@ -1,6 +1,6 @@
 import { createTestApp, type TestApp } from './support/test-app.js';
 
-describe('App (e2e)', () => {
+describe('App (integration)', () => {
   let t: TestApp;
 
   beforeAll(async () => {
@@ -19,8 +19,8 @@ describe('App (e2e)', () => {
     return t
       .agent()
       .get('/api/health')
-      .set('X-Request-Id', 'e2e-123')
-      .expect('x-request-id', 'e2e-123');
+      .set('X-Request-Id', 'int-123')
+      .expect('x-request-id', 'int-123');
   });
 
   it('does not serve Swagger UI outside development', () => {

@@ -84,7 +84,7 @@
   },
   "overrides": [
     {
-      "files": ["**/*.spec.ts", "**/*.e2e-spec.ts", "**/*.test.ts", "**/*.test.tsx", "**/test/**"],
+      "files": ["**/*.spec.ts", "**/*.int-spec.ts", "**/*.test.ts", "**/*.test.tsx", "**/test/**"],
       "rules": {
         "max-lines-per-function": "off",
         "typescript/no-explicit-any": "off",
