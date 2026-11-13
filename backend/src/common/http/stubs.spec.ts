@@ -5,13 +5,11 @@ import { CalendarController } from '../../calendar/calendar.controller.js';
 import { NotificationsController } from '../../notifications/notifications.controller.js';
 import { SettingsController } from '../../notifications/settings.controller.js';
 import { StatsController } from '../../stats/stats.controller.js';
-import { TasksController } from '../../tasks/tasks.controller.js';
 
 // Until a module gets its service, every handler of its controller answers 501
 const controllers = [
   GoogleAuthController,
   CalendarController,
-  TasksController,
   NotificationsController,
   SettingsController,
   StatsController,

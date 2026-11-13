@@ -13,7 +13,8 @@ import {
 import { ApiExtraModels, ApiTags } from '@nestjs/swagger';
 
 import { ApiSession } from '../common/http/api-docs.js';
-import { notImplemented, ParseId } from '../common/http/stubs.js';
+import { CurrentUser, type RequestUser } from '../common/http/auth.js';
+import { ParseId } from '../common/http/stubs.js';
 import { RECURRENCE_VARIANTS } from './dto/recurrence.dto.js';
 import {
   CreateTaskDto,
@@ -23,6 +24,7 @@ import {
   TasksQueryDto,
   UpdateTaskDto,
 } from './dto/task.dto.js';
+import { TasksService } from './tasks.service.js';
 
 /**
  * Task series and instances (FR-19–31, SD-1, SD-3). `/tasks/:taskId` routes answer 404 NOT_FOUND
@@ -33,13 +35,16 @@ import {
 @ApiExtraModels(...RECURRENCE_VARIANTS)
 @Controller()
 export class TasksController {
+  constructor(private readonly tasks: TasksService) {}
+
   /** Instances in `[from, to)` by dueAt, ascending, with computed status. Errors: 403 FORBIDDEN. */
   @Get('groups/:groupId/tasks')
   list(
+    @CurrentUser() user: RequestUser,
     @Param('groupId', ParseId) groupId: string,
     @Query() query: TasksQueryDto,
   ): Promise<TaskDto[]> {
-    return notImplemented(groupId, query);
+    return this.tasks.list(groupId, user.id, query);
   }
 
   /**
@@ -50,16 +55,20 @@ export class TasksController {
    */
   @Post('groups/:groupId/tasks')
   create(
+    @CurrentUser() user: RequestUser,
     @Param('groupId', ParseId) groupId: string,
     @Body() body: CreateTaskDto,
   ): Promise<TaskDto> {
-    return notImplemented(groupId, body);
+    return this.tasks.create(groupId, user.id, body);
   }
 
   /** One instance. Errors: 404 NOT_FOUND, 403 FORBIDDEN. */
   @Get('tasks/:taskId')
-  get(@Param('taskId', ParseId) taskId: string): Promise<TaskDto> {
-    return notImplemented(taskId);
+  get(
+    @CurrentUser() user: RequestUser,
+    @Param('taskId', ParseId) taskId: string,
+  ): Promise<TaskDto> {
+    return this.tasks.get(taskId, user.id);
   }
 
   /**
@@ -68,11 +77,12 @@ export class TasksController {
    */
   @Patch('tasks/:taskId')
   update(
+    @CurrentUser() user: RequestUser,
     @Param('taskId', ParseId) taskId: string,
     @Query() query: EditScopeQueryDto,
     @Body() body: UpdateTaskDto,
   ): Promise<TaskDto> {
-    return notImplemented(taskId, query, body);
+    return this.tasks.update(taskId, user.id, query.scope, body);
   }
 
   /**
@@ -82,17 +92,21 @@ export class TasksController {
   @Delete('tasks/:taskId')
   @HttpCode(HttpStatus.NO_CONTENT)
   remove(
+    @CurrentUser() user: RequestUser,
     @Param('taskId', ParseId) taskId: string,
     @Query() query: EditScopeQueryDto,
   ): Promise<void> {
-    return notImplemented(taskId, query);
+    return this.tasks.remove(taskId, user.id, query.scope);
   }
 
   /** Marks the task done; only its assignee can. Idempotent. Errors: 404 NOT_FOUND, 403 NOT_ASSIGNEE. */
   @Post('tasks/:taskId/complete')
   @HttpCode(HttpStatus.OK)
-  complete(@Param('taskId', ParseId) taskId: string): Promise<TaskDto> {
-    return notImplemented(taskId);
+  complete(
+    @CurrentUser() user: RequestUser,
+    @Param('taskId', ParseId) taskId: string,
+  ): Promise<TaskDto> {
+    return this.tasks.complete(taskId, user.id);
   }
 
   /**
@@ -100,8 +114,11 @@ export class TasksController {
    * Errors: 404 NOT_FOUND, 403 NOT_ASSIGNEE, 409 UNDO_EXPIRED.
    */
   @Delete('tasks/:taskId/complete')
-  undoComplete(@Param('taskId', ParseId) taskId: string): Promise<TaskDto> {
-    return notImplemented(taskId);
+  undoComplete(
+    @CurrentUser() user: RequestUser,
+    @Param('taskId', ParseId) taskId: string,
+  ): Promise<TaskDto> {
+    return this.tasks.undoComplete(taskId, user.id);
   }
 
   /**
@@ -110,9 +127,10 @@ export class TasksController {
    */
   @Patch('tasks/:taskId/assignee')
   reassign(
+    @CurrentUser() user: RequestUser,
     @Param('taskId', ParseId) taskId: string,
     @Body() body: ReassignTaskDto,
   ): Promise<TaskDto> {
-    return notImplemented(taskId, body);
+    return this.tasks.reassign(taskId, user.id, body.assigneeId);
   }
 }

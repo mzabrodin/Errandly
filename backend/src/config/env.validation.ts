@@ -36,6 +36,7 @@ const envSchema = z.object({
   DATABASE_URL: z.url({ protocol: /^postgres(ql)?$/ }).optional(),
   /** 0 turns after-commit delivery off */
   EVENTS_POLL_INTERVAL_MS: z.coerce.number().int().min(0).default(2000),
+  SCHEDULER_ENABLED: z.stringbool().default(true),
   /** Per IP (NFR-SEC-07) */
   RATE_LIMIT_PER_MINUTE: z.coerce.number().int().min(1).default(100),
   AUTH_RATE_LIMIT_PER_MINUTE: z.coerce.number().int().min(1).default(10),

@@ -49,12 +49,12 @@ describe('API contract (integration)', () => {
       .expect({ code: 'VALIDATION', fields: { admin: 'unknown' } });
   });
 
-  it('lets a valid request through to a stub handler', () => {
+  it('lets a valid request through to the access check', () => {
     return anya
       .post(`/api/groups/${groupId}/tasks`)
       .send(validTask)
-      .expect(501)
-      .expect({ code: 'NOT_IMPLEMENTED' });
+      .expect(403)
+      .expect({ code: 'FORBIDDEN' });
   });
 
   it('validates the recurrence variant', () => {

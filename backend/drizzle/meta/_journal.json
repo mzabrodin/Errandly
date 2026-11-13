@@ -15,6 +15,13 @@
       "when": 1794518883735,
       "tag": "0001_users_avatars",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1794525596774,
+      "tag": "0002_task_series_timezone",
+      "breakpoints": true
     }
   ]
 }

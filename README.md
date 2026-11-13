@@ -167,6 +167,7 @@ Swagger UI (`/api/docs`) доступний лише в режимі розро�
 | `LOG_LEVEL`                                   | `fatal`…`trace`, `silent`                                    | ні     | `backend/.env`, `.env`  |
 | `DATABASE_URL`                                | PostgreSQL; обов'язкова в production                         | так    | `backend/.env`, compose |
 | `EVENTS_POLL_INTERVAL_MS`                     | як часто доставляються події після коміту (мс, 0 — вимкнено) | ні     | `backend/.env`          |
+| `SCHEDULER_ENABLED`                           | щогодинні задачі, як-от поповнення серій на 4 тижні (`true`) | ні     | `backend/.env`          |
 | `RATE_LIMIT_PER_MINUTE`                       | запитів на хвилину з одного IP (100)                         | ні     | `backend/.env`          |
 | `AUTH_RATE_LIMIT_PER_MINUTE`                  | те саме для входу, відновлення пароля й листів (10)          | ні     | `backend/.env`          |
 | `POSTGRES_USER` / `POSTGRES_PASSWORD` / `_DB` | облікові дані бази в compose                                 | так    | `.env`                  |
