@@ -45,6 +45,12 @@ export const taskSeries = pgTable(
     startsAt: timestamptz().notNull(),
     /** Instances exist up to this moment; the scheduler tops them up daily */
     materializedUntil: timestamptz().notNull(),
+    /** The creating admin's zone, so instances keep their local time across DST (SYS-15) */
+    timezone: text().notNull().default('Europe/Kyiv'),
+    /** Deleted while completed instances remain; the top-up skips it */
+    endedAt: timestamptz(),
+    /** Null: the algorithm picks each instance's assignee */
+    assigneeId: uuid().references(() => users.id, { onDelete: 'set null' }),
     createdBy: uuid().references(() => users.id, { onDelete: 'set null' }),
     createdAt: createdAt(),
   },

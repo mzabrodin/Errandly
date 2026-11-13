@@ -13,6 +13,8 @@ export default defineConfig({
       NODE_ENV: 'test',
       // Tests drive EventDispatcher.dispatchDue() themselves instead of racing the poller
       EVENTS_POLL_INTERVAL_MS: '0',
+      // Tests run the series top-up themselves
+      SCHEDULER_ENABLED: 'false',
       // Every test signs in from the same address; rate-limits.int-spec.ts lowers them again
       RATE_LIMIT_PER_MINUTE: '100000',
       AUTH_RATE_LIMIT_PER_MINUTE: '100000',
