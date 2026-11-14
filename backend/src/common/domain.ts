@@ -69,7 +69,10 @@ export const DEFAULT_NOTIFICATION_PREFERENCES: Record<NotificationEvent, boolean
 
 /** Reminder offsets offered in the settings, in minutes before the due time */
 export const REMINDER_MINUTES = [15, 30, 60, 180, 1440] as const;
-export const DEFAULT_REMINDER_MINUTES = 60;
+/** FR-33 */
+export const DEFAULT_CALENDAR_REMINDER_MINUTES = 60;
+/** FR-38: a day before the due time */
+export const DEFAULT_EMAIL_REMINDER_MINUTES = 1440;
 
 export const MEMBER_COLORS = [
   '#e6f36b',

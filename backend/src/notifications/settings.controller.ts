@@ -2,8 +2,9 @@ import { Body, Controller, Get, Patch } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 
 import { ApiSession } from '../common/http/api-docs.js';
-import { notImplemented } from '../common/http/stubs.js';
+import { CurrentUser, type RequestUser } from '../common/http/auth.js';
 import { SettingsDto, UpdateSettingsDto } from './dto/settings.dto.js';
+import { SettingsService } from './settings.service.js';
 
 /**
  * The settings page (FR-32–35, FR-38). Notification preferences are this module's own data;
@@ -13,15 +14,20 @@ import { SettingsDto, UpdateSettingsDto } from './dto/settings.dto.js';
 @ApiSession()
 @Controller('me/settings')
 export class SettingsController {
+  constructor(private readonly settings: SettingsService) {}
+
   /** Notification and calendar settings. */
   @Get()
-  get(): Promise<SettingsDto> {
-    return notImplemented();
+  get(@CurrentUser() user: RequestUser): Promise<SettingsDto> {
+    return this.settings.get(user.id);
   }
 
-  /** Updates the reminder offset and notification switches. */
+  /**
+   * Updates the calendar reminder time and the notification switches; a new reminder time
+   * re-syncs every event. Errors: 409 CALENDAR_NOT_CONNECTED (reminderMinutes without a calendar).
+   */
   @Patch()
-  update(@Body() body: UpdateSettingsDto): Promise<SettingsDto> {
-    return notImplemented(body);
+  update(@CurrentUser() user: RequestUser, @Body() body: UpdateSettingsDto): Promise<SettingsDto> {
+    return this.settings.update(user.id, body);
   }
 }

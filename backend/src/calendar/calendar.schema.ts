@@ -1,4 +1,6 @@
+import { sql } from 'drizzle-orm';
 import {
+  check,
   index,
   pgEnum,
   pgTable,
@@ -10,7 +12,12 @@ import {
   varchar,
 } from 'drizzle-orm/pg-core';
 
-import { CALENDAR_PROVIDERS, LIMITS, SYNC_STATUSES } from '../common/domain.js';
+import {
+  CALENDAR_PROVIDERS,
+  DEFAULT_CALENDAR_REMINDER_MINUTES,
+  LIMITS,
+  SYNC_STATUSES,
+} from '../common/domain.js';
 import { createdAt, id, timestamptz, updatedAt } from '../db/columns.js';
 import { tasks } from '../tasks/tasks.schema.js';
 import { users } from '../users/users.schema.js';
@@ -28,11 +35,9 @@ export const calendarConnections = pgTable(
       .references(() => users.id, { onDelete: 'cascade' }),
     provider: calendarProviderEnum().notNull(),
     accountEmail: varchar({ length: LIMITS.email }).notNull(),
-    /** OAuth tokens, encrypted with TOKEN_ENCRYPTION_KEY before they are stored */
+    /** Encrypted (NFR-SEC-05); access tokens are never stored */
     refreshTokenEncrypted: text().notNull(),
-    accessTokenEncrypted: text(),
-    accessTokenExpiresAt: timestamptz(),
-    calendarId: text().notNull().default('primary'),
+    calendarId: text().notNull(),
     syncStatus: syncStatusEnum().notNull().default('ok'),
     /** Consecutive failures; the 5th one pauses the sync (SYS-21) */
     failedAttempts: smallint().notNull().default(0),
@@ -42,6 +47,19 @@ export const calendarConnections = pgTable(
     updatedAt: updatedAt(),
   },
   (t) => [uniqueIndex('calendar_connections_user_provider_key').on(t.userId, t.provider)],
+);
+
+/** Kept across reconnects; a missing row means the default */
+export const calendarSettings = pgTable(
+  'calendar_settings',
+  {
+    userId: uuid()
+      .primaryKey()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    reminderMinutes: smallint().notNull().default(DEFAULT_CALENDAR_REMINDER_MINUTES),
+    updatedAt: updatedAt(),
+  },
+  (t) => [check('calendar_settings_reminder_positive', sql`${t.reminderMinutes} > 0`)],
 );
 
 /** Events Errandly created, per connection; it never touches any other event (SYS-19) */

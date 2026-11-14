@@ -1,19 +1,11 @@
 import { NotImplementedException } from '@nestjs/common';
 
 import { GoogleAuthController } from '../../auth/google-auth.controller.js';
-import { CalendarController } from '../../calendar/calendar.controller.js';
 import { NotificationsController } from '../../notifications/notifications.controller.js';
-import { SettingsController } from '../../notifications/settings.controller.js';
 import { StatsController } from '../../stats/stats.controller.js';
 
 // Until a module gets its service, every handler of its controller answers 501
-const controllers = [
-  GoogleAuthController,
-  CalendarController,
-  NotificationsController,
-  SettingsController,
-  StatsController,
-];
+const controllers = [GoogleAuthController, NotificationsController, StatsController];
 
 const handlers = controllers.flatMap((Controller) => {
   const instance: object = new Controller();

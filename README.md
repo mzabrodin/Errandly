@@ -159,26 +159,26 @@ Swagger UI (`/api/docs`) доступний лише в режимі розро�
 
 Конфігурація задається лише змінними середовища (NFR-DEP-02). Бекенд перевіряє їх під час запуску й не стартує з некоректними значеннями. Секрети не комітяться: `.env` у `.gitignore`, у репозиторії є лише `.env.example`.
 
-| Змінна                                        | Призначення                                                  | Секрет | Де задається            |
-| --------------------------------------------- | ------------------------------------------------------------ | ------ | ----------------------- |
-| `NODE_ENV`                                    | `development` / `production` / `test`                        | ні     | `backend/.env`, compose |
-| `PORT`                                        | порт API                                                     | ні     | `backend/.env`, compose |
-| `APP_URL`                                     | публічна адреса застосунку: CORS, OAuth, посилання           | ні     | `backend/.env`, compose |
-| `LOG_LEVEL`                                   | `fatal`…`trace`, `silent`                                    | ні     | `backend/.env`, `.env`  |
-| `DATABASE_URL`                                | PostgreSQL; обов'язкова в production                         | так    | `backend/.env`, compose |
-| `EVENTS_POLL_INTERVAL_MS`                     | як часто доставляються події після коміту (мс, 0 — вимкнено) | ні     | `backend/.env`          |
-| `SCHEDULER_ENABLED`                           | щогодинні задачі, як-от поповнення серій на 4 тижні (`true`) | ні     | `backend/.env`          |
-| `RATE_LIMIT_PER_MINUTE`                       | запитів на хвилину з одного IP (100)                         | ні     | `backend/.env`          |
-| `AUTH_RATE_LIMIT_PER_MINUTE`                  | те саме для входу, відновлення пароля й листів (10)          | ні     | `backend/.env`          |
-| `POSTGRES_USER` / `POSTGRES_PASSWORD` / `_DB` | облікові дані бази в compose                                 | так    | `.env`                  |
-| `SMTP_HOST` / `SMTP_PORT` / `SMTP_SECURE`     | поштовий сервер (за замовчуванням Mailpit)                   | ні     | `backend/.env`, `.env`  |
-| `SMTP_USER` / `SMTP_PASS` / `SMTP_FROM`       | облікові дані пошти (Gmail: app password)                    | так    | `backend/.env`, `.env`  |
-| `S3_ENDPOINT`                                 | S3-сховище аватарок (за замовчуванням локальний SeaweedFS)   | ні     | `backend/.env`, compose |
-| `S3_ACCESS_KEY_ID` / `S3_SECRET_ACCESS_KEY`   | ключі сховища (у розробці — `errandly` / dev-пароль)         | так    | `backend/.env`, `.env`  |
-| `S3_REGION` / `S3_BUCKET`                     | необов'язкові: регіон (`us-east-1`) і бакет (`avatars`)      | ні     | `backend/.env`          |
-| `TOKEN_ENCRYPTION_KEY`                        | шифрування Google-токенів (буде додано)                      | так    | `backend/.env`          |
-| `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET`   | OAuth-клієнт Google (буде додано)                            | так    | `backend/.env`          |
-| `VITE_API_URL`                                | адреса API для фронтенду, якщо не той самий origin           | ні     | `frontend/.env`         |
+| Змінна                                        | Призначення                                                          | Секрет | Де задається            |
+| --------------------------------------------- | -------------------------------------------------------------------- | ------ | ----------------------- |
+| `NODE_ENV`                                    | `development` / `production` / `test`                                | ні     | `backend/.env`, compose |
+| `PORT`                                        | порт API                                                             | ні     | `backend/.env`, compose |
+| `APP_URL`                                     | публічна адреса застосунку: CORS, OAuth, посилання                   | ні     | `backend/.env`, compose |
+| `LOG_LEVEL`                                   | `fatal`…`trace`, `silent`                                            | ні     | `backend/.env`, `.env`  |
+| `DATABASE_URL`                                | PostgreSQL; обов'язкова в production                                 | так    | `backend/.env`, compose |
+| `EVENTS_POLL_INTERVAL_MS`                     | як часто доставляються події після коміту (мс, 0 — вимкнено)         | ні     | `backend/.env`          |
+| `SCHEDULER_ENABLED`                           | щогодинні задачі, як-от поповнення серій на 4 тижні (`true`)         | ні     | `backend/.env`          |
+| `RATE_LIMIT_PER_MINUTE`                       | запитів на хвилину з одного IP (100)                                 | ні     | `backend/.env`          |
+| `AUTH_RATE_LIMIT_PER_MINUTE`                  | те саме для входу, відновлення пароля й листів (10)                  | ні     | `backend/.env`          |
+| `POSTGRES_USER` / `POSTGRES_PASSWORD` / `_DB` | облікові дані бази в compose                                         | так    | `.env`                  |
+| `SMTP_HOST` / `SMTP_PORT` / `SMTP_SECURE`     | поштовий сервер (за замовчуванням Mailpit)                           | ні     | `backend/.env`, `.env`  |
+| `SMTP_USER` / `SMTP_PASS` / `SMTP_FROM`       | облікові дані пошти (Gmail: app password)                            | так    | `backend/.env`, `.env`  |
+| `S3_ENDPOINT`                                 | S3-сховище аватарок (за замовчуванням локальний SeaweedFS)           | ні     | `backend/.env`, compose |
+| `S3_ACCESS_KEY_ID` / `S3_SECRET_ACCESS_KEY`   | ключі сховища (у розробці — `errandly` / dev-пароль)                 | так    | `backend/.env`, `.env`  |
+| `S3_REGION` / `S3_BUCKET`                     | необов'язкові: регіон (`us-east-1`) і бакет (`avatars`)              | ні     | `backend/.env`          |
+| `TOKEN_ENCRYPTION_KEY`                        | шифрування Google-токенів, 32 байти base64; обов'язкова в production | так    | `backend/.env`, `.env`  |
+| `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET`   | OAuth-клієнт Google Calendar; без нього підключення дає 503          | так    | `backend/.env`, `.env`  |
+| `VITE_API_URL`                                | адреса API для фронтенду, якщо не той самий origin                   | ні     | `frontend/.env`         |
 
 - Усе з префіксом `VITE_` потрапляє в браузер, тому секретів там бути не може.
 - **GitHub Secrets** зараз не потрібні: CI використовує лише вбудований `GITHUB_TOKEN`. Під час деплою секрети додаються в GitHub Environment `production` (Settings → Environments), а не в змінні репозиторію.
@@ -189,9 +189,9 @@ Swagger UI (`/api/docs`) доступний лише в режимі розро�
 Вхід через Google і доступ до календаря — окремі потоки (SYS-06): календар підключається за бажанням, зокрема користувачами, які зареєструвалися за email. Адреси повернення будуються з `APP_URL`, окремі змінні не потрібні. У Google Cloud Console для кожного `APP_URL` зареєструйте:
 
 - `<APP_URL>/api/auth/google/callback` — вхід;
-- `<APP_URL>/api/calendar/google/callback` — підключення календаря.
+- `<APP_URL>/api/me/calendar/callback` — підключення календаря.
 
-Для розробки це `http://localhost:5173` і `http://localhost:8080`.
+Для розробки це `http://localhost:5173` і `http://localhost:8080`. Також потрібні: увімкнений Google Calendar API, екран згоди з доступом `calendar.app.created` (Errandly працює лише у власному календарі «Errandly») і, поки застосунок у режимі тестування, ваша адреса серед тестових користувачів.
 
 ## Логування
 

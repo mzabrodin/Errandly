@@ -5,6 +5,7 @@ import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 
 import type { EnvironmentVariables } from '../config/env.validation.js';
 import { Clock, SystemClock } from './clock.js';
+import { TokenCipher } from './crypto/token-cipher.js';
 import { ApiExceptionFilter } from './errors/api-exception.filter.js';
 import { EventBus } from './events/event-bus.js';
 import { EventDispatcher } from './events/event-dispatcher.js';
@@ -35,7 +36,8 @@ import { S3ObjectStorage } from './storage/s3-object-storage.js';
     EventPublicationStore,
     EventBus,
     EventDispatcher,
+    TokenCipher,
   ],
-  exports: [Clock, EventBus, ObjectStorage],
+  exports: [Clock, EventBus, ObjectStorage, TokenCipher],
 })
 export class CommonModule {}

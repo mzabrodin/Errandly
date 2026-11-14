@@ -12,7 +12,7 @@ import {
 } from 'drizzle-orm/pg-core';
 
 import {
-  DEFAULT_REMINDER_MINUTES,
+  DEFAULT_EMAIL_REMINDER_MINUTES,
   NOTIFICATION_CHANNELS,
   NOTIFICATION_EVENTS,
   NOTIFICATION_TYPES,
@@ -59,8 +59,8 @@ export const notificationSettings = pgTable(
     userId: uuid()
       .primaryKey()
       .references(() => users.id, { onDelete: 'cascade' }),
-    /** Minutes before the due time when the dueSoon reminder goes out */
-    reminderMinutes: smallint().notNull().default(DEFAULT_REMINDER_MINUTES),
+    /** When the taskDueSoon email goes out */
+    reminderMinutes: smallint().notNull().default(DEFAULT_EMAIL_REMINDER_MINUTES),
     updatedAt: updatedAt(),
   },
   (t) => [check('notification_settings_reminder_positive', sql`${t.reminderMinutes} > 0`)],
@@ -83,5 +83,4 @@ export const notificationPreferences = pgTable(
 
 export type NotificationRow = typeof notifications.$inferSelect;
 export type NewNotificationRow = typeof notifications.$inferInsert;
-export type NotificationSettingsRow = typeof notificationSettings.$inferSelect;
 export type NotificationPreferenceRow = typeof notificationPreferences.$inferSelect;

@@ -131,9 +131,41 @@ export class TasksRepository {
     return row;
   }
 
+  /** NO KEY UPDATE, so a calendar sync holding the task does not block edits */
   async lockTask(id: string, tx: DbExecutor): Promise<TaskRow | undefined> {
-    const [row] = await tx.select().from(tasks).where(eq(tasks.id, id)).limit(1).for('update');
+    const [row] = await tx
+      .select()
+      .from(tasks)
+      .where(eq(tasks.id, id))
+      .limit(1)
+      .for('no key update');
     return row;
+  }
+
+  async holdTask(id: string, tx: DbExecutor): Promise<TaskRow | undefined> {
+    const [row] = await tx.select().from(tasks).where(eq(tasks.id, id)).limit(1).for('key share');
+    return row;
+  }
+
+  assignedTo(userId: string, from: Date, db: DbExecutor = this.db): Promise<TaskRow[]> {
+    return db
+      .select()
+      .from(tasks)
+      .where(and(eq(tasks.assigneeId, userId), gte(tasks.dueAt, from)))
+      .orderBy(asc(tasks.dueAt));
+  }
+
+  async lockTasks(ids: readonly string[], tx: DbExecutor): Promise<void> {
+    if (ids.length === 0) return;
+    await tx
+      .select({ id: tasks.id })
+      .from(tasks)
+      .where(inArray(tasks.id, [...ids]))
+      .for('update');
+  }
+
+  lockGroupTasks(groupId: string, tx: DbExecutor): Promise<TaskRow[]> {
+    return tx.select().from(tasks).where(eq(tasks.groupId, groupId)).for('update');
   }
 
   async updateTask(id: string, changes: TaskChanges, db: DbExecutor = this.db): Promise<void> {
