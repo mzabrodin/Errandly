@@ -11,6 +11,7 @@ import type { UserDto, UsersApi } from '../users/index.js';
 import { LeastLoadRotationStrategy } from './assignment/least-load-rotation.strategy.js';
 import type { CreateTaskDto } from './dto/task.dto.js';
 import { SeriesTopUp } from './series-top-up.js';
+import { TaskDeletion } from './task-deletion.js';
 import { TaskPlanner } from './task-planner.js';
 import { TaskRedistribution } from './task-redistribution.js';
 import type {
@@ -140,6 +141,14 @@ class FakeRepository {
     return Promise.resolve();
   }
 
+  lockTasks() {
+    return Promise.resolve();
+  }
+
+  lockGroupTasks(groupId: string) {
+    return Promise.resolve(this.tasks.filter((row) => row.groupId === groupId));
+  }
+
   deleteTasks(ids: readonly string[]) {
     this.tasks = this.tasks.filter((row) => !ids.includes(row.id));
     return Promise.resolve();
@@ -251,10 +260,14 @@ function setup() {
   const groups = new FakeGroups();
   const clock = new FixedClock(NOW);
   const published: [string, Record<string, unknown>][] = [];
+  const storedOnDelete: boolean[] = [];
   const listeners = new Map<string, Listener>();
   const bus = {
     publish: (_tx: unknown, type: string, event: Record<string, unknown>) => {
       published.push([type, event]);
+      if (type === 'task.deleted') {
+        storedOnDelete.push(repository.tasks.some((task) => task.id === event['taskId']));
+      }
       return Promise.resolve();
     },
     onInTransaction: (type: string, listener: Listener) => {
@@ -267,12 +280,14 @@ function setup() {
   const repo = repository as unknown as TasksRepository;
   const groupsApi = groups as unknown as GroupsApi;
   const planner = new TaskPlanner(repo, groupsApi, users, new LeastLoadRotationStrategy(), bus);
-  const service = new TasksService(db, repo, planner, groupsApi, users, bus, clock);
+  const deletion = new TaskDeletion(repo, bus);
+  const service = new TasksService(db, repo, planner, deletion, groupsApi, users, bus, clock);
   const redistribution = new TaskRedistribution(repo, planner, bus, clock);
   redistribution.onModuleInit();
+  deletion.onModuleInit();
   const config = { get: () => true } as unknown as ConfigService<EnvironmentVariables, true>;
   const topUp = new SeriesTopUp(db, repo, planner, clock, config);
-  return { repository, groups, clock, published, listeners, service, topUp };
+  return { repository, groups, clock, published, storedOnDelete, listeners, service, topUp };
 }
 
 function input(overrides: Partial<CreateTaskDto> = {}): CreateTaskDto {
@@ -443,6 +458,33 @@ describe('TasksService', () => {
     await service.remove(task.id, 'anya', 'series');
 
     expect(repository.series).toHaveLength(0);
+  });
+
+  it('announces a deletion while the task row still exists', async () => {
+    const { service, published, storedOnDelete } = setup();
+    const task = await service.create(G, 'anya', input({ assigneeId: 'bohdan' }));
+
+    await service.remove(task.id, 'anya', 'one');
+
+    expect(published.at(-1)).toEqual([
+      'task.deleted',
+      { taskId: task.id, groupId: G, assigneeId: 'bohdan' },
+    ]);
+    expect(storedOnDelete).toEqual([true]);
+  });
+
+  it('deletes every task of a group that is being deleted, done ones too', async () => {
+    const { service, repository, listeners, published, storedOnDelete } = setup();
+    const task = await service.create(G, 'anya', input({ assigneeId: 'bohdan' }));
+    await service.complete(task.id, 'bohdan');
+    await service.create(G, 'anya', input());
+    published.length = 0;
+
+    await listeners.get('group.deleted')?.({ groupId: G } as never, TX);
+
+    expect(repository.tasks).toEqual([]);
+    expect(published.map(([type]) => type)).toEqual(['task.deleted', 'task.deleted']);
+    expect(storedOnDelete).toEqual([true, true]);
   });
 });
 

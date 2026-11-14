@@ -18,8 +18,10 @@ export class NotificationPrefsDto {
 /** The settings page; composed from the notifications and calendar modules */
 export class SettingsDto {
   calendar!: CalendarStatusDto;
-  /** Minutes before the due time when the reminder goes out: 15, 30, 60, 180 or 1440 */
-  reminderMinutes!: number;
+  /** The popup on each calendar event, minutes before the due time */
+  calendarReminderMinutes!: number;
+  /** When the dueSoon email goes out, minutes before the due time */
+  emailReminderMinutes!: number;
   notifications!: NotificationPrefsDto;
 }
 
@@ -46,7 +48,12 @@ export class UpdateSettingsDto {
   /** 15, 30, 60, 180 or 1440 */
   @IsOptional()
   @IsIn(REMINDER_MINUTES, code('invalid'))
-  reminderMinutes?: number;
+  calendarReminderMinutes?: number;
+
+  /** 15, 30, 60, 180 or 1440 */
+  @IsOptional()
+  @IsIn(REMINDER_MINUTES, code('invalid'))
+  emailReminderMinutes?: number;
 
   @IsOptional()
   @ValidateNested()

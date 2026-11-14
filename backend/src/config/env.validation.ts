@@ -27,6 +27,23 @@ export const DEV_STORAGE = {
   S3_SECRET_ACCESS_KEY: 'errandly-dev-secret',
 } as const;
 
+/** Development only */
+export const DEV_TOKEN_ENCRYPTION_KEY = 'yJpH0e/0UtV+dOz6V9SXk/LFRXoBX+xMaBzCoaixAJU=';
+
+const AES_256_KEY_BYTES = 32;
+
+/** An empty value from compose (`${VAR:-}`) means "not set" */
+const optionalSecret = z
+  .string()
+  .optional()
+  .transform((value) => (value === '' ? undefined : value));
+
+const encryptionKey = z
+  .string()
+  .refine((value) => Buffer.from(value, 'base64').length === AES_256_KEY_BYTES, {
+    message: 'must be 32 bytes in base64 (openssl rand -base64 32)',
+  });
+
 const envSchema = z.object({
   NODE_ENV: z.enum(NodeEnv).default(NodeEnv.Development),
   PORT: port.default(3000),
@@ -57,6 +74,11 @@ const envSchema = z.object({
   S3_BUCKET: z.string().min(1).default('avatars'),
   S3_ACCESS_KEY_ID: z.string().min(1).optional(),
   S3_SECRET_ACCESS_KEY: z.string().min(1).optional(),
+
+  // Without them, connecting a calendar answers 503
+  GOOGLE_CLIENT_ID: optionalSecret,
+  GOOGLE_CLIENT_SECRET: optionalSecret,
+  TOKEN_ENCRYPTION_KEY: encryptionKey.optional(),
 });
 
 const isProduction = (env: { NODE_ENV: NodeEnv }): boolean => env.NODE_ENV === NodeEnv.Production;
@@ -70,9 +92,14 @@ const refinedSchema = envSchema
     message: 'DATABASE_URL is required in production',
     path: ['DATABASE_URL'],
   })
+  .refine((env) => !isProduction(env) || env.TOKEN_ENCRYPTION_KEY !== undefined, {
+    message: 'TOKEN_ENCRYPTION_KEY is required in production',
+    path: ['TOKEN_ENCRYPTION_KEY'],
+  })
   .transform((env) => ({
     ...env,
     DATABASE_URL: env.DATABASE_URL ?? DEV_DATABASE_URL,
+    TOKEN_ENCRYPTION_KEY: env.TOKEN_ENCRYPTION_KEY ?? DEV_TOKEN_ENCRYPTION_KEY,
     S3_ENDPOINT: env.S3_ENDPOINT ?? devStorage(env, 'S3_ENDPOINT'),
     S3_ACCESS_KEY_ID: env.S3_ACCESS_KEY_ID ?? devStorage(env, 'S3_ACCESS_KEY_ID'),
     S3_SECRET_ACCESS_KEY: env.S3_SECRET_ACCESS_KEY ?? devStorage(env, 'S3_SECRET_ACCESS_KEY'),

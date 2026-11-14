@@ -1,4 +1,13 @@
-import { DEV_DATABASE_URL, DEV_STORAGE, LogLevel, NodeEnv, validateEnv } from './env.validation.js';
+import {
+  DEV_DATABASE_URL,
+  DEV_STORAGE,
+  DEV_TOKEN_ENCRYPTION_KEY,
+  LogLevel,
+  NodeEnv,
+  validateEnv,
+} from './env.validation.js';
+
+const PRODUCTION_KEY = Buffer.alloc(32, 7).toString('base64');
 
 describe('validateEnv', () => {
   it('applies defaults', () => {
@@ -41,9 +50,16 @@ describe('validateEnv', () => {
   });
 
   it('requires DATABASE_URL in production', () => {
-    expect(() => validateEnv({ NODE_ENV: 'production' })).toThrow(/DATABASE_URL/);
+    expect(() =>
+      validateEnv({ NODE_ENV: 'production', TOKEN_ENCRYPTION_KEY: PRODUCTION_KEY }),
+    ).toThrow(/DATABASE_URL/);
     const url = 'postgres://app:secret@db:5432/errandly';
-    expect(validateEnv({ NODE_ENV: 'production', DATABASE_URL: url }).DATABASE_URL).toBe(url);
+    const env = validateEnv({
+      NODE_ENV: 'production',
+      DATABASE_URL: url,
+      TOKEN_ENCRYPTION_KEY: PRODUCTION_KEY,
+    });
+    expect(env.DATABASE_URL).toBe(url);
   });
 
   it('rejects a DATABASE_URL that is not postgres', () => {
@@ -61,7 +77,11 @@ describe('validateEnv', () => {
   });
 
   it('leaves storage to AWS S3 and its credential chain in production when nothing is set', () => {
-    const env = validateEnv({ NODE_ENV: 'production', DATABASE_URL: 'postgresql://db/errandly' });
+    const env = validateEnv({
+      NODE_ENV: 'production',
+      DATABASE_URL: 'postgresql://db/errandly',
+      TOKEN_ENCRYPTION_KEY: PRODUCTION_KEY,
+    });
 
     expect(env.S3_ENDPOINT).toBeUndefined();
     expect(env.S3_ACCESS_KEY_ID).toBeUndefined();
@@ -72,5 +92,23 @@ describe('validateEnv', () => {
 
     expect(env).toMatchObject({ S3_ENDPOINT: 'https://r2.example.com', S3_ACCESS_KEY_ID: 'id' });
     expect(env.S3_SECRET_ACCESS_KEY).toBe(DEV_STORAGE.S3_SECRET_ACCESS_KEY);
+  });
+
+  it('uses a dev token key outside production and requires one in production', () => {
+    expect(validateEnv({}).TOKEN_ENCRYPTION_KEY).toBe(DEV_TOKEN_ENCRYPTION_KEY);
+    expect(() =>
+      validateEnv({ NODE_ENV: 'production', DATABASE_URL: 'postgresql://db/errandly' }),
+    ).toThrow(/TOKEN_ENCRYPTION_KEY/);
+  });
+
+  it('rejects a token key that is not 32 bytes', () => {
+    expect(() => validateEnv({ TOKEN_ENCRYPTION_KEY: 'c2hvcnQ=' })).toThrow(/TOKEN_ENCRYPTION_KEY/);
+  });
+
+  it('treats empty Google credentials from compose as unset', () => {
+    const env = validateEnv({ GOOGLE_CLIENT_ID: '', GOOGLE_CLIENT_SECRET: '' });
+
+    expect(env.GOOGLE_CLIENT_ID).toBeUndefined();
+    expect(env.GOOGLE_CLIENT_SECRET).toBeUndefined();
   });
 });

@@ -29,6 +29,13 @@
       "when": 1794554644929,
       "tag": "0003_users_timezone_auto",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1794653945835,
+      "tag": "0004_calendar_sync",
+      "breakpoints": true
     }
   ]
 }

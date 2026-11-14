@@ -159,12 +159,14 @@ type Listener = (event: never, tx: DbExecutor) => Promise<void>;
 function setup(people: UserDto[] = [user('anya'), user('oleh'), user('marta')]) {
   const repository = new FakeRepository();
   const published: [string, unknown][] = [];
+  const storedOnDelete: boolean[] = [];
   const inTransaction = new Map<string, Listener>();
   const afterCommit = new Map<string, Listener>();
   const sent: { template: string; to: string; data: Record<string, string>; locale: string }[] = [];
   const bus = {
     publish: (_tx: unknown, type: string, event: unknown) => {
       published.push([type, event]);
+      if (type === 'group.deleted') storedOnDelete.push(repository.groups.length > 0);
       return Promise.resolve();
     },
     onInTransaction: (type: string, listener: Listener) => inTransaction.set(type, listener),
@@ -201,6 +203,7 @@ function setup(people: UserDto[] = [user('anya'), user('oleh'), user('marta')]) 
   return {
     repository,
     published,
+    storedOnDelete,
     inTransaction,
     afterCommit,
     sent,
@@ -358,7 +361,9 @@ describe('GroupsService', () => {
       expect(world.published).toEqual([
         ['group.memberLeft', { groupId, userId: 'oleh', removedBy: null }],
         ['group.memberLeft', { groupId, userId: 'anya', removedBy: null }],
+        ['group.deleted', { groupId }],
       ]);
+      expect(world.storedOnDelete).toEqual([true]);
     });
 
     it('vetoes an account deletion that would orphan a group, naming the groups', async () => {

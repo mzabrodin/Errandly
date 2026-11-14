@@ -7,6 +7,8 @@ import type TestAgent from 'supertest/lib/agent.js';
 import { AppModule } from '../../src/app.module.js';
 import { configureApp } from '../../src/app.setup.js';
 import { Argon2PasswordHasher, PasswordHasher } from '../../src/auth/index.js';
+import { GoogleCalendarGateway } from '../../src/calendar/gateways/google-calendar.gateway.js';
+import { CalendarOAuth } from '../../src/calendar/oauth/calendar-oauth.js';
 import { Clock, FixedClock } from '../../src/common/clock.js';
 import { EventDispatcher } from '../../src/common/events/event-dispatcher.js';
 import { ObjectStorage } from '../../src/common/storage/object-storage.js';
@@ -15,6 +17,7 @@ import type { EnvironmentVariables } from '../../src/config/env.validation.js';
 import { DATABASE, type Database } from '../../src/db/database.js';
 import { truncateAll } from '../../src/db/tables.js';
 import { MailTransport } from '../../src/mail/mail-transport.js';
+import { FakeCalendarOAuth, FakeGoogleCalendar } from './calendar.js';
 import { RecordingMailTransport } from './mailbox.js';
 import { FlakyObjectStorage } from './storage.js';
 
@@ -33,11 +36,13 @@ export interface TestApp {
   clock: FixedClock;
   mailbox: RecordingMailTransport;
   storage: FlakyObjectStorage;
+  google: FakeGoogleCalendar;
+  oauth: FakeCalendarOAuth;
   /** Runs the after-commit listeners that are due, as the poller would */
   deliverEvents: () => Promise<number>;
   /** A cookie-keeping client, like one browser */
   agent: () => TestAgent;
-  /** Empties every table and the mailbox and resets the clock; call in beforeEach */
+  /** Empties every table, the mailbox and the fakes, and resets the clock; call in beforeEach */
   reset: () => Promise<void>;
   close: () => Promise<void>;
 }
@@ -46,6 +51,8 @@ export interface TestApp {
 export async function createTestApp(): Promise<TestApp> {
   const clock = new FixedClock(START);
   const mailbox = new RecordingMailTransport();
+  const google = new FakeGoogleCalendar();
+  const oauth = new FakeCalendarOAuth();
   const moduleRef = await Test.createTestingModule({ imports: [AppModule] })
     .overrideProvider(Clock)
     .useValue(clock)
@@ -53,6 +60,10 @@ export async function createTestApp(): Promise<TestApp> {
     .useValue(mailbox)
     .overrideProvider(PasswordHasher)
     .useValue(TEST_HASHER)
+    .overrideProvider(GoogleCalendarGateway)
+    .useValue(google)
+    .overrideProvider(CalendarOAuth)
+    .useValue(oauth)
     .overrideProvider(ObjectStorage)
     .useFactory({
       factory: (config: ConfigService<EnvironmentVariables, true>) =>
@@ -76,12 +87,16 @@ export async function createTestApp(): Promise<TestApp> {
     clock,
     mailbox,
     storage,
+    google,
+    oauth,
     deliverEvents: () => dispatcher.dispatchDue(),
     agent: () => request.agent(app.getHttpServer()),
     reset: async () => {
       await truncateAll(db);
       mailbox.clear();
       storage.clear();
+      google.clear();
+      oauth.clear();
       clock.set(START);
     },
     close: () => app.close(),

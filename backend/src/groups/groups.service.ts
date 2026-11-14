@@ -101,7 +101,10 @@ export class GroupsService implements OnModuleInit {
     await this.repository.deleteMembership(groupId, userId, tx);
     await this.bus.publish(tx, 'group.memberLeft', { groupId, userId, removedBy: null });
     // Nobody left to see it: the group, its invites and tasks go
-    if (members.length === 1) await this.repository.deleteGroup(groupId, tx);
+    if (members.length === 1) {
+      await this.bus.publish(tx, 'group.deleted', { groupId });
+      await this.repository.deleteGroup(groupId, tx);
+    }
   }
 
   /** The only admin of a group with other members blocks the deletion (LAST_ADMIN) */

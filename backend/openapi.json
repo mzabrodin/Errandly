@@ -1526,7 +1526,62 @@
             "cookie": []
           }
         ],
-        "summary": "Starts the calendar OAuth flow; after consent Google returns to /settings?calendar=connected.",
+        "summary": "Starts the calendar OAuth flow. Errors: 503 SERVICE_UNAVAILABLE (no Google OAuth client).",
+        "tags": [
+          "calendar"
+        ]
+      }
+    },
+    "/api/me/calendar/callback": {
+      "get": {
+        "operationId": "CalendarController_callback",
+        "parameters": [
+          {
+            "name": "code",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "state",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "error",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          },
+          "default": {
+            "description": "Error: { code, fields?, ... }",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "cookie": []
+          }
+        ],
+        "summary": "Google's redirect after consent; redirects to /settings?calendar=connected or =error.",
         "tags": [
           "calendar"
         ]
@@ -1563,7 +1618,7 @@
             "cookie": []
           }
         ],
-        "summary": "Disconnects the calendar and deletes the stored tokens.",
+        "summary": "Disconnects the calendar and deletes the tokens and the Errandly calendar.",
         "tags": [
           "calendar"
         ]
@@ -1759,7 +1814,7 @@
             "cookie": []
           }
         ],
-        "summary": "Updates the reminder offset and notification switches.",
+        "summary": "Updates the calendar reminder time and the notification switches; a new reminder time\nre-syncs every event. Errors: 409 CALENDAR_NOT_CONNECTED (reminderMinutes without a calendar).",
         "tags": [
           "me"
         ]
@@ -2861,9 +2916,13 @@
           "calendar": {
             "$ref": "#/components/schemas/CalendarStatusDto"
           },
-          "reminderMinutes": {
+          "calendarReminderMinutes": {
             "type": "number",
-            "description": "Minutes before the due time when the reminder goes out: 15, 30, 60, 180 or 1440"
+            "description": "The popup on each calendar event, minutes before the due time"
+          },
+          "emailReminderMinutes": {
+            "type": "number",
+            "description": "When the dueSoon email goes out, minutes before the due time"
           },
           "notifications": {
             "$ref": "#/components/schemas/NotificationPrefsDto"
@@ -2871,7 +2930,8 @@
         },
         "required": [
           "calendar",
-          "reminderMinutes",
+          "calendarReminderMinutes",
+          "emailReminderMinutes",
           "notifications"
         ]
       },
@@ -2895,7 +2955,18 @@
       "UpdateSettingsDto": {
         "type": "object",
         "properties": {
-          "reminderMinutes": {
+          "calendarReminderMinutes": {
+            "type": "number",
+            "description": "15, 30, 60, 180 or 1440",
+            "enum": [
+              15,
+              30,
+              60,
+              180,
+              1440
+            ]
+          },
+          "emailReminderMinutes": {
             "type": "number",
             "description": "15, 30, 60, 180 or 1440",
             "enum": [

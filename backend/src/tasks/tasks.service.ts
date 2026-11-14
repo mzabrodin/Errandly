@@ -8,6 +8,7 @@ import { DATABASE, type Database, type DbExecutor } from '../db/database.js';
 import { GroupsApi } from '../groups/index.js';
 import { UsersApi } from '../users/index.js';
 import type { CreateTaskDto, TaskDto, TasksQueryDto, UpdateTaskDto } from './dto/task.dto.js';
+import { TaskDeletion } from './task-deletion.js';
 import { TaskPlanner } from './task-planner.js';
 import { toTaskDto } from './tasks.mapper.js';
 import { TasksRepository, type TaskWithSeries } from './tasks.repository.js';
@@ -21,6 +22,7 @@ export class TasksService {
     @Inject(DATABASE) private readonly db: Database,
     private readonly repository: TasksRepository,
     private readonly planner: TaskPlanner,
+    private readonly deletion: TaskDeletion,
     private readonly groups: GroupsApi,
     private readonly users: UsersApi,
     private readonly bus: EventBus,
@@ -90,10 +92,10 @@ export class TasksService {
     const task = await this.adminTask(taskId, userId);
     await this.db.transaction(async (tx) => {
       if (scope === 'one') {
-        await this.deleteInstances([task], tx);
+        await this.deletion.delete([task], tx);
         return;
       }
-      await this.deleteInstances(
+      await this.deletion.delete(
         await this.repository.unfinishedOfSeries(task.seriesId, undefined, tx),
         tx,
       );
@@ -193,7 +195,7 @@ export class TasksService {
   ): Promise<string> {
     const series = await this.repository.findSeries(task.seriesId, tx);
     if (!series) throw new DomainError('NOT_FOUND');
-    await this.deleteInstances(await this.repository.unfinishedOfSeries(series.id, now, tx), tx);
+    await this.deletion.delete(await this.repository.unfinishedOfSeries(series.id, now, tx), tx);
     const changes = {
       ...seriesFields(input),
       timezone: await this.timezoneOf(userId, tx),
@@ -235,21 +237,6 @@ export class TasksService {
       previousAssigneeId: task.assigneeId,
       actorId,
     });
-  }
-
-  private async deleteInstances(instances: readonly TaskRow[], tx: DbExecutor): Promise<void> {
-    await this.repository.deleteTasks(
-      instances.map((task) => task.id),
-      tx,
-    );
-    for (const task of instances) {
-      // oxlint-disable-next-line no-await-in-loop -- one transaction connection, so the inserts run in order anyway
-      await this.bus.publish(tx, 'task.deleted', {
-        taskId: task.id,
-        groupId: task.groupId,
-        assigneeId: task.assigneeId,
-      });
-    }
   }
 
   private async assertAssignable(
