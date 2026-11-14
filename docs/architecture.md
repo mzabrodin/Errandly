@@ -12,7 +12,7 @@
 | `auth`          | реєстрація, вхід, сесії, пароль, вхід через Google, листи-підтвердження | `password_credentials`, `auth_identities`, `sessions`, `email_tokens` | FR-01–09            |
 | `groups`        | групи, учасники, ролі, запрошення, відсутності                          | `groups`, `memberships`, `invites`, `absences`                        | FR-10–18            |
 | `tasks`         | серії та екземпляри задач, статус, виконання, автоматичний розподіл     | `task_series`, `tasks`                                                | FR-19–31            |
-| `calendar`      | підключення зовнішніх календарів і синхронізація                        | `calendar_connections`, `calendar_event_links`                        | FR-32–36, SYS-18–21 |
+| `calendar`      | підключення зовнішніх календарів і синхронізація                        | `calendar_connections`, `calendar_settings`, `calendar_event_links`   | FR-32–36, SYS-18–21 |
 | `notifications` | сповіщення в сервісі, налаштування сповіщень, нагадування               | `notifications`, `notification_settings`, `notification_preferences`  | FR-25, FR-38        |
 | `stats`         | статистика учасників (модель лише для читання поверх задач)             | —                                                                     | FR-37, FR-39        |
 | `mail`          | шаблонні листи мовою одержувача                                         | —                                                                     | FR-04, FR-08, FR-38 |
@@ -93,8 +93,8 @@ flowchart LR
 | ---------- | ----------------------------------------------------------------------------------------------------------- | -------------------------------------- |
 | `users`    | `UsersApi`: `findById`, `findByEmail`, `create`, `markEmailVerified` — ім'я, мова, часовий пояс для листів  | `auth`, згодом усі                     |
 | `groups`   | `GroupsApi`: `requireMember(groupId, userId)` → роль, `requireAdmin(…)`, `members(groupId)` з відсутностями | `tasks`, `stats`, `notifications`      |
-| `tasks`    | `findById`, `inRange(groupId, from, to)`, `dueBetween(from, to)`                                            | `calendar`, `notifications`, `stats`   |
-| `calendar` | `status(userId)` → `CalendarStatusDto`                                                                      | `notifications` (сторінка налаштувань) |
+| `tasks`    | `TasksApi`: `hold(taskId, tx)`, `assignedTo(userId, from)`; згодом `inRange`, `dueBetween`                  | `calendar`, `notifications`, `stats`   |
+| `calendar` | `CalendarApi`: `settings(userId)`, `setReminderMinutes(userId, minutes)`                                    | `notifications` (сторінка налаштувань) |
 | `mail`     | `MailService.send(template, to, data, locale)`                                                              | `notifications`, `auth`, `groups`      |
 
 ### Події
@@ -108,7 +108,7 @@ bus.onInTransaction('group.memberLeft', (event, tx) =>
 );
 
 // calendar.module.ts — побічний ефект із повторами; id слухача стабільний
-bus.onAfterCommit('task.assigned', 'calendar.syncAssignment', (event) =>
+bus.onAfterCommit('task.assigned', 'calendar.syncAssignedTask', (event) =>
   this.sync.syncTask(event.taskId),
 );
 ```
@@ -153,7 +153,7 @@ sequenceDiagram
   T->>DB: BEGIN, UPDATE tasks SET assignee_id
   T->>DB: INSERT event_publications ×2 (calendar, notifications)
   T->>DB: COMMIT — користувач уже бачить нового виконавця
-  D->>C: syncAssignment(event)
+  D->>C: syncTask(taskId)
   C->>Gc: створити подію
   Gc-->>C: 503
   C-->>D: помилка
@@ -165,22 +165,26 @@ sequenceDiagram
 
 Payload — лише id, ISO-рядки й прості значення (`common/events/domain-events.ts`). Подія описує, **що сталося**, а не що робити далі.
 
-| Подія                             | Видавець | Слухачі (режим)                                                                                                                                                                                    |
-| --------------------------------- | -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `auth.emailVerificationRequested` | `auth`   | `auth` — новий токен і лист `verifyEmail` (після коміту, з повторами)                                                                                                                              |
-| `auth.passwordResetRequested`     | `auth`   | `auth` — новий токен на 1 год і лист `resetPassword` (після коміту, з повторами)                                                                                                                   |
-| `user.deleted`                    | `users`  | `groups` — `LAST_ADMIN`, якщо користувач — єдиний адмін групи з іншими учасниками, інакше вийти з усіх груп (у транзакції; далі `group.memberLeft`)                                                |
-| `user.avatarDiscarded`            | `users`  | `users` — видалити файл фото зі сховища (після коміту, з повторами): заміна, видалення фото чи акаунта                                                                                             |
-| `group.created`                   | `groups` | `notifications` — `groupCreated` (після коміту, буде додано)                                                                                                                                       |
-| `group.roleChanged`               | `groups` | `notifications` — `roleGranted`/`roleRevoked` (після коміту, буде додано)                                                                                                                          |
-| `group.inviteEmailRequested`      | `groups` | `groups` — окреме посилання й лист `invite` одержувачу (після коміту, з повторами)                                                                                                                 |
-| `group.memberJoined`              | `groups` | `notifications` — `groupJoined` новачку, `memberJoined` адмінам (після коміту)                                                                                                                     |
-| `group.memberLeft`                | `groups` | `tasks` — відкриті задачі, і ручні теж, отримують нового виконавця, серії учасника — автоматичний розподіл (у транзакції, FR-15); `notifications` — `removedFromGroup` (після коміту, буде додано) |
-| `group.absenceAdded`              | `groups` | `tasks` — автоматично розподілені задачі на ці дні отримують нового виконавця, ручні лишаються (у транзакції, FR-17, FR-29)                                                                        |
-| `task.assigned`                   | `tasks`  | `notifications` — `taskAssigned`/`taskUnassigned` і лист; `calendar` — подія в календарі (обидва після коміту, буде додано)                                                                        |
-| `task.changed`                    | `tasks`  | `calendar` — оновити подію (після коміту, буде додано)                                                                                                                                             |
-| `task.completed`                  | `tasks`  | `calendar` — позначити подію (після коміту, буде додано)                                                                                                                                           |
-| `task.deleted`                    | `tasks`  | `calendar` — видалити подію (після коміту, буде додано)                                                                                                                                            |
+| Подія                             | Видавець   | Слухачі (режим)                                                                                                                                                                                      |
+| --------------------------------- | ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `auth.emailVerificationRequested` | `auth`     | `auth` — новий токен і лист `verifyEmail` (після коміту, з повторами)                                                                                                                                |
+| `auth.passwordResetRequested`     | `auth`     | `auth` — новий токен на 1 год і лист `resetPassword` (після коміту, з повторами)                                                                                                                     |
+| `user.deleted`                    | `users`    | `groups` — `LAST_ADMIN`, якщо користувач — єдиний адмін групи з іншими учасниками, інакше вийти з усіх груп (у транзакції; далі `group.memberLeft`); `calendar` — закрити підключення (у транзакції) |
+| `user.avatarDiscarded`            | `users`    | `users` — видалити файл фото зі сховища (після коміту, з повторами): заміна, видалення фото чи акаунта                                                                                               |
+| `group.created`                   | `groups`   | `notifications` — `groupCreated` (після коміту, буде додано)                                                                                                                                         |
+| `group.roleChanged`               | `groups`   | `notifications` — `roleGranted`/`roleRevoked` (після коміту, буде додано)                                                                                                                            |
+| `group.inviteEmailRequested`      | `groups`   | `groups` — окреме посилання й лист `invite` одержувачу (після коміту, з повторами)                                                                                                                   |
+| `group.memberJoined`              | `groups`   | `notifications` — `groupJoined` новачку, `memberJoined` адмінам (після коміту)                                                                                                                       |
+| `group.memberLeft`                | `groups`   | `tasks` — відкриті задачі, і ручні теж, отримують нового виконавця, серії учасника — автоматичний розподіл (у транзакції, FR-15); `notifications` — `removedFromGroup` (після коміту, буде додано)   |
+| `group.absenceAdded`              | `groups`   | `tasks` — автоматично розподілені задачі на ці дні отримують нового виконавця, ручні лишаються (у транзакції, FR-17, FR-29)                                                                          |
+| `group.deleted`                   | `groups`   | `tasks` — видалити всі задачі групи через `task.deleted` (у транзакції, до видалення групи)                                                                                                          |
+| `task.assigned`                   | `tasks`    | `calendar` — звірити подію з виконавцем (після коміту); `notifications` — `taskAssigned`/`taskUnassigned` і лист (після коміту, буде додано)                                                         |
+| `task.changed`                    | `tasks`    | `calendar` — оновити подію (після коміту)                                                                                                                                                            |
+| `task.completed`                  | `tasks`    | `calendar` — «✓» і без нагадування або назад (після коміту)                                                                                                                                          |
+| `task.deleted`                    | `tasks`    | `calendar` — поки зв'язки з подіями ще є, поставити їх у чергу на видалення (у транзакції, до видалення задачі)                                                                                      |
+| `calendar.eventDiscarded`         | `calendar` | `calendar` — видалити подію в Google (після коміту)                                                                                                                                                  |
+| `calendar.resyncRequested`        | `calendar` | `calendar` — звірити весь календар: майбутні задачі, події без зв'язку (після коміту)                                                                                                                |
+| `calendar.connectionClosed`       | `calendar` | `calendar` — видалити календар «Errandly» і відкликати доступ (після коміту)                                                                                                                         |
 
 Періодичні задачі — не події, а розклад (`@nestjs/schedule`, вимикається `SCHEDULER_ENABLED=false`). Уже є `SeriesTopUp`: щогодини й під час старту доповнює повторювані серії до 4 тижнів уперед; повторний запуск нічого не дублює (ключ `(series_id, due_at)`), тож пропущені після збою запуски наздоганяються одразу (SYS-25). Далі буде: нагадування `taskDueSoon`, прострочення `taskOverdue`, тижневий підсумок (SD-4).
 

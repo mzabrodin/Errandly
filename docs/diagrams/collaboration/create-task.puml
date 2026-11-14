@@ -23,7 +23,7 @@ object "tasks : TasksRepository" as tasks
 object "bus : EventBus" as bus
 object "dispatcher : EventDispatcher" as dispatcher
 object "notifications : слухач (буде додано)" as notifications
-object "calendar : слухач (буде додано)" as calendar
+object "calendar : CalendarSync" as calendar
 
 admin --> form : 1: submit()
 form --> tc : 2: POST /api/groups/:groupId/tasks

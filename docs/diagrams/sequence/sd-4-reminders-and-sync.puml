@@ -11,7 +11,7 @@ participant "Нагадування\n(notifications, буде додано)" as 
 participant "MailService" as Mail
 participant "EventDispatcher" as Disp
 participant "EventPublicationStore" as Store
-participant "calendar\n(слухач, буде додано)" as Cal
+participant "CalendarSync" as Cal
 participant "Google Calendar API" as Google
 
 == Поповнення серій (FR-21, SYS-12, SYS-25) ==
@@ -40,16 +40,22 @@ end
 Disp -> Store : claimDue(now, ліміт, оренда 5 хв)
 note right of Store : зайняті іншим екземпляром\nпублікації пропускаються
 loop По одній (ліміти Google API)
-  Disp -> Cal : calendar.syncTask(event)
-  Cal -> Google : events.insert / update / delete
+  Disp -> Cal : syncTask(taskId) / deleteEvent / resync
+  Cal -> Cal : зв'язок із подією (задачу утримано до кінця транзакції)
+  Cal -> Google : events.update / insert / delete\nлише в календарі «Errandly»
   alt Успіх
+    Cal -> Cal : failedAttempts = 0, lastSyncedAt
+    Disp -> Store : complete(id)
+  else Доступ відкликано
+    Cal -> Cal : syncStatus = paused
     Disp -> Store : complete(id)
   else Помилка (503, мережа)
-    Disp -> Store : fail(id): наступна спроба\nчерез 30 с / 2 хв / 8 хв / 32 хв
-    opt П'ята невдача (SYS-21)
+    Cal -> Cal : failedAttempts + 1
+    opt П'ята невдача поспіль (SYS-21)
       Cal -> Cal : syncStatus = paused
       note right of Cal : банер у налаштуваннях (FR-35)
     end
+    Disp -> Store : fail(id): наступна спроба\nчерез 30 с / 2 хв / 8 хв / 32 хв
   end
 end
 @enduml

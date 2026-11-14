@@ -38,6 +38,13 @@ package Services {
     +memberLeft(groupId, userId, tx)
     +absenceAdded(groupId, userId, from, to, tx)
   }
+  class TaskDeletion <<слухач>> {
+    +delete(instances, tx)
+  }
+  class TasksApi <<фасад>> {
+    +hold(taskId, tx)
+    +assignedTo(userId, from)
+  }
   class SeriesTopUp <<щогодини>> {
     +topUp()
   }
@@ -58,6 +65,7 @@ class Clock <<спільне ядро>>
 
 TasksController ..> TasksService
 TasksService ..> TaskPlanner
+TasksService ..> TaskDeletion
 TasksService ..> TasksRepository
 TasksService ..> GroupsApi
 TasksService ..> UsersApi
@@ -70,6 +78,9 @@ TaskPlanner ..> UsersApi
 TaskPlanner ..> EventBus
 TaskRedistribution ..> TaskPlanner
 TaskRedistribution ..> TasksRepository
+TaskDeletion ..> TasksRepository
+TaskDeletion ..> EventBus
+TasksApi ..> TasksRepository
 SeriesTopUp ..> TaskPlanner
 SeriesTopUp ..> TasksRepository
 LeastLoadRotationStrategy -up-|> AssignmentStrategy

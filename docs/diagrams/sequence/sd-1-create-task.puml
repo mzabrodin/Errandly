@@ -13,7 +13,7 @@ participant "GroupsApi" as Groups
 participant "TaskPlanner" as Planner
 participant "TasksRepository" as Repo
 participant "EventBus" as Bus
-participant "notifications, calendar\n(слухачі, буде додано)" as Listeners
+participant "CalendarSync,\nnotifications (буде додано)" as Listeners
 
 Admin -> SPA : Назва, складність, термін,\nповторюваність, виконавець (необов'язково)
 SPA -> Ctrl : POST /api/groups/:groupId/tasks

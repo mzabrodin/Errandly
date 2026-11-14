@@ -51,8 +51,11 @@ package "Порти й адаптери" {
   }
   class S3ObjectStorage
   abstract class CalendarGateway {
-    +upsertEvent(connection, event)
-    +deleteEvent(connection, id)
+    +createCalendar(token, name, zone)
+    +deleteCalendar(access)
+    +listEventIds(access)
+    +upsertEvent(access, id, event)
+    +deleteEvent(access, id)
   }
   class GoogleCalendarGateway
 }
