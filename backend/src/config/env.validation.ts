@@ -87,11 +87,19 @@ function devStorage(env: { NODE_ENV: NodeEnv }, key: keyof typeof DEV_STORAGE): 
   return isProduction(env) ? undefined : DEV_STORAGE[key];
 }
 
+function requiresDatabaseUrl(env: {
+  NODE_ENV: NodeEnv;
+  DATABASE_URL?: string | undefined;
+}): boolean {
+  return !isProduction(env) || env.DATABASE_URL !== undefined;
+}
+const DATABASE_URL_REQUIRED = {
+  message: 'DATABASE_URL is required in production',
+  path: ['DATABASE_URL'],
+};
+
 const refinedSchema = envSchema
-  .refine((env) => !isProduction(env) || env.DATABASE_URL !== undefined, {
-    message: 'DATABASE_URL is required in production',
-    path: ['DATABASE_URL'],
-  })
+  .refine(requiresDatabaseUrl, DATABASE_URL_REQUIRED)
   .refine((env) => !isProduction(env) || env.TOKEN_ENCRYPTION_KEY !== undefined, {
     message: 'TOKEN_ENCRYPTION_KEY is required in production',
     path: ['TOKEN_ENCRYPTION_KEY'],
@@ -105,12 +113,26 @@ const refinedSchema = envSchema
     S3_SECRET_ACCESS_KEY: env.S3_SECRET_ACCESS_KEY ?? devStorage(env, 'S3_SECRET_ACCESS_KEY'),
   }));
 
+// The migration job gets only the database, not the app's secrets
+const databaseSchema = envSchema
+  .pick({ NODE_ENV: true, DATABASE_URL: true })
+  .refine(requiresDatabaseUrl, DATABASE_URL_REQUIRED)
+  .transform((env) => ({ DATABASE_URL: env.DATABASE_URL ?? DEV_DATABASE_URL }));
+
 export type EnvironmentVariables = z.infer<typeof refinedSchema>;
 
-export function validateEnv(config: Record<string, unknown>): EnvironmentVariables {
-  const result = refinedSchema.safeParse(config);
+function parse<T>(schema: z.ZodType<T>, config: Record<string, unknown>): T {
+  const result = schema.safeParse(config);
   if (!result.success) {
     throw new Error(`Invalid environment variables:\n${z.prettifyError(result.error)}`);
   }
   return result.data;
+}
+
+export function validateEnv(config: Record<string, unknown>): EnvironmentVariables {
+  return parse(refinedSchema, config);
+}
+
+export function validateDatabaseEnv(config: Record<string, unknown>): { DATABASE_URL: string } {
+  return parse(databaseSchema, config);
 }

@@ -4,14 +4,14 @@ import { fileURLToPath } from 'node:url';
 import { Logger } from '@nestjs/common';
 import { migrate } from 'drizzle-orm/node-postgres/migrator';
 
-import { validateEnv } from '../config/env.validation.js';
+import { validateDatabaseEnv } from '../config/env.validation.js';
 import { createDatabase, createPool } from './database.js';
 
 // Same relative path from src/db (tsx) and dist/db (compiled)
 const MIGRATIONS_FOLDER = fileURLToPath(new URL('../../drizzle', import.meta.url));
 
 const logger = new Logger('Migrate');
-const env = validateEnv(process.env);
+const env = validateDatabaseEnv(process.env);
 const pool = createPool(env.DATABASE_URL);
 
 try {
