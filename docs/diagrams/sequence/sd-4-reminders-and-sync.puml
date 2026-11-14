@@ -7,7 +7,8 @@ autonumber
 
 participant "Планувальник\n(@nestjs/schedule)" as Cron
 participant "SeriesTopUp" as TopUp
-participant "Нагадування\n(notifications, буде додано)" as Reminders
+participant "ReminderJobs" as Reminders
+participant "NotificationEmails" as Emails
 participant "MailService" as Mail
 participant "EventDispatcher" as Disp
 participant "EventPublicationStore" as Store
@@ -18,23 +19,24 @@ participant "Google Calendar API" as Google
 Cron -> TopUp : щогодини й під час старту
 TopUp -> TopUp : кожна серія — до 4 тижнів уперед,\nповторний запуск нічого не дублює
 
-== Нагадування та прострочення (FR-38) ==
-Cron -> Reminders : за розкладом
-loop Задачі, для яких настав час нагадування
-  Reminders -> Reminders : сповіщення taskDueSoon
-  opt Сповіщення не вимкнено
-    Reminders -> Mail : send('taskDueSoon', мова виконавця)
+== Нагадування, прострочення й підсумок (FR-38, FR-25) ==
+Cron -> Reminders : кожні 5 хв і під час старту
+loop Відкриті задачі з терміном у найближчу добу
+  opt До терміну не більше за час нагадування виконавця
+    Reminders -> Reminders : task_reminders (dueSoon): уже є → пропустити
+    Reminders -> Store : подія notification.reminderDue
   end
 end
-loop Нові прострочені задачі
+loop Задачі, прострочені за останні 2 доби
+  Reminders -> Reminders : task_reminders (overdue): уже є → пропустити
   Reminders -> Reminders : сповіщення taskOverdue
-  opt Сповіщення не вимкнено
-    Reminders -> Mail : send('taskOverdue')
-  end
+  Reminders -> Store : подія notification.reminderDue
 end
-opt Увімкнено тижневий підсумок
-  Reminders -> Mail : send('weeklyDigest')
+loop Хто ввімкнув підсумок і в кого понеділок від 09:00
+  Reminders -> Reminders : weekly_digests: уже є → пропустити
+  Reminders -> Store : подія notification.digestDue
 end
+note right of Reminders : кожна задача й користувач —\nокрема коротка транзакція
 
 == Події після коміту (кожні EVENTS_POLL_INTERVAL_MS) ==
 Disp -> Store : claimDue(now, ліміт, оренда 5 хв)
@@ -58,4 +60,9 @@ loop По одній (ліміти Google API)
     Disp -> Store : fail(id): наступна спроба\nчерез 30 с / 2 хв / 8 хв / 32 хв
   end
 end
+Disp -> Emails : reminderDue / digestDue / task.assigned
+opt Задача досі за виконавцем і не виконана, лист не вимкнено
+  Emails -> Mail : send('taskDueSoon' | 'taskOverdue' | 'weeklyDigest' | 'taskAssigned',\nмова одержувача)
+end
+note right of Mail : збій SMTP — повтор через 30 с … 32 хв (SYS-22)
 @enduml

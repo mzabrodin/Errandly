@@ -121,6 +121,13 @@ package notifications {
     +channel : NotificationChannel
     +enabled : Boolean
   }
+  class TaskReminder {
+    +kind : ReminderKind
+    +dueAt : DateTime
+  }
+  class WeeklyDigest {
+    +weekStart : Date
+  }
 }
 
 package calendar {
@@ -188,6 +195,8 @@ Group ..> MemberStats : обчислює
 User "1" -- "0..*" Notification : отримує
 User "1" -- "0..1" NotificationSettings
 User "1" -- "0..*" NotificationPreference
+Task "1" -- "0..*" TaskReminder : надіслані нагадування
+User "1" -- "0..*" WeeklyDigest : надіслані підсумки
 User "1" -- "0..1" CalendarSettings
 User "1" -- "0..*" CalendarConnection : підключає
 CalendarConnection "1" *-- "0..*" CalendarEventLink
