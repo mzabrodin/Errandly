@@ -512,8 +512,25 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Starts the calendar OAuth flow; after consent Google returns to /settings?calendar=connected. */
+        /** Starts the calendar OAuth flow. Errors: 503 SERVICE_UNAVAILABLE (no Google OAuth client). */
         post: operations["CalendarController_connect"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/me/calendar/callback": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Google's redirect after consent; redirects to /settings?calendar=connected or =error. */
+        get: operations["CalendarController_callback"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -530,7 +547,7 @@ export interface paths {
         get?: never;
         put?: never;
         post?: never;
-        /** Disconnects the calendar and deletes the stored tokens. */
+        /** Disconnects the calendar and deletes the tokens and the Errandly calendar. */
         delete: operations["CalendarController_disconnect"];
         options?: never;
         head?: never;
@@ -602,7 +619,10 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        /** Updates the reminder offset and notification switches. */
+        /**
+         * Updates the calendar reminder time and the notification switches; a new reminder time
+         *     re-syncs every event. Errors: 409 CALENDAR_NOT_CONNECTED (reminderMinutes without a calendar).
+         */
         patch: operations["SettingsController_update"];
         trace?: never;
     };
@@ -927,8 +947,10 @@ export interface components {
         };
         SettingsDto: {
             calendar: components["schemas"]["CalendarStatusDto"];
-            /** @description Minutes before the due time when the reminder goes out: 15, 30, 60, 180 or 1440 */
-            reminderMinutes: number;
+            /** @description The popup on each calendar event, minutes before the due time */
+            calendarReminderMinutes: number;
+            /** @description When the dueSoon email goes out, minutes before the due time */
+            emailReminderMinutes: number;
             notifications: components["schemas"]["NotificationPrefsDto"];
         };
         UpdateNotificationPrefsDto: {
@@ -942,7 +964,12 @@ export interface components {
              * @description 15, 30, 60, 180 or 1440
              * @enum {number}
              */
-            reminderMinutes?: 15 | 30 | 60 | 180 | 1440;
+            calendarReminderMinutes?: 15 | 30 | 60 | 180 | 1440;
+            /**
+             * @description 15, 30, 60, 180 or 1440
+             * @enum {number}
+             */
+            emailReminderMinutes?: 15 | 30 | 60 | 180 | 1440;
             notifications?: components["schemas"]["UpdateNotificationPrefsDto"];
         };
         /** @enum {string} */
@@ -2022,6 +2049,36 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["CalendarConnectDto"];
                 };
+            };
+            /** @description Error: { code, fields?, ... } */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
+        };
+    };
+    CalendarController_callback: {
+        parameters: {
+            query?: {
+                code?: string;
+                state?: string;
+                error?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Error: { code, fields?, ... } */
             default: {

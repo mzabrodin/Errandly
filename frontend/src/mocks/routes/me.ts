@@ -15,7 +15,9 @@ import {
   type DbUserRecord,
 } from './common';
 
-type SettingsPatch = Partial<Pick<Settings, 'reminderMinutes' | 'notifications'>>;
+type SettingsPatch = Partial<
+  Pick<Settings, 'calendarReminderMinutes' | 'emailReminderMinutes' | 'notifications'>
+>;
 
 // Mocks store it as a data URL; the server will put the file in storage and return a link
 function readAsDataUrl(file: Blob): Promise<string> {
@@ -65,7 +67,12 @@ const settingsHandlers = [
     if (!user) return error(401, 'UNAUTHENTICATED');
     const patch = await request.json();
     const settings = defaultSettingsFor(user.id);
-    if (typeof patch.reminderMinutes === 'number') settings.reminderMinutes = patch.reminderMinutes;
+    if (typeof patch.calendarReminderMinutes === 'number') {
+      settings.calendarReminderMinutes = patch.calendarReminderMinutes;
+    }
+    if (typeof patch.emailReminderMinutes === 'number') {
+      settings.emailReminderMinutes = patch.emailReminderMinutes;
+    }
     if (patch.notifications) Object.assign(settings.notifications, patch.notifications);
     persist();
     return HttpResponse.json(settings);

@@ -59,7 +59,7 @@ export interface Db {
 }
 
 const STORAGE_KEY = 'errandly-mock-db';
-const DB_VERSION = 5;
+const DB_VERSION = 6;
 const DAY_MS = 24 * 60 * 60 * 1000;
 export const HORIZON_DAYS = 28;
 
@@ -103,6 +103,9 @@ export function withStatus(task: DbTask): Task {
   return { ...task, status: computeStatus(task) };
 }
 
+const DEFAULT_CALENDAR_REMINDER_MINUTES = 60;
+const DEFAULT_EMAIL_REMINDER_MINUTES = 1440;
+
 function defaultSettings(): Settings {
   return {
     calendar: {
@@ -111,7 +114,8 @@ function defaultSettings(): Settings {
       googleEmail: null,
       lastSyncedAt: null,
     },
-    reminderMinutes: 60,
+    calendarReminderMinutes: DEFAULT_CALENDAR_REMINDER_MINUTES,
+    emailReminderMinutes: DEFAULT_EMAIL_REMINDER_MINUTES,
     notifications: {
       assigned: true,
       dueSoon: true,

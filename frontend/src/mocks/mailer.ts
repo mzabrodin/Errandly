@@ -80,12 +80,12 @@ export function sendReminders(): string {
   let sent = 0;
   for (const task of db.tasks) {
     if (task.assigneeId === null || task.assigneeId === '' || isCompleted(task)) continue;
-    const settings = defaultSettingsFor(task.assigneeId).notifications;
+    const { notifications: settings, emailReminderMinutes } = defaultSettingsFor(task.assigneeId);
     const due = new Date(task.dueAt).getTime();
     const user = db.users.find((candidate) => candidate.id === task.assigneeId);
     const data = taskMailData(task, task.assigneeId);
     if (!user || !data) continue;
-    if (settings.dueSoon && due > now && due - now <= DAY_MS) {
+    if (settings.dueSoon && due > now && due - now <= emailReminderMinutes * 60_000) {
       sendMail('taskDueSoon', user.email, data);
       sent += 1;
     } else if (settings.overdue && computeStatus(task) === 'overdue' && now - due <= 2 * DAY_MS) {
