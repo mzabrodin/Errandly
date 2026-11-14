@@ -4,6 +4,7 @@ import {
   DEV_TOKEN_ENCRYPTION_KEY,
   LogLevel,
   NodeEnv,
+  validateDatabaseEnv,
   validateEnv,
 } from './env.validation.js';
 
@@ -99,6 +100,15 @@ describe('validateEnv', () => {
     expect(() =>
       validateEnv({ NODE_ENV: 'production', DATABASE_URL: 'postgresql://db/errandly' }),
     ).toThrow(/TOKEN_ENCRYPTION_KEY/);
+  });
+
+  it('lets the migration job run in production with only a database URL', () => {
+    const url = 'postgresql://db/errandly';
+
+    expect(validateDatabaseEnv({ NODE_ENV: 'production', DATABASE_URL: url })).toEqual({
+      DATABASE_URL: url,
+    });
+    expect(() => validateDatabaseEnv({ NODE_ENV: 'production' })).toThrow(/DATABASE_URL/);
   });
 
   it('rejects a token key that is not 32 bytes', () => {
