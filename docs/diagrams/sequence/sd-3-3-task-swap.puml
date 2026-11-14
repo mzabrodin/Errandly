@@ -1,0 +1,70 @@
+@startuml sd-3-3-task-swap
+skinparam shadowing false
+skinparam defaultFontName "Inter, Segoe UI, Arial"
+skinparam maxMessageSize 220
+skinparam ResponseMessageBelowArrow true
+autonumber
+
+actor "Автор" as Proposer
+actor "Одержувач" as Recipient
+participant "React SPA" as SPA
+participant "TaskSwapsController" as Ctrl
+participant "TaskSwaps" as Svc
+participant "GroupsApi" as Groups
+participant "TasksRepository" as Tasks
+participant "TaskSwapsRepository" as Repo
+participant "EventBus" as Bus
+participant "CalendarSync" as Cal
+
+== Пропозиція ==
+Proposer -> SPA : Обирає чужу задачу натомість своєї
+SPA -> Ctrl : POST /api/tasks/:taskId/swaps
+Ctrl -> Svc : propose(taskId, userId, requestedTaskId)
+Svc -> Tasks : findTask(taskId), findTask(requestedTaskId)
+Svc -> Groups : requireMember(groupId, userId)
+alt Не виконавець своєї задачі
+  Ctrl --> SPA : 403 NOT_ASSIGNEE
+else Чужа задача з іншої групи, без виконавця чи власна
+  Ctrl --> SPA : 400 VALIDATION
+else Можна запропонувати
+  group транзакція
+    Svc -> Groups : members(groupId) з відсутностями
+    Svc -> Svc : swapProblem(...)
+    alt Задачу виконано, прострочено або хтось відсутній
+      Ctrl --> SPA : 409 SWAP_STALE / MEMBER_ABSENT
+    else Актуальна
+      Svc -> Repo : insert(pending)
+      Svc -> Bus : publish(task.swapProposed)
+      Ctrl --> SPA : 201 SwapDto
+    end
+  end
+end
+
+== Відповідь ==
+Recipient -> SPA : Погоджується
+SPA -> Ctrl : POST /api/swaps/:swapId/accept
+Ctrl -> Svc : accept(swapId, userId)
+Svc -> Repo : find(swapId)
+alt Не одержувач
+  Ctrl --> SPA : 403 FORBIDDEN
+else Одержувач
+  group транзакція (SYS-13)
+    Svc -> Repo : lock(swapId) FOR UPDATE
+    Svc -> Tasks : lockTask(менший id), lockTask(більший id)
+    Svc -> Groups : members(groupId) з відсутностями
+    Svc -> Svc : swapProblem(...)
+    alt Задачі вже змінилися
+      Ctrl --> SPA : 409 SWAP_STALE
+    else Актуальна
+      Svc -> Tasks : updateTask(свою → одержувачу, вручну)
+      Svc -> Tasks : updateTask(чужу → автору, вручну)
+      Svc -> Bus : publish(task.assigned) ×2
+      Svc -> Repo : decide(accepted)
+      Svc -> Bus : publish(task.swapDecided, accepted = true)
+      Ctrl --> SPA : 200 SwapDto
+    end
+  end
+  Bus -> Cal : після коміту: task.assigned ×2
+  Cal -> Cal : перенести обидві події між календарями (FR-34)
+end
+@enduml
