@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { and, asc, eq, gt, gte, inArray, isNull, lt, lte } from 'drizzle-orm';
+import { and, asc, eq, gt, gte, inArray, isNotNull, isNull, lt, lte } from 'drizzle-orm';
 
 import { DATABASE, type Database, type DbExecutor } from '../db/database.js';
 import type { AssignedTask } from './assignment/assignment-strategy.js';
@@ -158,11 +158,37 @@ export class TasksRepository {
     return row;
   }
 
-  assignedTo(userId: string, from: Date, db: DbExecutor = this.db): Promise<TaskRow[]> {
+  assignedTo(
+    userId: string,
+    from: Date,
+    until?: Date,
+    db: DbExecutor = this.db,
+  ): Promise<TaskRow[]> {
     return db
       .select()
       .from(tasks)
-      .where(and(eq(tasks.assigneeId, userId), gte(tasks.dueAt, from)))
+      .where(
+        and(
+          eq(tasks.assigneeId, userId),
+          gte(tasks.dueAt, from),
+          until === undefined ? undefined : lt(tasks.dueAt, until),
+        ),
+      )
+      .orderBy(asc(tasks.dueAt));
+  }
+
+  openAssignedDueBetween(from: Date, to: Date, db: DbExecutor = this.db): Promise<TaskRow[]> {
+    return db
+      .select()
+      .from(tasks)
+      .where(
+        and(
+          isNotNull(tasks.assigneeId),
+          isNull(tasks.completedAt),
+          gt(tasks.dueAt, from),
+          lte(tasks.dueAt, to),
+        ),
+      )
       .orderBy(asc(tasks.dueAt));
   }
 

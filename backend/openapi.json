@@ -3124,6 +3124,7 @@
           "taskAssigned",
           "taskUnassigned",
           "taskOverdue",
+          "taskNoAssignee",
           "roleGranted",
           "roleRevoked",
           "removedFromGroup",

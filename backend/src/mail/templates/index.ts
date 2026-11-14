@@ -8,6 +8,7 @@ import { taskDueSoon } from './task-due-soon.js';
 import { taskOverdue } from './task-overdue.js';
 import type { RenderedMail } from './template.js';
 import { verifyEmail } from './verify-email.js';
+import { weeklyDigest } from './weekly-digest.js';
 
 export type { RenderedMail } from './template.js';
 
@@ -18,6 +19,7 @@ export const templates = {
   taskAssigned,
   taskDueSoon,
   taskOverdue,
+  weeklyDigest,
 };
 
 export type TemplateName = keyof typeof templates;

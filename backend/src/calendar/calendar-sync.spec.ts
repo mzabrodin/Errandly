@@ -211,6 +211,7 @@ function setup() {
       title: 'Take out the trash',
       description: '',
       dueAt: new Date('2026-11-20T18:00:00Z'),
+      difficulty: 2,
       assigneeId: 'anya',
       completedAt: null,
       ...overrides,

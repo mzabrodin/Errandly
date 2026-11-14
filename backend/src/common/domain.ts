@@ -31,6 +31,7 @@ export const NOTIFICATION_TYPES = [
   'taskAssigned',
   'taskUnassigned',
   'taskOverdue',
+  'taskNoAssignee',
   'roleGranted',
   'roleRevoked',
   'removedFromGroup',
@@ -62,6 +63,9 @@ export const NOTIFICATION_EVENTS = [
   'weeklyDigest',
 ] as const;
 export type NotificationEvent = (typeof NOTIFICATION_EVENTS)[number];
+
+export const REMINDER_KINDS = ['dueSoon', 'overdue'] as const;
+export type ReminderKind = (typeof REMINDER_KINDS)[number];
 
 export const NOTIFICATION_CHANNELS = ['email'] as const;
 export type NotificationChannel = (typeof NOTIFICATION_CHANNELS)[number];

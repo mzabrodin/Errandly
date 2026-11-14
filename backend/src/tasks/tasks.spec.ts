@@ -329,7 +329,12 @@ describe('TasksService', () => {
     const assignedTo = (userId: string) =>
       repository.tasks.filter((task) => task.assigneeId === userId).length;
     expect([assignedTo('anya'), assignedTo('bohdan')]).toEqual([14, 14]);
-    expect(published.filter(([type]) => type === 'task.assigned')).toHaveLength(28);
+    const assigned = published.filter(([type]) => type === 'task.assigned');
+    expect(assigned).toHaveLength(28);
+    expect(assigned.map(([, event]) => event['bulk'])).toEqual([
+      false,
+      ...Array<boolean>(27).fill(true),
+    ]);
     expect(repository.series[0]).toMatchObject({ timezone: 'Europe/Kyiv', assigneeId: null });
   });
 
@@ -524,7 +529,7 @@ describe('redistribution', () => {
 
 describe('SeriesTopUp', () => {
   it('extends series to 4 weeks ahead, skips ended ones and does nothing twice', async () => {
-    const { service, repository, clock, topUp } = setup();
+    const { service, repository, clock, topUp, published } = setup();
     await service.create(G, 'anya', input({ recurrence: { type: 'daily' } }));
     const ended = await service.create(
       G,
@@ -535,8 +540,10 @@ describe('SeriesTopUp', () => {
     await service.remove(ended.id, 'anya', 'series');
     clock.advance(3 * DAY);
 
+    published.length = 0;
     await expect(topUp.topUp()).resolves.toBe(3);
     await expect(topUp.topUp()).resolves.toBe(0);
+    expect(published.map(([, event]) => event['bulk'])).toEqual([true, true, true]);
     expect(repository.tasks.filter((task) => task.title === 'Ended')).toHaveLength(1);
   });
 

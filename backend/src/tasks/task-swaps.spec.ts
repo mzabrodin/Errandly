@@ -167,7 +167,13 @@ describe('TaskSwaps', () => {
     expect(published).toEqual([
       [
         'task.swapProposed',
-        { swapId: first.id, groupId: G, proposerId: 'anya', recipientId: 'bohdan' },
+        {
+          swapId: first.id,
+          groupId: G,
+          proposerId: 'anya',
+          recipientId: 'bohdan',
+          offeredTaskId: 'mine',
+        },
       ],
     ]);
   });

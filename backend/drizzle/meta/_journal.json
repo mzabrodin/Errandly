@@ -43,6 +43,13 @@
       "when": 1794688176164,
       "tag": "0005_task_swaps",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1794690197418,
+      "tag": "0006_notifications",
+      "breakpoints": true
     }
   ]
 }

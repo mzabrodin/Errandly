@@ -11,6 +11,8 @@ import {
   notificationPreferences,
   notifications,
   notificationSettings,
+  taskReminders,
+  weeklyDigests,
 } from '../notifications/notifications.schema.js';
 import { tasks, taskSeries, taskSwaps } from '../tasks/tasks.schema.js';
 import { users } from '../users/users.schema.js';
@@ -112,6 +114,15 @@ export const notificationsRelations = relations(notifications, ({ one }) => ({
 
 export const notificationPreferencesRelations = relations(notificationPreferences, ({ one }) => ({
   user: one(users, { fields: [notificationPreferences.userId], references: [users.id] }),
+}));
+
+export const taskRemindersRelations = relations(taskReminders, ({ one }) => ({
+  task: one(tasks, { fields: [taskReminders.taskId], references: [tasks.id] }),
+  user: one(users, { fields: [taskReminders.userId], references: [users.id] }),
+}));
+
+export const weeklyDigestsRelations = relations(weeklyDigests, ({ one }) => ({
+  user: one(users, { fields: [weeklyDigests.userId], references: [users.id] }),
 }));
 
 export const notificationSettingsRelations = relations(notificationSettings, ({ one }) => ({

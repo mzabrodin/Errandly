@@ -7,6 +7,7 @@ const TASK: TaskView = {
   title: 'Take out the trash',
   description: 'Blue bags',
   dueAt: new Date('2026-11-20T18:00:00.000Z'),
+  difficulty: 2,
   assigneeId: 'u1',
   completedAt: null,
 };

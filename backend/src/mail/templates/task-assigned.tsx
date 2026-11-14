@@ -1,10 +1,11 @@
 import { Rich } from '../i18n.js';
 import { Paragraph } from './layout.js';
 import { formatDue, TaskEmail, taskSample, taskSchema } from './task-email.js';
-import { defineTemplate } from './template.js';
+import { defineTemplate, text } from './template.js';
 
 export const taskAssigned = defineTemplate({
-  schema: taskSchema,
+  /** actorName: who assigned it by hand; without it the algorithm picked the assignee */
+  schema: taskSchema.extend({ actorName: text.optional() }),
   sample: taskSample,
   subject: (t, data) => t('taskAssigned.subject', { taskTitle: data.taskTitle }),
   Component: (props) => {
@@ -21,11 +22,19 @@ export const taskAssigned = defineTemplate({
         cta={t('taskAssigned.cta')}
       >
         <Paragraph>
-          <Rich
-            t={t}
-            i18nKey="taskAssigned.paragraph1"
-            values={{ name: data.name, groupName: data.groupName }}
-          />
+          {data.actorName === undefined ? (
+            <Rich
+              t={t}
+              i18nKey="taskAssigned.paragraph1"
+              values={{ name: data.name, groupName: data.groupName }}
+            />
+          ) : (
+            <Rich
+              t={t}
+              i18nKey="taskAssigned.paragraphByActor"
+              values={{ name: data.name, groupName: data.groupName, actorName: data.actorName }}
+            />
+          )}
         </Paragraph>
       </TaskEmail>
     );
