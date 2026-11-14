@@ -1,5 +1,14 @@
 import { LeastLoadRotationStrategy } from './assignment/least-load-rotation.strategy.js';
-import { canUndo, localDay, occurrences, taskStatus, toRecurrence } from './tasks.rules.js';
+import {
+  canUndo,
+  isAbsentOn,
+  localDay,
+  occurrences,
+  swapProblem,
+  taskStatus,
+  toRecurrence,
+  type SwapTask,
+} from './tasks.rules.js';
 
 const KYIV = 'Europe/Kyiv';
 const DAY = 24 * 60 * 60 * 1000;
@@ -93,6 +102,55 @@ describe('task rules', () => {
       weekdays: [1, 5],
     });
     expect(toRecurrence({ recurrenceType: 'daily', weekdays: [] })).toEqual({ type: 'daily' });
+  });
+});
+
+describe('isAbsentOn', () => {
+  const away = [{ from: '2026-11-20', to: '2026-11-22' }];
+
+  it('compares the local day, inclusive of both ends', () => {
+    expect(isAbsentOn(away, new Date('2026-11-19T22:30:00Z'), KYIV)).toBe(true);
+    expect(isAbsentOn(away, new Date('2026-11-19T22:30:00Z'), 'Europe/London')).toBe(false);
+    expect(isAbsentOn(away, new Date('2026-11-22T12:00:00Z'), KYIV)).toBe(true);
+    expect(isAbsentOn(away, new Date('2026-11-23T12:00:00Z'), KYIV)).toBe(false);
+  });
+});
+
+function swapTask(assigneeId: string, dueAt: string, completedAt: Date | null = null): SwapTask {
+  return { assigneeId, completedAt, dueAt: new Date(dueAt), series: { timezone: KYIV } };
+}
+
+describe('swapProblem', () => {
+  const now = new Date('2026-11-14T10:00:00Z');
+  const parties = {
+    proposerId: 'a',
+    recipientId: 'b',
+    proposerAbsences: [],
+    recipientAbsences: [],
+  };
+  const offered = swapTask('a', '2026-11-16T18:00:00Z');
+  const requested = swapTask('b', '2026-11-17T18:00:00Z');
+
+  it('accepts two open upcoming tasks of the two sides', () => {
+    expect(swapProblem(parties, offered, requested, now)).toBeNull();
+  });
+
+  it.each([
+    ['the offered task changed hands', swapTask('c', '2026-11-16T18:00:00Z'), requested],
+    ['the requested task changed hands', offered, swapTask('a', '2026-11-17T18:00:00Z')],
+    ['a task is done', offered, swapTask('b', '2026-11-17T18:00:00Z', now)],
+    ['a task is past due', swapTask('a', '2026-11-14T09:00:00Z'), requested],
+  ])('is stale when %s', (_case, a, b) => {
+    expect(swapProblem(parties, a, b, now)).toBe('SWAP_STALE');
+  });
+
+  it('refuses a task on a day its new assignee is away', () => {
+    const away = [{ from: '2026-11-16', to: '2026-11-16' }];
+
+    expect(swapProblem({ ...parties, recipientAbsences: away }, offered, requested, now)).toBe(
+      'MEMBER_ABSENT',
+    );
+    expect(swapProblem({ ...parties, proposerAbsences: away }, offered, requested, now)).toBeNull();
   });
 });
 

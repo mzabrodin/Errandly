@@ -42,6 +42,15 @@ export interface DomainEventMap {
   'task.changed': { taskId: string; groupId: string };
   /** tasks: marked done or undone (SD-3) */
   'task.completed': { taskId: string; groupId: string; userId: string; done: boolean };
+  'task.swapProposed': { swapId: string; groupId: string; proposerId: string; recipientId: string };
+  /** tasks: `accepted` means both tasks have already changed hands */
+  'task.swapDecided': {
+    swapId: string;
+    groupId: string;
+    proposerId: string;
+    recipientId: string;
+    accepted: boolean;
+  };
   /** groups: the last member left; published before the group and its tasks are deleted */
   'group.deleted': { groupId: string };
   /** tasks: published before the instance is deleted */

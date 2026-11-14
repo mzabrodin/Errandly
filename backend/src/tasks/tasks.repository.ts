@@ -131,6 +131,17 @@ export class TasksRepository {
     return row;
   }
 
+  async findTasks(ids: readonly string[], db: DbExecutor = this.db): Promise<TaskWithSeries[]> {
+    if (ids.length === 0) return [];
+    return withSeries(
+      await db
+        .select({ task: tasks, series: seriesColumns })
+        .from(tasks)
+        .innerJoin(taskSeries, eq(taskSeries.id, tasks.seriesId))
+        .where(inArray(tasks.id, [...ids])),
+    );
+  }
+
   /** NO KEY UPDATE, so a calendar sync holding the task does not block edits */
   async lockTask(id: string, tx: DbExecutor): Promise<TaskRow | undefined> {
     const [row] = await tx

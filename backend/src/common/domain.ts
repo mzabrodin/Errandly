@@ -12,6 +12,9 @@ export type GroupRole = (typeof GROUP_ROLES)[number];
 export const TASK_STATUSES = ['planned', 'done', 'overdue', 'unassigned'] as const;
 export type TaskStatus = (typeof TASK_STATUSES)[number];
 
+export const SWAP_STATUSES = ['pending', 'accepted', 'declined', 'cancelled'] as const;
+export type SwapStatus = (typeof SWAP_STATUSES)[number];
+
 export const RECURRENCE_TYPES = ['once', 'daily', 'weekly', 'monthly'] as const;
 export type RecurrenceType = (typeof RECURRENCE_TYPES)[number];
 
@@ -31,6 +34,9 @@ export const NOTIFICATION_TYPES = [
   'roleGranted',
   'roleRevoked',
   'removedFromGroup',
+  'swapProposed',
+  'swapAccepted',
+  'swapDeclined',
 ] as const;
 export type NotificationType = (typeof NOTIFICATION_TYPES)[number];
 
