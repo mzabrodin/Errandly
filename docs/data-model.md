@@ -19,6 +19,8 @@ erDiagram
   groups ||--o{ task_series : ""
   task_series ||--o{ tasks : "екземпляри"
   users |o--o{ tasks : "виконавець"
+  tasks ||--o{ task_swaps : "віддають / просять"
+  users ||--o{ task_swaps : "автор / одержувач"
   users ||--o{ notifications : ""
   users ||--o| notification_settings : ""
   users ||--o{ notification_preferences : ""
@@ -109,6 +111,16 @@ erDiagram
     boolean manually_assigned
     timestamptz completed_at
   }
+  task_swaps {
+    uuid id PK
+    uuid group_id FK
+    uuid offered_task_id FK
+    uuid requested_task_id FK
+    uuid proposer_id FK
+    uuid recipient_id FK
+    swap_status status
+    timestamptz decided_at
+  }
   notifications {
     uuid id PK
     uuid user_id FK
@@ -171,11 +183,12 @@ erDiagram
 
 - **TaskSeries** — правило повторення: `once`, `daily`, `weekly` (дні тижня 1–7, принаймні один) або `monthly`. Одноразова задача — серія з одним екземпляром. `timezone` — пояс адміністратора, який створив серію (SYS-15): екземпляри тримають місцевий час і після переходу на зимовий. `assignee_id` — виконавець кожного нового екземпляра, `null` — автоматичний розподіл. `ended_at` — серію видалено, але виконані екземпляри лишилися; поповнення її пропускає.
 - **Task** — конкретний екземпляр із терміном. Назву, опис і складність скопійовано із серії, тому редагування зі `scope=one` не зачіпає інших екземплярів. Пара `(series_id, due_at)` унікальна, тож повторне поповнення серії не створює дублікатів.
+- **TaskSwap** — пропозиція обміну (FR-26): `offered_task_id` — задача автора, `requested_task_id` — задача одержувача. `status` — рішення (`pending` → `accepted` | `declined` | `cancelled`), а чи діє ще `pending`, обчислюється з обох задач, тож застарілі пропозиції не треба прибирати. Одна `pending` на пару задач (частковий унікальний індекс); видаляється разом із будь-якою із задач.
 - **Статус не зберігається**, а обчислюється в такому порядку: `done` (є `completed_at`) → `overdue` (термін минув) → `unassigned` (немає виконавця) → `planned`.
 
 ### notifications
 
-- **Notification** — запис у «дзвіночку». Типи: `groupCreated`, `groupJoined`, `memberJoined`, `taskAssigned`, `taskUnassigned`, `taskOverdue`, `roleGranted`, `roleRevoked`, `removedFromGroup`. Отримувач ніколи не отримує сповіщення про власну дію.
+- **Notification** — запис у «дзвіночку». Типи: `groupCreated`, `groupJoined`, `memberJoined`, `taskAssigned`, `taskUnassigned`, `taskOverdue`, `roleGranted`, `roleRevoked`, `removedFromGroup`, `swapProposed`, `swapAccepted`, `swapDeclined`. Отримувач ніколи не отримує сповіщення про власну дію.
 - **NotificationSettings** — за скільки хвилин до терміну приходить лист «Скоро термін» (15, 30, 60, 180 або 1440; типово доба, FR-38).
 - **NotificationPreference** — увімкнено чи вимкнено подію (`taskAssigned`, `taskDueSoon`, `taskOverdue`, `weeklyDigest`) у каналі (`email`). Зберігаються лише відхилення від типових значень, тому нова подія чи канал — це значення переліку, а не нова колонка.
 
@@ -199,6 +212,7 @@ erDiagram
 | `locale`               | `uk` (типова), `en`                                          |
 | `group_role`           | `admin`, `member`                                            |
 | `recurrence_type`      | `once`, `daily`, `weekly`, `monthly`                         |
+| `swap_status`          | `pending`, `accepted`, `declined`, `cancelled`               |
 | `auth_provider`        | `google`                                                     |
 | `calendar_provider`    | `google`                                                     |
 | `sync_status`          | `ok`, `paused`                                               |

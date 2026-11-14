@@ -27,6 +27,8 @@ rectangle Errandly {
   usecase "Вийти з групи\n(FR-16)" as UC_Leave
   usecase "Переглядати задачі й календар\n(FR-23, FR-37)" as UC_View
   usecase "Позначити задачу виконаною\n(FR-24)" as UC_Complete
+  usecase "Запропонувати обмін задачами\n(FR-26)" as UC_Swap
+  usecase "Відповісти на пропозицію обміну\n(FR-26)" as UC_SwapAnswer
   usecase "Переглядати статистику\n(FR-39)" as UC_Stats
   usecase "Підключити Google Calendar\n(FR-32)" as UC_Connect
   usecase "Налаштувати сповіщення\n(FR-38)" as UC_Settings
@@ -52,6 +54,8 @@ Member --> UC_Absence
 Member --> UC_Leave
 Member --> UC_View
 Member --> UC_Complete
+Member --> UC_Swap
+Member --> UC_SwapAnswer
 Member --> UC_Stats
 Member --> UC_Connect
 Member --> UC_Settings
@@ -67,6 +71,7 @@ UC_Auto ..> UC_Notify : <<include>>
 UC_Auto ..> UC_Sync : <<include>>
 UC_Members ..> UC_Auto : <<include>>\nперерозподіл
 UC_Invite ..> UC_Notify : <<include>>\nлист
+UC_SwapAnswer ..> UC_Sync : <<include>>\nобидві події
 
 UC_Sync --> Google
 UC_Connect --> Google

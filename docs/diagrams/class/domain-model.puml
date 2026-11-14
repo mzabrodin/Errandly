@@ -95,6 +95,11 @@ package tasks {
     +completedAt : DateTime?
     +status() : TaskStatus
   }
+  class TaskSwap {
+    +status : SwapStatus
+    +createdAt : DateTime
+    +decidedAt : DateTime?
+  }
   class MemberStats <<обчислюється>> {
     +tasksDone : Int
     +tasksOverdue : Int
@@ -153,6 +158,12 @@ enum RecurrenceType {
   weekly
   monthly
 }
+enum SwapStatus {
+  pending
+  accepted
+  declined
+  cancelled
+}
 enum SyncStatus {
   ok
   paused
@@ -169,6 +180,10 @@ Group "1" *-- "0..*" Invite : видає
 Group "1" *-- "0..*" TaskSeries : містить
 TaskSeries "1" *-- "1..*" Task : породжує
 Task "0..*" -- "0..1" User : виконавець
+TaskSwap "0..*" -- "1" Task : віддає автор
+TaskSwap "0..*" -- "1" Task : просить
+TaskSwap "0..*" -- "1" User : автор
+TaskSwap "0..*" -- "1" User : одержувач
 Group ..> MemberStats : обчислює
 User "1" -- "0..*" Notification : отримує
 User "1" -- "0..1" NotificationSettings
@@ -180,5 +195,6 @@ Task "1" -- "0..*" CalendarEventLink : відображається
 Membership --> GroupRole
 Task ..> TaskStatus
 TaskSeries --> RecurrenceType
+TaskSwap --> SwapStatus
 CalendarConnection --> SyncStatus
 @enduml

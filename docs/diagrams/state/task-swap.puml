@@ -1,0 +1,26 @@
+@startuml task-swap
+skinparam shadowing false
+skinparam defaultFontName "Inter, Segoe UI, Arial"
+skinparam ArrowColor #1F6F64
+skinparam StateBackgroundColor #DCEEEA
+skinparam StateBorderColor #1F6F64
+
+state "Очікує відповіді" as Pending {
+  state "Актуальна" as Live
+  state "Неактуальна" as Stale
+  Live --> Stale : задача змінила виконавця,\nвиконана, прострочена\nабо хтось буде відсутній
+  Stale --> Live : умови знову виконуються
+}
+state "Прийнята" as Accepted
+state "Відхилена" as Declined
+state "Скасована" as Cancelled
+
+[*] --> Live : учасник запропонував\nсвою задачу на чужу (FR-26)
+Live --> Accepted : одержувач погодився:\nобидві задачі міняють виконавців
+Pending --> Declined : одержувач відхилив
+Pending --> Cancelled : автор скасував\nабо запропонував ту саму пару знову
+Pending --> [*] : видалено одну із задач
+Accepted --> [*]
+Declined --> [*]
+Cancelled --> [*]
+@enduml

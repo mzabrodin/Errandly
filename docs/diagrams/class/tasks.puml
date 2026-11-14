@@ -18,6 +18,13 @@ package Controllers {
     +undoComplete(taskId)
     +reassign(taskId, dto)
   }
+  class TaskSwapsController {
+    +list(groupId)
+    +propose(taskId, dto)
+    +accept(swapId)
+    +decline(swapId)
+    +cancel(swapId)
+  }
 }
 
 package Services {
@@ -29,6 +36,13 @@ package Services {
     +complete(taskId, userId)
     +undoComplete(taskId, userId)
     +reassign(taskId, userId, assigneeId)
+  }
+  class TaskSwaps {
+    +list(groupId, userId)
+    +propose(taskId, userId, requestedTaskId)
+    +accept(swapId, userId)
+    +decline(swapId, userId)
+    +cancel(swapId, userId)
   }
   class TaskPlanner {
     +materialize(series, window, actorId, tx)
@@ -56,6 +70,7 @@ package Services {
 
 package Repositories {
   class TasksRepository
+  class TaskSwapsRepository
 }
 
 class GroupsApi <<з іншого модуля>>
@@ -71,6 +86,12 @@ TasksService ..> GroupsApi
 TasksService ..> UsersApi
 TasksService ..> EventBus
 TasksService ..> Clock
+TaskSwapsController ..> TaskSwaps
+TaskSwaps ..> TaskSwapsRepository
+TaskSwaps ..> TasksRepository
+TaskSwaps ..> GroupsApi
+TaskSwaps ..> EventBus
+TaskSwaps ..> Clock
 TaskPlanner ..> AssignmentStrategy
 TaskPlanner ..> TasksRepository
 TaskPlanner ..> GroupsApi
