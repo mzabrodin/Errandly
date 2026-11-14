@@ -13,6 +13,7 @@ import {
   Sparkles,
   UserMinus,
   UserPlus,
+  UserX,
 } from 'lucide-react';
 import { useEffect, useId, useRef, useState, type JSX, type RefObject } from 'react';
 import { Trans, useTranslation } from 'react-i18next';
@@ -32,6 +33,7 @@ const ICONS: Record<NotificationType, { icon: typeof Bell; tone: string }> = {
   taskAssigned: { icon: ListChecks, tone: 'var(--sky)' },
   taskUnassigned: { icon: ArrowRightLeft, tone: 'var(--cream-deep)' },
   taskOverdue: { icon: AlertTriangle, tone: 'var(--status-overdue)' },
+  taskNoAssignee: { icon: UserX, tone: 'var(--status-overdue)' },
   roleGranted: { icon: ShieldCheck, tone: 'var(--lime)' },
   roleRevoked: { icon: ShieldOff, tone: 'var(--cream-deep)' },
   removedFromGroup: { icon: UserMinus, tone: 'var(--status-overdue)' },

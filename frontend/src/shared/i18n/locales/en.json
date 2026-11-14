@@ -334,6 +334,7 @@
       "taskAssigned": "You were assigned <b>“{{task}}”</b> in the group “{{group}}”",
       "taskUnassigned": "The task <b>“{{task}}”</b> was handed to another member",
       "taskOverdue": "Overdue: <b>“{{task}}”</b>. Mark it if you’ve already done it",
+      "taskNoAssignee": "Nobody is available for <b>“{{task}}”</b> in “{{group}}”: assign someone by hand",
       "roleGranted": "You were made an admin of the group <b>“{{group}}”</b>",
       "roleRevoked": "You’re no longer an admin of the group “{{group}}”",
       "removedFromGroup": "You were removed from the group “{{group}}”",
