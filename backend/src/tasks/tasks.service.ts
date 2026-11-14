@@ -236,6 +236,7 @@ export class TasksService {
       assigneeId,
       previousAssigneeId: task.assigneeId,
       actorId,
+      bulk: false,
     });
   }
 

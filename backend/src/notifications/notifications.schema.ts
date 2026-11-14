@@ -2,6 +2,7 @@ import { sql } from 'drizzle-orm';
 import {
   boolean,
   check,
+  date,
   index,
   jsonb,
   pgEnum,
@@ -16,6 +17,7 @@ import {
   NOTIFICATION_CHANNELS,
   NOTIFICATION_EVENTS,
   NOTIFICATION_TYPES,
+  REMINDER_KINDS,
 } from '../common/domain.js';
 import { createdAt, id, timestamptz, updatedAt } from '../db/columns.js';
 import { groups } from '../groups/groups.schema.js';
@@ -25,6 +27,7 @@ import { users } from '../users/users.schema.js';
 export const notificationTypeEnum = pgEnum('notification_type', NOTIFICATION_TYPES);
 export const notificationEventEnum = pgEnum('notification_event', NOTIFICATION_EVENTS);
 export const notificationChannelEnum = pgEnum('notification_channel', NOTIFICATION_CHANNELS);
+export const reminderKindEnum = pgEnum('reminder_kind', REMINDER_KINDS);
 
 /** Values substituted into the notification text on the frontend */
 export interface NotificationData {
@@ -79,6 +82,36 @@ export const notificationPreferences = pgTable(
     updatedAt: updatedAt(),
   },
   (t) => [primaryKey({ columns: [t.userId, t.event, t.channel] })],
+);
+
+/** Each reminder goes out once; a new due date allows a new one */
+export const taskReminders = pgTable(
+  'task_reminders',
+  {
+    taskId: uuid()
+      .notNull()
+      .references(() => tasks.id, { onDelete: 'cascade' }),
+    userId: uuid()
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    kind: reminderKindEnum().notNull(),
+    dueAt: timestamptz().notNull(),
+    createdAt: createdAt(),
+  },
+  (t) => [primaryKey({ columns: [t.taskId, t.userId, t.kind, t.dueAt] })],
+);
+
+/** `weekStart`: the user's local Monday */
+export const weeklyDigests = pgTable(
+  'weekly_digests',
+  {
+    userId: uuid()
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    weekStart: date({ mode: 'string' }).notNull(),
+    createdAt: createdAt(),
+  },
+  (t) => [primaryKey({ columns: [t.userId, t.weekStart] })],
 );
 
 export type NotificationRow = typeof notifications.$inferSelect;

@@ -10,6 +10,7 @@ export interface TaskView {
   title: string;
   description: string;
   dueAt: Date;
+  difficulty: number;
   assigneeId: string | null;
   completedAt: Date | null;
 }
@@ -21,6 +22,7 @@ function toView(row: TaskRow): TaskView {
     title: row.title,
     description: row.description,
     dueAt: row.dueAt,
+    difficulty: row.difficulty,
     assigneeId: row.assigneeId,
     completedAt: row.completedAt,
   };
@@ -36,7 +38,16 @@ export class TasksApi {
     return row ? toView(row) : null;
   }
 
-  async assignedTo(userId: string, from: Date): Promise<TaskView[]> {
-    return (await this.repository.assignedTo(userId, from)).map(toView);
+  async find(taskId: string, db?: DbExecutor): Promise<TaskView | null> {
+    const row = await this.repository.findTask(taskId, db);
+    return row ? toView(row) : null;
+  }
+
+  async assignedTo(userId: string, from: Date, until?: Date): Promise<TaskView[]> {
+    return (await this.repository.assignedTo(userId, from, until)).map(toView);
+  }
+
+  async openAssignedDueBetween(from: Date, to: Date): Promise<TaskView[]> {
+    return (await this.repository.openAssignedDueBetween(from, to)).map(toView);
   }
 }

@@ -1,6 +1,6 @@
 // What happened, never what to do next. Payloads are stored as JSON: ids, ISO strings, plain values.
 
-import type { CalendarProvider, GroupRole } from '../domain.js';
+import type { CalendarProvider, GroupRole, ReminderKind } from '../domain.js';
 
 export interface DomainEventMap {
   /** auth: registration or "send again"; the listener issues a fresh token per delivery */
@@ -37,24 +37,41 @@ export interface DomainEventMap {
     previousAssigneeId: string | null;
     /** Null when the algorithm decided; nobody is notified about their own action */
     actorId: string | null;
+    /** Not announced: a new series' instances after the first, and top-ups */
+    bulk: boolean;
   };
   /** tasks: title, description, due date or difficulty changed */
   'task.changed': { taskId: string; groupId: string };
   /** tasks: marked done or undone (SD-3) */
   'task.completed': { taskId: string; groupId: string; userId: string; done: boolean };
-  'task.swapProposed': { swapId: string; groupId: string; proposerId: string; recipientId: string };
+  'task.swapProposed': {
+    swapId: string;
+    groupId: string;
+    proposerId: string;
+    recipientId: string;
+    offeredTaskId: string;
+  };
   /** tasks: `accepted` means both tasks have already changed hands */
   'task.swapDecided': {
     swapId: string;
     groupId: string;
     proposerId: string;
     recipientId: string;
+    offeredTaskId: string;
+    requestedTaskId: string;
     accepted: boolean;
   };
   /** groups: the last member left; published before the group and its tasks are deleted */
   'group.deleted': { groupId: string };
   /** tasks: published before the instance is deleted */
   'task.deleted': { taskId: string; groupId: string; assigneeId: string | null };
+  'notification.reminderDue': { taskId: string; userId: string; kind: ReminderKind };
+  'notification.digestDue': {
+    userId: string;
+    lastWeekFrom: string;
+    lastWeekTo: string;
+    until: string;
+  };
   /** calendar: connect, "sync now" or a new reminder time */
   'calendar.resyncRequested': { userId: string };
   /** calendar: the event's task was deleted (FR-34) */

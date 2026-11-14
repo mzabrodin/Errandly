@@ -53,7 +53,7 @@ export class TaskPlanner {
       manuallyAssigned: assigneeId !== null,
     }));
     const inserted = await this.repository.insertTasks(rows, tx);
-    for (const task of inserted) {
+    for (const [index, task] of inserted.entries()) {
       // oxlint-disable-next-line no-await-in-loop -- one transaction connection, so the inserts run in order anyway
       await this.bus.publish(tx, 'task.assigned', {
         taskId: task.id,
@@ -61,6 +61,7 @@ export class TaskPlanner {
         assigneeId: task.assigneeId,
         previousAssigneeId: null,
         actorId,
+        bulk: actorId === null || index > 0,
       });
     }
     return inserted.toSorted((a, b) => a.dueAt.getTime() - b.dueAt.getTime());
@@ -88,6 +89,7 @@ export class TaskPlanner {
         assigneeId,
         previousAssigneeId: task.assigneeId,
         actorId: null,
+        bulk: false,
       });
     }
   }

@@ -37,6 +37,16 @@ export class GroupsApi {
     }
   }
 
+  async names(groupIds: readonly string[], db?: DbExecutor): Promise<Map<string, string>> {
+    const rows = await this.repository.findGroups(groupIds, db);
+    return new Map(rows.map((group) => [group.id, group.name]));
+  }
+
+  async admins(groupId: string, db?: DbExecutor): Promise<string[]> {
+    const members = await this.repository.membersOf(groupId, db);
+    return members.filter((member) => member.role === 'admin').map((member) => member.userId);
+  }
+
   async members(groupId: string, db?: DbExecutor): Promise<GroupMember[]> {
     const [members, absences] = await Promise.all([
       this.repository.membersOf(groupId, db),

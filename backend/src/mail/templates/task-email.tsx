@@ -11,6 +11,11 @@ const DEFAULT_TIMEZONE = 'Europe/Kyiv';
 const MINUTES_PER_HOUR = 60;
 const MINUTES_PER_DAY = 1440;
 
+export const timeZone = z
+  .string()
+  .refine(isTimeZone, 'must be an IANA time zone')
+  .default(DEFAULT_TIMEZONE);
+
 export const taskSchema = z.object({
   name: text,
   groupName: text,
@@ -20,7 +25,7 @@ export const taskSchema = z.object({
   url: httpUrl,
   settingsUrl: httpUrl.optional(),
   /** The recipient's profile time zone; the due date is shown in it */
-  timezone: z.string().refine(isTimeZone, 'must be an IANA time zone').default(DEFAULT_TIMEZONE),
+  timezone: timeZone,
 });
 
 export type TaskData = z.output<typeof taskSchema>;

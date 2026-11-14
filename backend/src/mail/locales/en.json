@@ -48,7 +48,8 @@
     "preheader": "{{when}} · group “{{groupName}}”",
     "heading": "your turn!",
     "paragraph1": "{{name}}, you’ve been assigned a task in the group <b>“{{groupName}}”</b>. The system picked you because you have the lowest workload over the last 4 weeks.",
-    "cta": "Open task"
+    "cta": "Open task",
+    "paragraphByActor": "{{name}}, <b>{{actorName}}</b> assigned you a task in the group <b>“{{groupName}}”</b>."
   },
   "taskDueSoon": {
     "subject": "Reminder: {{taskTitle}} at {{time}}",
@@ -65,5 +66,16 @@
     "paragraph1": "{{name}}, the task is past its due date and still isn’t marked as done.",
     "paragraph2": "Already done? Mark it — it takes a second. Running late? Agree on a new date with the group admin.",
     "cta": "Open task"
+  },
+  "weeklyDigest": {
+    "subject_one": "Your week: {{count}} task",
+    "subject_other": "Your week: {{count}} tasks",
+    "preheader": "What’s ahead this week and how the last one went.",
+    "heading": "your week",
+    "paragraph1": "{{name}}, here are your tasks for the next 7 days and a summary of last week.",
+    "lastWeek": "Last week: <b>{{done}}</b> done, <b>{{overdue}}</b> overdue.",
+    "nothingAhead": "No tasks this week.",
+    "cta": "Open Errandly",
+    "note": "You get this summary because you turned it on in the settings"
   }
 }

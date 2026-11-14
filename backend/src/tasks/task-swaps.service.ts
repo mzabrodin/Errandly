@@ -87,6 +87,7 @@ export class TaskSwaps {
         groupId: swap.groupId,
         proposerId: userId,
         recipientId,
+        offeredTaskId: offered.id,
       });
       return swap.id;
     });
@@ -152,6 +153,7 @@ export class TaskSwaps {
       assigneeId,
       previousAssigneeId,
       actorId: swap.recipientId,
+      bulk: false,
     });
   }
 
@@ -161,6 +163,8 @@ export class TaskSwaps {
       groupId: swap.groupId,
       proposerId: swap.proposerId,
       recipientId: swap.recipientId,
+      offeredTaskId: swap.offeredTaskId,
+      requestedTaskId: swap.requestedTaskId,
       accepted,
     });
   }

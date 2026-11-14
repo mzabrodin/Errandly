@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { and, asc, count, eq, isNull } from 'drizzle-orm';
+import { and, asc, count, eq, inArray, isNull } from 'drizzle-orm';
 
 import type { GroupRole } from '../common/domain.js';
 import { DATABASE, type Database, type DbExecutor } from '../db/database.js';
@@ -46,6 +46,14 @@ export class GroupsRepository {
   async findGroup(id: string, db: DbExecutor = this.db): Promise<GroupRow | undefined> {
     const [row] = await db.select().from(groups).where(eq(groups.id, id)).limit(1);
     return row;
+  }
+
+  async findGroups(ids: readonly string[], db: DbExecutor = this.db): Promise<GroupRow[]> {
+    if (ids.length === 0) return [];
+    return db
+      .select()
+      .from(groups)
+      .where(inArray(groups.id, [...ids]));
   }
 
   /** Members, invites, absences and tasks go with it (ON DELETE CASCADE) */

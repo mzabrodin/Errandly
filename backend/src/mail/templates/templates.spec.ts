@@ -12,6 +12,27 @@ const task = {
 
 const hostile = '<script>alert(1)</script> <b>bold</b> "quoted" & A&amp;B';
 
+function digest(tasks: number) {
+  return {
+    name: 'Anya',
+    url: 'http://localhost:5173',
+    settingsUrl: 'http://localhost:5173/settings',
+    groups: [
+      {
+        name: 'Room 12',
+        done: 2,
+        overdue: 1,
+        tasks: Array.from({ length: tasks }, (_, index) => ({
+          title: `Task ${index}`,
+          dueAt: task.dueAt,
+          difficulty: 1,
+          url: `http://localhost:5173/g/1/tasks/${index}`,
+        })),
+      },
+    ],
+  };
+}
+
 describe('mail templates', () => {
   const cases = templateNames.flatMap((name) => LOCALES.map((locale) => [name, locale] as const));
 
@@ -76,6 +97,25 @@ describe('mail templates', () => {
 
     expect((await renderTemplate('taskDueSoon', data)).text).toContain(uk);
     expect((await renderTemplate('taskDueSoon', data, 'en')).text).toContain(en);
+  });
+
+  it('names whoever assigned the task by hand', async () => {
+    const auto = await renderTemplate('taskAssigned', task, 'en');
+    const manual = await renderTemplate('taskAssigned', { ...task, actorName: 'Bohdan' }, 'en');
+
+    expect(auto.text).toContain('The system picked you');
+    expect(manual.text).toContain('Bohdan assigned you a task');
+    expect(manual.text).not.toContain('The system picked you');
+  });
+
+  it('counts the week’s tasks in the digest subject with plural forms', async () => {
+    expect((await renderTemplate('weeklyDigest', digest(1))).subject).toBe('Ваш тиждень: 1 задача');
+    expect((await renderTemplate('weeklyDigest', digest(3))).subject).toBe('Ваш тиждень: 3 задачі');
+    expect((await renderTemplate('weeklyDigest', digest(5))).subject).toBe('Ваш тиждень: 5 задач');
+    const empty = await renderTemplate('weeklyDigest', digest(0), 'en');
+    expect(empty.subject).toBe('Your week: 0 tasks');
+    expect(empty.text).toContain('Last week: 2 done, 1 overdue.');
+    expect(empty.text).toContain('No tasks this week.');
   });
 
   it('links the notification settings only when given', async () => {
