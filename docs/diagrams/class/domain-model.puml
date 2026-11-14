@@ -123,9 +123,13 @@ package calendar {
     +provider : CalendarProvider
     +accountEmail : String
     +refreshTokenEncrypted : String
+    +calendarId : String
     +syncStatus : SyncStatus
     +failedAttempts : Int
     +lastSyncedAt : DateTime?
+  }
+  class CalendarSettings {
+    +reminderMinutes : Int
   }
   class CalendarEventLink {
     +externalEventId : String
@@ -169,6 +173,7 @@ Group ..> MemberStats : обчислює
 User "1" -- "0..*" Notification : отримує
 User "1" -- "0..1" NotificationSettings
 User "1" -- "0..*" NotificationPreference
+User "1" -- "0..1" CalendarSettings
 User "1" -- "0..*" CalendarConnection : підключає
 CalendarConnection "1" *-- "0..*" CalendarEventLink
 Task "1" -- "0..*" CalendarEventLink : відображається

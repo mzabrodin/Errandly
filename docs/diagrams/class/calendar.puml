@@ -1,0 +1,77 @@
+@startuml calendar
+skinparam shadowing false
+skinparam defaultFontName "Inter, Segoe UI, Arial"
+skinparam RoundCorner 12
+skinparam ClassBackgroundColor #FFFFFF
+skinparam ClassBorderColor #1F6F64
+skinparam packageStyle rectangle
+hide empty members
+
+package Controllers {
+  class CalendarController {
+    +connect()
+    +callback(code, state, error)
+    +disconnect()
+    +sync()
+  }
+}
+
+package Services {
+  class CalendarService {
+    +connectUrl(userId)
+    +complete(userId, query)
+    +disconnect(userId)
+    +syncNow(userId)
+  }
+  class CalendarSync <<слухач>> {
+    +syncTask(taskId)
+    +discardEvents(taskId, tx)
+    +deleteEvent(connectionId, eventId)
+    +resync(userId)
+  }
+  class CalendarApi <<фасад>> {
+    +settings(userId)
+    +setReminderMinutes(userId, minutes)
+  }
+  abstract class CalendarOAuth <<порт>> {
+    +authUrl(state)
+    +exchange(code)
+    +revoke(refreshToken)
+  }
+  class GoogleCalendarOAuth
+  class CalendarGateways {
+    +for(provider)
+  }
+  abstract class CalendarGateway <<порт>>
+  class GoogleCalendarGateway
+}
+
+package Repositories {
+  class CalendarRepository
+}
+
+class TasksApi <<з іншого модуля>>
+class UsersApi <<з іншого модуля>>
+class SettingsService <<notifications>>
+class TokenCipher <<спільне ядро>>
+class EventBus <<спільне ядро>>
+
+CalendarController ..> CalendarService
+CalendarService ..> CalendarOAuth
+CalendarService ..> CalendarGateways
+CalendarService ..> CalendarRepository
+CalendarService ..> UsersApi
+CalendarService ..> TokenCipher
+CalendarService ..> EventBus
+CalendarSync ..> TasksApi
+CalendarSync ..> UsersApi
+CalendarSync ..> CalendarGateways
+CalendarSync ..> CalendarRepository
+CalendarSync ..> TokenCipher
+CalendarSync ..> EventBus
+CalendarApi ..> CalendarRepository
+SettingsService ..> CalendarApi
+CalendarGateways ..> CalendarGateway
+GoogleCalendarOAuth -up-|> CalendarOAuth
+GoogleCalendarGateway -up-|> CalendarGateway
+@enduml

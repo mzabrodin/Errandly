@@ -22,6 +22,7 @@ erDiagram
   users ||--o{ notifications : ""
   users ||--o| notification_settings : ""
   users ||--o{ notification_preferences : ""
+  users ||--o| calendar_settings : ""
   users ||--o{ calendar_connections : ""
   calendar_connections ||--o{ calendar_event_links : ""
   tasks ||--o{ calendar_event_links : ""
@@ -129,8 +130,13 @@ erDiagram
     uuid id PK
     uuid user_id FK
     calendar_provider provider "google"
+    text calendar_id
     sync_status sync_status "ok | paused"
     smallint failed_attempts
+  }
+  calendar_settings {
+    uuid user_id PK
+    smallint reminder_minutes
   }
   calendar_event_links {
     uuid connection_id PK
@@ -170,13 +176,14 @@ erDiagram
 ### notifications
 
 - **Notification** — запис у «дзвіночку». Типи: `groupCreated`, `groupJoined`, `memberJoined`, `taskAssigned`, `taskUnassigned`, `taskOverdue`, `roleGranted`, `roleRevoked`, `removedFromGroup`. Отримувач ніколи не отримує сповіщення про власну дію.
-- **NotificationSettings** — за скільки хвилин до терміну надіслати нагадування (15, 30, 60, 180 або 1440).
+- **NotificationSettings** — за скільки хвилин до терміну приходить лист «Скоро термін» (15, 30, 60, 180 або 1440; типово доба, FR-38).
 - **NotificationPreference** — увімкнено чи вимкнено подію (`taskAssigned`, `taskDueSoon`, `taskOverdue`, `weeklyDigest`) у каналі (`email`). Зберігаються лише відхилення від типових значень, тому нова подія чи канал — це значення переліку, а не нова колонка.
 
 ### calendar
 
-- **CalendarConnection** — підключений зовнішній календар, окремий OAuth-потік від входу (SYS-18). Токени зашифровані. Після 5 невдач поспіль синхронізація переходить у `paused`, і налаштування показують банер.
-- **CalendarEventLink** — подія, яку створив Errandly, для пари «підключення × задача». Errandly ніколи не чіпає інших подій календаря (SYS-19).
+- **CalendarConnection** — підключений зовнішній календар, окремий OAuth-потік від входу (SYS-18). `calendar_id` — власний календар «Errandly» у Google-акаунті. Зберігається лише refresh-токен, зашифрований AES-256-GCM. Після 5 невдач поспіль синхронізація переходить у `paused`, і налаштування показують банер.
+- **CalendarSettings** — нагадування в кожній події календаря (15, 30, 60, 180 або 1440; типово година, FR-33). Окремо від підключення, тож не губиться після відключення.
+- **CalendarEventLink** — подія, яку створив Errandly, для пари «підключення × задача» (SYS-19). Видаляється разом із задачею, але перед цим `task.deleted` встигає поставити в чергу видалення події.
 
 ## Похідні об'єкти (не зберігаються)
 
