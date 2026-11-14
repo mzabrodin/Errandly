@@ -47,6 +47,10 @@ export class TasksApi {
     return (await this.repository.assignedTo(userId, from, until)).map(toView);
   }
 
+  async inGroup(groupId: string, from: Date, to: Date): Promise<TaskView[]> {
+    return (await this.repository.listTasks(groupId, { from, to })).map(toView);
+  }
+
   async openAssignedDueBetween(from: Date, to: Date): Promise<TaskView[]> {
     return (await this.repository.openAssignedDueBetween(from, to)).map(toView);
   }
