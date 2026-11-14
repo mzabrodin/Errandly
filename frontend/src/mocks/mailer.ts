@@ -86,7 +86,7 @@ export function sendReminders(): string {
     const data = taskMailData(task, task.assigneeId);
     if (!user || !data) continue;
     if (settings.dueSoon && due > now && due - now <= emailReminderMinutes * 60_000) {
-      sendMail('taskDueSoon', user.email, data);
+      sendMail('taskDueSoon', user.email, { ...data, reminderMinutes: emailReminderMinutes });
       sent += 1;
     } else if (settings.overdue && computeStatus(task) === 'overdue' && now - due <= 2 * DAY_MS) {
       sendMail('taskOverdue', user.email, data);
