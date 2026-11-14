@@ -11,7 +11,7 @@ export default defineConfig({
     setupFiles: ['reflect-metadata'],
     coverage: {
       provider: 'v8',
-      include: ['src/**/*.ts'],
+      include: ['src/**/*.{ts,tsx}'],
       exclude: [
         'src/**/*.spec.ts',
         'src/main.ts',

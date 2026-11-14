@@ -84,6 +84,13 @@
   },
   "overrides": [
     {
+      "files": ["**/*.tsx"],
+      "plugins": ["react"],
+      "rules": {
+        "react/react-in-jsx-scope": "off"
+      }
+    },
+    {
       "files": ["**/*.spec.ts", "**/*.int-spec.ts", "**/*.test.ts", "**/*.test.tsx", "**/test/**"],
       "rules": {
         "max-lines-per-function": "off",

@@ -44,8 +44,14 @@ function sourceFiles(dir: string): string[] {
     const full = path.join(dir, entry.name);
     if (entry.isDirectory()) return sourceFiles(full);
     // Tests may reach into internals of the module they test
-    return entry.name.endsWith('.ts') && !entry.name.endsWith('.spec.ts') ? [full] : [];
+    return /\.tsx?$/.test(entry.name) && !entry.name.endsWith('.spec.ts') ? [full] : [];
   });
+}
+
+/** `./x.js` is compiled from x.ts or x.tsx */
+function sourcePath(target: string): string {
+  const ts = target.replace(/\.js$/, '.ts');
+  return existsSync(ts) ? ts : `${ts}x`;
 }
 
 const IMPORT = /(?:from|import)\s*\(?\s*['"](\.{1,2}\/[^'"]+)['"]/g;
@@ -53,7 +59,7 @@ const IMPORT = /(?:from|import)\s*\(?\s*['"](\.{1,2}\/[^'"]+)['"]/g;
 const imports: Import[] = sourceFiles(SRC).flatMap((file) =>
   [...readFileSync(file, 'utf8').matchAll(IMPORT)].map((match) => ({
     from: file,
-    to: path.resolve(path.dirname(file), (match[1] ?? '').replace(/\.js$/, '.ts')),
+    to: sourcePath(path.resolve(path.dirname(file), match[1] ?? '')),
   })),
 );
 

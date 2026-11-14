@@ -1,0 +1,69 @@
+{
+  "layout": {
+    "tagline": "chores for everyone who lives together",
+    "difficulty": "difficulty",
+    "buttonFallback": "Button not working? Copy the link into your browser:",
+    "manageNotifications": "Manage notifications",
+    "footer": "Errandly · a NaUKMA student project",
+    "taskNote": "You received this email because you are a member of a group in Errandly"
+  },
+  "duration": {
+    "minutes_one": "{{count}} minute",
+    "minutes_other": "{{count}} minutes",
+    "hours_one": "{{count}} hour",
+    "hours_other": "{{count}} hours",
+    "days_one": "{{count}} day",
+    "days_other": "{{count}} days"
+  },
+  "verifyEmail": {
+    "subject": "Verify your email for Errandly",
+    "preheader": "One click and you can start gathering your flatmates.",
+    "heading": "hi, {{name}}!",
+    "paragraph1": "Thanks for signing up for Errandly. There’s <b>one step left</b>: confirm that this is your email.",
+    "paragraph2": "Once verified, you can create a group for your flat or room and invite your flatmates.",
+    "cta": "Verify email",
+    "note": "If you didn’t sign up for Errandly, just ignore this email."
+  },
+  "resetPassword": {
+    "subject": "Reset your Errandly password",
+    "preheader": "The link for a new password is valid for 1 hour.",
+    "heading": "new password",
+    "paragraph1": "{{name}}, we received a request to change the password for your account.",
+    "paragraph2": "The link is valid for <b>1 hour</b> and works only once.",
+    "cta": "Change password",
+    "note": "Didn’t request this? Do nothing — your password stays the same."
+  },
+  "invite": {
+    "subject": "{{inviterName}} invites you to “{{groupName}}”",
+    "preheader": "Errandly splits household chores fairly between flatmates.",
+    "heading": "you’re invited!",
+    "paragraph1": "<b>{{inviterName}}</b> invites you to the group <b>“{{groupName}}”</b> in Errandly.",
+    "paragraph2": "Errandly splits household chores so that everyone’s workload is even, and adds them to your Google Calendar. No more arguing about whose turn it is to take out the trash.",
+    "paragraph3": "The invitation is valid for <b>7 days</b>.",
+    "cta": "Join the group",
+    "note": "Don’t know who this is? Just ignore this email — you won’t be added to the group unless you follow the link."
+  },
+  "taskAssigned": {
+    "subject": "New task: {{taskTitle}}",
+    "preheader": "{{when}} · group “{{groupName}}”",
+    "heading": "your turn!",
+    "paragraph1": "{{name}}, you’ve been assigned a task in the group <b>“{{groupName}}”</b>. The system picked you because you have the lowest workload over the last 4 weeks.",
+    "cta": "Open task"
+  },
+  "taskDueSoon": {
+    "subject": "Reminder: {{taskTitle}} at {{time}}",
+    "preheader": "Less than {{duration}} left until the due date.",
+    "heading": "due soon",
+    "paragraph1": "{{name}}, a reminder: the task is due in <b>less than {{duration}}</b>.",
+    "paragraph2": "Once it’s done, mark the task as done so everyone can see.",
+    "cta": "Mark as done"
+  },
+  "taskOverdue": {
+    "subject": "Overdue: {{taskTitle}}",
+    "preheader": "The task is past its due date and hasn’t been marked as done.",
+    "heading": "oops, overdue",
+    "paragraph1": "{{name}}, the task is past its due date and still isn’t marked as done.",
+    "paragraph2": "Already done? Mark it — it takes a second. Running late? Agree on a new date with the group admin.",
+    "cta": "Open task"
+  }
+}

@@ -1,8 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
 
+import { DEFAULT_LOCALE, type Locale } from '../common/domain.js';
 import { MailTransport } from './mail-transport.js';
-import { renderTemplate, type TemplateName } from './templates/index.js';
-import { DEFAULT_MAIL_LOCALE, type MailLocale } from './templates/locale.js';
+import { renderTemplate, type MailData, type TemplateName } from './templates/index.js';
 
 @Injectable()
 export class MailService {
@@ -14,13 +14,14 @@ export class MailService {
     return this.transport.isLocal;
   }
 
-  async send(
-    template: TemplateName,
+  /** Data that does not match the template's schema throws: that is a bug in the caller */
+  async send<T extends TemplateName>(
+    template: T,
     to: string,
-    data: Record<string, string | number>,
-    locale: MailLocale = DEFAULT_MAIL_LOCALE,
+    data: MailData<T>,
+    locale: Locale = DEFAULT_LOCALE,
   ): Promise<string> {
-    const mail = renderTemplate(template, data, locale);
+    const mail = await renderTemplate(template, data, locale);
     const messageId = await this.transport.send({
       to,
       subject: mail.subject,

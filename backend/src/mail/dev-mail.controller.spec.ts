@@ -26,12 +26,12 @@ describe('DevMailController', () => {
     send.mockReset().mockResolvedValue('<id@mailpit>');
   });
 
-  it('is hidden unless MAIL_DEV_API is on', () => {
-    expect(() => createController(false).index()).toThrow(NotFoundException);
+  it('is hidden unless MAIL_DEV_API is on', async () => {
+    await expect(createController(false).index()).rejects.toThrow(NotFoundException);
   });
 
-  it('is hidden with a real SMTP server', () => {
-    expect(() => createController(true, false).index()).toThrow(NotFoundException);
+  it('is hidden with a real SMTP server', async () => {
+    await expect(createController(true, false).index()).rejects.toThrow(NotFoundException);
   });
 
   it('sends a valid email', async () => {
@@ -62,20 +62,27 @@ describe('DevMailController', () => {
     ).rejects.toThrow(BadRequestException);
   });
 
-  it('rejects incomplete data', async () => {
-    await expect(
-      createController(true).send({ template: 'invite', to: 'bob@errandly.dev', data: {} }),
-    ).rejects.toThrow(BadRequestException);
+  it('rejects data that does not match the template, naming the fields', async () => {
+    const error: unknown = await createController(true)
+      .send({
+        template: 'invite',
+        to: 'bob@errandly.dev',
+        data: { ...invite, url: 'javascript:x' },
+      })
+      .catch((caught: unknown) => caught);
+
+    expect(error).toBeInstanceOf(BadRequestException);
+    expect(error).toMatchObject({ response: { message: [expect.stringMatching(/^url: /)] } });
     expect(send).not.toHaveBeenCalled();
   });
 
-  it('lists and renders previews', () => {
+  it('lists and renders previews', async () => {
     const controller = createController(true);
 
-    expect(controller.index()).toContain('preview/invite?locale=en');
-    expect(controller.preview('invite')).toContain('<html lang="uk">');
-    expect(controller.preview('invite', 'en')).toContain('<html lang="en">');
-    expect(controller.preview('invite', 'fr')).toContain('<html lang="uk">');
-    expect(() => controller.preview('nope')).toThrow(NotFoundException);
+    await expect(controller.index()).resolves.toContain('preview/invite?locale=en');
+    await expect(controller.preview('invite')).resolves.toContain('lang="uk"');
+    await expect(controller.preview('invite', 'en')).resolves.toContain('lang="en"');
+    await expect(controller.preview('invite', 'fr')).resolves.toContain('lang="uk"');
+    await expect(controller.preview('nope')).rejects.toThrow(NotFoundException);
   });
 });
