@@ -6,7 +6,7 @@ import { computeStatus, DAY_MS, db, defaultSettingsFor, isCompleted } from './db
 // The mock API cannot speak SMTP, so the backend renders and sends emails through a dev endpoint
 // (backend/src/mail/dev-mail.controller.ts) to Mailpit: http://localhost:8025
 
-type MailData = Record<string, string | number>;
+type MailData = Record<string, unknown>;
 
 let warned = false;
 
@@ -63,12 +63,65 @@ function taskMailData(task: TaskLike, userId: string): MailData | null {
 }
 
 /** Assignment notification (FR-38), unless the member turned it off */
-export function notifyAssigned(task: TaskLike): void {
+export function notifyAssigned(task: TaskLike, actorName?: string): void {
   if (task.assigneeId === null || task.assigneeId === '') return;
   if (!defaultSettingsFor(task.assigneeId).notifications.assigned) return;
   const user = db.users.find((candidate) => candidate.id === task.assigneeId);
   const data = taskMailData(task, task.assigneeId);
-  if (user && data) sendMail('taskAssigned', user.email, data);
+  if (!user || !data) return;
+  sendMail(
+    'taskAssigned',
+    user.email,
+    task.manuallyAssigned && actorName !== undefined ? { ...data, actorName } : data,
+  );
+}
+
+/** Monday's digest on the server; with mocks, by hand from the console: errandlySendDigest() */
+export function sendDigest(): string {
+  const user = db.users.find((candidate) => candidate.id === db.sessionUserId);
+  if (!user) return 'Sign in first';
+  const now = Date.now();
+  const groups = db.memberships
+    .filter((membership) => membership.userId === user.id)
+    .flatMap((membership) => {
+      const group = db.groups.find((candidate) => candidate.id === membership.groupId);
+      if (!group) return [];
+      const own = db.tasks.filter(
+        (task) => task.groupId === group.id && task.assigneeId === user.id,
+      );
+      const lastWeek = own.filter((task) => {
+        const due = new Date(task.dueAt).getTime();
+        return due >= now - 7 * DAY_MS && due < now;
+      });
+      const ahead = own
+        .filter((task) => {
+          const due = new Date(task.dueAt).getTime();
+          return !isCompleted(task) && due >= now && due < now + 7 * DAY_MS;
+        })
+        .toSorted((a, b) => a.dueAt.localeCompare(b.dueAt));
+      return [
+        {
+          name: group.name,
+          done: lastWeek.filter((task) => isCompleted(task)).length,
+          overdue: lastWeek.filter((task) => computeStatus(task) === 'overdue').length,
+          tasks: ahead.slice(0, 50).map((task) => ({
+            title: task.title,
+            dueAt: task.dueAt,
+            difficulty: task.difficulty,
+            url: `${location.origin}/g/${task.groupId}/tasks/${task.id}`,
+          })),
+        },
+      ];
+    });
+  if (groups.length === 0) return 'No groups';
+  sendMail('weeklyDigest', user.email, {
+    name: user.name.split(' ')[0] ?? '',
+    url: location.origin,
+    settingsUrl: `${location.origin}/settings`,
+    timezone: user.timezone,
+    groups,
+  });
+  return 'Digest sent';
 }
 
 /**

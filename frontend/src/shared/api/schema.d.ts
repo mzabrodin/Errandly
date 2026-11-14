@@ -1031,7 +1031,7 @@ export interface components {
             lastSyncedAt: string | null;
         };
         /** @enum {string} */
-        NotificationType: "groupCreated" | "groupJoined" | "memberJoined" | "taskAssigned" | "taskUnassigned" | "taskOverdue" | "roleGranted" | "roleRevoked" | "removedFromGroup" | "swapProposed" | "swapAccepted" | "swapDeclined";
+        NotificationType: "groupCreated" | "groupJoined" | "memberJoined" | "taskAssigned" | "taskUnassigned" | "taskOverdue" | "taskNoAssignee" | "roleGranted" | "roleRevoked" | "removedFromGroup" | "swapProposed" | "swapAccepted" | "swapDeclined";
         NotificationDataDto: {
             groupName?: string;
             taskTitle?: string;

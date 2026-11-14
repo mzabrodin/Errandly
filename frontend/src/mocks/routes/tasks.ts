@@ -47,14 +47,42 @@ function validateTask(input: TaskInput, previousDueAt?: string): Record<string, 
   return Object.keys(fields).length > 0 ? fields : null;
 }
 
+/** FR-29: the other admins, once while the notification about this task title is unread */
+function notifyNoAssignee(
+  task: DbTaskRecord,
+  actorId: string,
+  data: Parameters<typeof pushNotification>[2]['data'],
+): void {
+  const admins = db.memberships.filter(
+    (item) => item.groupId === task.groupId && item.role === 'admin' && item.userId !== actorId,
+  );
+  for (const admin of admins) {
+    const repeated = db.notifications.some(
+      (item) =>
+        item.userId === admin.userId &&
+        item.type === 'taskNoAssignee' &&
+        item.groupId === task.groupId &&
+        !item.read &&
+        item.data.taskTitle === task.title,
+    );
+    if (!repeated) {
+      pushNotification(admin.userId, 'taskNoAssignee', {
+        groupId: task.groupId,
+        taskId: task.id,
+        data,
+      });
+    }
+  }
+}
+
 /** Task assignment: an email (if enabled) + in-app notifications to the new and previous assignee */
 function onAssigned(
   task: DbTaskRecord,
   actorId: string,
   previousAssigneeId: string | null = null,
 ): void {
-  notifyAssigned(task);
   const actor = db.users.find((user) => user.id === actorId);
+  notifyAssigned(task, actor?.name);
   const data = {
     groupName: groupName(task.groupId),
     taskTitle: task.title,
@@ -68,6 +96,7 @@ function onAssigned(
       data,
     });
   }
+  if (task.assigneeId === null) notifyNoAssignee(task, actorId, data);
   if (
     previousAssigneeId !== null &&
     previousAssigneeId !== '' &&
