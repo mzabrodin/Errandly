@@ -24,6 +24,8 @@ erDiagram
   users ||--o{ notifications : ""
   users ||--o| notification_settings : ""
   users ||--o{ notification_preferences : ""
+  tasks ||--o{ task_reminders : "надіслані нагадування"
+  users ||--o{ weekly_digests : "надіслані підсумки"
   users ||--o| calendar_settings : ""
   users ||--o{ calendar_connections : ""
   calendar_connections ||--o{ calendar_event_links : ""
@@ -138,6 +140,16 @@ erDiagram
     notification_channel channel PK
     boolean enabled
   }
+  task_reminders {
+    uuid task_id PK
+    uuid user_id PK
+    reminder_kind kind PK
+    timestamptz due_at PK
+  }
+  weekly_digests {
+    uuid user_id PK
+    date week_start PK
+  }
   calendar_connections {
     uuid id PK
     uuid user_id FK
@@ -188,8 +200,10 @@ erDiagram
 
 ### notifications
 
-- **Notification** — запис у «дзвіночку». Типи: `groupCreated`, `groupJoined`, `memberJoined`, `taskAssigned`, `taskUnassigned`, `taskOverdue`, `roleGranted`, `roleRevoked`, `removedFromGroup`, `swapProposed`, `swapAccepted`, `swapDeclined`. Отримувач ніколи не отримує сповіщення про власну дію.
+- **Notification** — запис у «дзвіночку». Типи: `groupCreated`, `groupJoined`, `memberJoined`, `taskAssigned`, `taskUnassigned`, `taskOverdue`, `roleGranted`, `roleRevoked`, `removedFromGroup`, `swapProposed`, `swapAccepted`, `swapDeclined`, `taskNoAssignee`. Отримувач ніколи не отримує сповіщення про власну дію.
 - **NotificationSettings** — за скільки хвилин до терміну приходить лист «Скоро термін» (15, 30, 60, 180 або 1440; типово доба, FR-38).
+- **TaskReminder** — уже надіслане нагадування `dueSoon` чи `overdue` для пари «задача × виконавець» і конкретного `due_at`. Фоновий процес не надсилає його вдруге, а новий термін дозволяє нове нагадування.
+- **WeeklyDigest** — уже надісланий тижневий підсумок; `week_start` — понеділок за поясом користувача.
 - **NotificationPreference** — увімкнено чи вимкнено подію (`taskAssigned`, `taskDueSoon`, `taskOverdue`, `weeklyDigest`) у каналі (`email`). Зберігаються лише відхилення від типових значень, тому нова подія чи канал — це значення переліку, а не нова колонка.
 
 ### calendar
@@ -217,5 +231,6 @@ erDiagram
 | `calendar_provider`    | `google`                                                     |
 | `sync_status`          | `ok`, `paused`                                               |
 | `notification_event`   | `taskAssigned`, `taskDueSoon`, `taskOverdue`, `weeklyDigest` |
+| `reminder_kind`        | `dueSoon`, `overdue`                                         |
 | `notification_channel` | `email`                                                      |
 | `email_token_purpose`  | `verifyEmail`, `resetPassword`                               |

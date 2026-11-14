@@ -1,0 +1,87 @@
+@startuml notifications
+skinparam shadowing false
+skinparam defaultFontName "Inter, Segoe UI, Arial"
+skinparam RoundCorner 12
+skinparam ClassBackgroundColor #FFFFFF
+skinparam ClassBorderColor #1F6F64
+skinparam packageStyle rectangle
+hide empty members
+
+package Controllers {
+  class NotificationsController {
+    +list()
+    +markRead(dto)
+  }
+  class SettingsController {
+    +get()
+    +update(dto)
+  }
+}
+
+package Services {
+  class NotificationsService {
+    +list(userId)
+    +markRead(userId, ids?)
+  }
+  class SettingsService {
+    +get(userId)
+    +update(userId, patch)
+  }
+  class NotificationFeed <<слухач у транзакції>> {
+    +notify(recipients, subject, tx)
+  }
+  class NotificationEmails <<слухач після коміту>> {
+    +assigned(event)
+    +reminder(event)
+    +digest(event)
+  }
+  class ReminderJobs <<кожні 5 хв>> {
+    +dueSoon()
+    +overdue()
+    +digests()
+  }
+  class "notifications.rules" as Rules <<чисті функції>> {
+    +assignmentRecipients(event, admins)
+    +isDueSoon(dueAt, minutes, now)
+    +digestWeek(now, timeZone)
+    +summarizeWeek(tasks, week, now)
+  }
+}
+
+package Repositories {
+  class NotificationsRepository
+}
+
+class TasksApi <<з іншого модуля>>
+class GroupsApi <<з іншого модуля>>
+class UsersApi <<з іншого модуля>>
+class CalendarApi <<з іншого модуля>>
+class MailService <<з іншого модуля>>
+class EventBus <<спільне ядро>>
+class Clock <<спільне ядро>>
+
+NotificationsController ..> NotificationsService
+SettingsController ..> SettingsService
+NotificationsService ..> NotificationsRepository
+SettingsService ..> NotificationsRepository
+SettingsService ..> CalendarApi
+NotificationFeed ..> NotificationsRepository
+NotificationFeed ..> GroupsApi
+NotificationFeed ..> TasksApi
+NotificationFeed ..> UsersApi
+NotificationFeed ..> Rules
+NotificationFeed ..> EventBus
+NotificationEmails ..> MailService
+NotificationEmails ..> TasksApi
+NotificationEmails ..> GroupsApi
+NotificationEmails ..> UsersApi
+NotificationEmails ..> NotificationsRepository
+NotificationEmails ..> Rules
+ReminderJobs ..> NotificationFeed
+ReminderJobs ..> NotificationsRepository
+ReminderJobs ..> TasksApi
+ReminderJobs ..> UsersApi
+ReminderJobs ..> EventBus
+ReminderJobs ..> Clock
+ReminderJobs ..> Rules
+@enduml

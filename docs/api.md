@@ -150,11 +150,28 @@
 | GET   | `/notifications`      | → `{ items: AppNotification[], unread: number }` (останні 50) |
 | POST  | `/notifications/read` | `{ ids?: string[] }` → 204; без `ids` — позначити всі         |
 
-Типи подій (`AppNotification.type`): `groupCreated`, `groupJoined`, `memberJoined` (адмінам), `taskAssigned`, `taskUnassigned` (попередньому виконавцю), `taskOverdue` (від фонового процесу FR-25), `roleGranted`, `roleRevoked`, `removedFromGroup`, `swapProposed` (одержувачу), `swapAccepted` і `swapDeclined` (автору пропозиції). Сповіщення не створюється, якщо дію виконав сам отримувач. Фронтенд опитує список раз на 30 с.
+Типи подій (`AppNotification.type`) і хто їх отримує:
+
+- `groupCreated` — автору групи; `groupJoined` — новачку, `memberJoined` — адмінам; `roleGranted`/`roleRevoked` — тому, кому змінили роль; `removedFromGroup` — тому, кого видалив адмін (`groupId: null`, бо групи йому вже не видно).
+- `taskAssigned` — новому виконавцю, `taskUnassigned` — попередньому. Нова серія оголошує лише перший екземпляр, щоденне поповнення — нічого; ручне призначення, обмін і перерозподіл — кожну задачу.
+- `taskNoAssignee` — адмінам, коли задачу нікому доручити (FR-29); поки таке сповіщення про ту саму задачу не прочитане, нове не з'являється.
+- `taskOverdue` — виконавцю, коли задача щойно стала простроченою (FR-25, фоновий процес).
+- `swapProposed` — одержувачу пропозиції обміну, `swapAccepted` / `swapDeclined` — її автору.
+
+Сповіщення не створюється, якщо дію виконав сам отримувач. Сповіщення пишуться в тій самій транзакції, що й зміна, тож з'являються одразу й рівно один раз. `POST /notifications/read` позначає лише власні сповіщення. Фронтенд опитує список раз на 30 с.
 
 ## Листи
 
-Шаблони й відправка — `backend/src/mail` (`MailService.send(template, to, data, locale)`). Лист іде мовою акаунта одержувача (`User.locale`); запрошення людині без акаунта — мовою того, хто запрошує. Шаблони: `verifyEmail`, `resetPassword`, `invite`, `taskAssigned`, `taskDueSoon`, `taskOverdue`. Кожен шаблон — компонент React Email (`backend/src/mail/templates/*.tsx`) зі zod-схемою своїх даних: вона типізує `MailService.send`, а dev-ендпоінт повертає 400 з переліком хибних полів. Тексти — `backend/src/mail/locales/{uk,en}.json` (i18next; тест перевіряє, що ключі в обох мовах однакові). Дані користувача React екранує, тож ім'я чи назва групи ніколи не стають розміткою; текстова версія листа генерується з HTML. `taskDueSoon` також приймає `reminderMinutes` (час нагадування з налаштувань) і пише «до терміну залишилось менше …» відповідно до нього. Посилання в листах фронтенд очікує на `/verify-email/:token`, `/reset-password/:token`, `/invite/:token`, `/g/:groupId/tasks/:taskId`, `/settings`.
+Шаблони й відправка — `backend/src/mail` (`MailService.send(template, to, data, locale)`). Лист іде мовою акаунта одержувача (`User.locale`); запрошення людині без акаунта — мовою того, хто запрошує. Шаблони: `verifyEmail`, `resetPassword`, `invite`, `taskAssigned`, `taskDueSoon`, `taskOverdue`, `weeklyDigest`. Кожен шаблон — компонент React Email (`backend/src/mail/templates/*.tsx`) зі zod-схемою своїх даних: вона типізує `MailService.send`, а dev-ендпоінт повертає 400 з переліком хибних полів. Тексти — `backend/src/mail/locales/{uk,en}.json` (i18next; тест перевіряє, що ключі в обох мовах однакові). Дані користувача React екранує, тож ім'я чи назва групи ніколи не стають розміткою; текстова версія листа генерується з HTML. `taskDueSoon` також приймає `reminderMinutes` (час нагадування з налаштувань) і пише «до терміну залишилось менше …» відповідно до нього; `taskAssigned` — необов'язкове `actorName` («Аня доручає вам задачу» замість «система обрала вас»).
+
+Коли листи йдуть (FR-38; кожен тип вимикається в налаштуваннях):
+
+- `taskAssigned` — за тими самими правилами, що й сповіщення `taskAssigned`, після коміту.
+- `taskDueSoon` — фоновий процес кожні 5 хвилин: коли до терміну лишилося не більше обраного часу нагадування (типово доба). Один раз на задачу й термін: якщо термін змінять, нагадування прийде знову.
+- `taskOverdue` — разом зі сповіщенням `taskOverdue` для задач, прострочених за останні 2 доби.
+- `weeklyDigest` — у понеділок від 09:00 за поясом користувача, якщо підсумок увімкнено (типово вимкнено): задачі на наступні 7 днів і скільки минулого тижня виконано й прострочено, по групах. Без задач і підсумку лист не надсилається.
+
+Лист не йде, якщо задачу вже виконали чи передали іншому. Збій SMTP повторюється через `event_publications` (SYS-22). Посилання в листах фронтенд очікує на `/verify-email/:token`, `/reset-password/:token`, `/invite/:token`, `/g/:groupId/tasks/:taskId`, `/settings`.
 
 ## Статистика та налаштування
 
