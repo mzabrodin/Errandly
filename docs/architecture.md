@@ -89,13 +89,13 @@ flowchart LR
 
 Фасади (реалізовані й заплановані):
 
-| Модуль     | Публічне API                                                                                                                                      | Хто використовує                       |
-| ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------- |
-| `users`    | `UsersApi`: `findById`, `findByEmail`, `create`, `markEmailVerified` — ім'я, мова, часовий пояс для листів                                        | `auth`, згодом усі                     |
-| `groups`   | `GroupsApi`: `requireMember(groupId, userId)` → роль, `requireAdmin(…)`, `members(groupId)` з відсутностями, `admins(groupId)`, `names(groupIds)` | `tasks`, `stats`, `notifications`      |
-| `tasks`    | `TasksApi`: `hold(taskId, tx)`, `find(taskId)`, `assignedTo(userId, from, until?)`, `openAssignedDueBetween(from, to)`                            | `calendar`, `notifications`, `stats`   |
-| `calendar` | `CalendarApi`: `settings(userId)`, `setReminderMinutes(userId, minutes)`                                                                          | `notifications` (сторінка налаштувань) |
-| `mail`     | `MailService.send(template, to, data, locale)`                                                                                                    | `notifications`, `auth`, `groups`      |
+| Модуль     | Публічне API                                                                                                                                         | Хто використовує                       |
+| ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------- |
+| `users`    | `UsersApi`: `findById`, `findByEmail`, `create`, `markEmailVerified` — ім'я, мова, часовий пояс для листів                                           | `auth`, згодом усі                     |
+| `groups`   | `GroupsApi`: `requireMember(groupId, userId)` → роль, `requireAdmin(…)`, `members(groupId)` з відсутностями, `admins(groupId)`, `names(groupIds)`    | `tasks`, `stats`, `notifications`      |
+| `tasks`    | `TasksApi`: `hold(taskId, tx)`, `find(taskId)`, `inGroup(groupId, from, to)`, `assignedTo(userId, from, until?)`, `openAssignedDueBetween(from, to)` | `calendar`, `notifications`, `stats`   |
+| `calendar` | `CalendarApi`: `settings(userId)`, `setReminderMinutes(userId, minutes)`                                                                             | `notifications` (сторінка налаштувань) |
+| `mail`     | `MailService.send(template, to, data, locale)`                                                                                                       | `notifications`, `auth`, `groups`      |
 
 ### Події
 
