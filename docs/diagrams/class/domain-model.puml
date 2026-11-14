@@ -101,9 +101,9 @@ package tasks {
     +decidedAt : DateTime?
   }
   class MemberStats <<обчислюється>> {
-    +tasksDone : Int
-    +tasksOverdue : Int
-    +workload : Int
+    +done : Int
+    +overdue : Int
+    +difficulty : Int
   }
 }
 
