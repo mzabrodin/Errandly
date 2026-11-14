@@ -8,17 +8,19 @@ import {
   smallint,
   text,
   unique,
+  uniqueIndex,
   uuid,
   varchar,
   type AnyPgColumn,
 } from 'drizzle-orm/pg-core';
 
-import { LIMITS, RECURRENCE_TYPES } from '../common/domain.js';
+import { LIMITS, RECURRENCE_TYPES, SWAP_STATUSES } from '../common/domain.js';
 import { createdAt, id, timestamptz, updatedAt } from '../db/columns.js';
 import { groups } from '../groups/groups.schema.js';
 import { users } from '../users/users.schema.js';
 
 export const recurrenceTypeEnum = pgEnum('recurrence_type', RECURRENCE_TYPES);
+export const swapStatusEnum = pgEnum('swap_status', SWAP_STATUSES);
 
 function difficultyRange(column: AnyPgColumn): SQL {
   return sql`${column} between ${sql.raw(String(LIMITS.difficultyMin))} and ${sql.raw(String(LIMITS.difficultyMax))}`;
@@ -97,7 +99,44 @@ export const tasks = pgTable(
   ],
 );
 
+/** FR-26; whether a pending swap still applies is computed from its tasks */
+export const taskSwaps = pgTable(
+  'task_swaps',
+  {
+    id: id(),
+    groupId: uuid()
+      .notNull()
+      .references(() => groups.id, { onDelete: 'cascade' }),
+    offeredTaskId: uuid()
+      .notNull()
+      .references(() => tasks.id, { onDelete: 'cascade' }),
+    requestedTaskId: uuid()
+      .notNull()
+      .references(() => tasks.id, { onDelete: 'cascade' }),
+    proposerId: uuid()
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    recipientId: uuid()
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    status: swapStatusEnum().notNull().default('pending'),
+    createdAt: createdAt(),
+    decidedAt: timestamptz(),
+  },
+  (t) => [
+    uniqueIndex('task_swaps_pending_key')
+      .on(t.offeredTaskId, t.requestedTaskId)
+      .where(sql`${t.status} = 'pending'`),
+    index('task_swaps_group_id_idx').on(t.groupId),
+    index('task_swaps_requested_task_id_idx').on(t.requestedTaskId),
+    check('task_swaps_distinct_tasks', sql`${t.offeredTaskId} <> ${t.requestedTaskId}`),
+    check('task_swaps_distinct_users', sql`${t.proposerId} <> ${t.recipientId}`),
+  ],
+);
+
 export type TaskSeriesRow = typeof taskSeries.$inferSelect;
 export type NewTaskSeriesRow = typeof taskSeries.$inferInsert;
 export type TaskRow = typeof tasks.$inferSelect;
 export type NewTaskRow = typeof tasks.$inferInsert;
+export type TaskSwapRow = typeof taskSwaps.$inferSelect;
+export type NewTaskSwapRow = typeof taskSwaps.$inferInsert;

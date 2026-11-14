@@ -42,6 +42,59 @@ export function localDay(at: Date, timeZone: string): string {
   return format(new TZDate(at, timeZone), 'yyyy-MM-dd');
 }
 
+/** FR-17: absences are whole local days, inclusive */
+export function isAbsentOn(
+  absences: readonly { from: string; to: string }[],
+  at: Date,
+  timeZone: string,
+): boolean {
+  const day = localDay(at, timeZone);
+  return absences.some(({ from, to }) => from <= day && day <= to);
+}
+
+export interface SwapTask {
+  assigneeId: string | null;
+  completedAt: Date | null;
+  dueAt: Date;
+  series: { timezone: string };
+}
+
+export interface SwapParties {
+  proposerId: string;
+  recipientId: string;
+  proposerAbsences: readonly { from: string; to: string }[];
+  recipientAbsences: readonly { from: string; to: string }[];
+}
+
+export function swapProblem(
+  parties: SwapParties,
+  offered: SwapTask,
+  requested: SwapTask,
+  now: Date,
+): 'SWAP_STALE' | 'MEMBER_ABSENT' | null {
+  const open = (task: SwapTask): boolean =>
+    task.completedAt === null && task.dueAt.getTime() > now.getTime();
+  if (
+    offered.assigneeId !== parties.proposerId ||
+    requested.assigneeId !== parties.recipientId ||
+    !open(offered) ||
+    !open(requested)
+  ) {
+    return 'SWAP_STALE';
+  }
+  const recipientAway = isAbsentOn(
+    parties.recipientAbsences,
+    offered.dueAt,
+    offered.series.timezone,
+  );
+  const proposerAway = isAbsentOn(
+    parties.proposerAbsences,
+    requested.dueAt,
+    requested.series.timezone,
+  );
+  return recipientAway || proposerAway ? 'MEMBER_ABSENT' : null;
+}
+
 export function taskStatus(
   task: { completedAt: Date | null; dueAt: Date; assigneeId: string | null },
   now: Date,

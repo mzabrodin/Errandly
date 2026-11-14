@@ -18,6 +18,8 @@ export const ERROR_STATUS = {
   LAST_ADMIN: HttpStatus.CONFLICT,
   TASK_DONE: HttpStatus.CONFLICT,
   UNDO_EXPIRED: HttpStatus.CONFLICT,
+  SWAP_STALE: HttpStatus.CONFLICT,
+  MEMBER_ABSENT: HttpStatus.CONFLICT,
   CANNOT_REMOVE_SELF: HttpStatus.CONFLICT,
   CALENDAR_NOT_CONNECTED: HttpStatus.CONFLICT,
   /** A unique or foreign-key constraint caught a race the service did not */

@@ -36,6 +36,13 @@
       "when": 1794653945835,
       "tag": "0004_calendar_sync",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1794688176164,
+      "tag": "0005_task_swaps",
+      "breakpoints": true
     }
   ]
 }

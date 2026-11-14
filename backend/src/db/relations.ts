@@ -12,7 +12,7 @@ import {
   notifications,
   notificationSettings,
 } from '../notifications/notifications.schema.js';
-import { tasks, taskSeries } from '../tasks/tasks.schema.js';
+import { tasks, taskSeries, taskSwaps } from '../tasks/tasks.schema.js';
 import { users } from '../users/users.schema.js';
 
 // Relations for the typed `db.query` API. They live here, not in the module schemas,
@@ -84,6 +84,24 @@ export const tasksRelations = relations(tasks, ({ one, many }) => ({
   group: one(groups, { fields: [tasks.groupId], references: [groups.id] }),
   assignee: one(users, { fields: [tasks.assigneeId], references: [users.id] }),
   calendarEventLinks: many(calendarEventLinks),
+  offeredInSwaps: many(taskSwaps, { relationName: 'offeredTask' }),
+  requestedInSwaps: many(taskSwaps, { relationName: 'requestedTask' }),
+}));
+
+export const taskSwapsRelations = relations(taskSwaps, ({ one }) => ({
+  group: one(groups, { fields: [taskSwaps.groupId], references: [groups.id] }),
+  offeredTask: one(tasks, {
+    fields: [taskSwaps.offeredTaskId],
+    references: [tasks.id],
+    relationName: 'offeredTask',
+  }),
+  requestedTask: one(tasks, {
+    fields: [taskSwaps.requestedTaskId],
+    references: [tasks.id],
+    relationName: 'requestedTask',
+  }),
+  proposer: one(users, { fields: [taskSwaps.proposerId], references: [users.id] }),
+  recipient: one(users, { fields: [taskSwaps.recipientId], references: [users.id] }),
 }));
 
 export const notificationsRelations = relations(notifications, ({ one }) => ({

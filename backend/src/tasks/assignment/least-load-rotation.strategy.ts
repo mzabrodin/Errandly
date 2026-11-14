@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 
-import { LOAD_WINDOW_MS, localDay } from '../tasks.rules.js';
+import { isAbsentOn, LOAD_WINDOW_MS } from '../tasks.rules.js';
 import {
   AssignmentStrategy,
   type AssignedTask,
@@ -22,10 +22,9 @@ export class LeastLoadRotationStrategy extends AssignmentStrategy {
     history: readonly AssignedTask[],
     task: TaskToAssign,
   ): string | null {
-    const day = localDay(task.dueAt, task.timeZone);
     const due = task.dueAt.getTime();
     const scored = candidates
-      .filter((candidate) => !candidate.absences.some(({ from, to }) => from <= day && day <= to))
+      .filter((candidate) => !isAbsentOn(candidate.absences, task.dueAt, task.timeZone))
       .map((candidate): Scored => {
         const own = history.filter((other) => other.assigneeId === candidate.userId);
         return {
