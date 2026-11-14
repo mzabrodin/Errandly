@@ -5,6 +5,7 @@ import { authHandlers } from './routes/auth';
 import { API } from './routes/common';
 import { groupHandlers } from './routes/groups';
 import { meHandlers } from './routes/me';
+import { swapHandlers } from './routes/swaps';
 import { taskHandlers } from './routes/tasks';
 
 // Mock API handlers, grouped by section in ./routes
@@ -15,6 +16,7 @@ export const handlers = [
   ...authHandlers,
   ...groupHandlers,
   ...taskHandlers,
+  ...swapHandlers,
   ...activityHandlers,
   ...meHandlers,
 ];

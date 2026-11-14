@@ -22,6 +22,8 @@ export type Task = Schemas['TaskDto'];
 /** Task form; `assigneeId: null` means automatic assignment */
 export type TaskInput = Schemas['CreateTaskDto'];
 export type EditScope = Schemas['EditScope'];
+export type SwapStatus = Schemas['SwapStatus'];
+export type Swap = Schemas['SwapDto'];
 
 export type StatsPeriod = Schemas['StatsPeriod'];
 export type MemberStats = Schemas['MemberStatsDto'];

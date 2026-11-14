@@ -1,9 +1,12 @@
 import { clsx } from 'clsx';
 import {
   AlertTriangle,
+  ArrowLeftRight,
   ArrowRightLeft,
   Bell,
   CheckCheck,
+  CircleX,
+  Handshake,
   ListChecks,
   ShieldCheck,
   ShieldOff,
@@ -32,6 +35,9 @@ const ICONS: Record<NotificationType, { icon: typeof Bell; tone: string }> = {
   roleGranted: { icon: ShieldCheck, tone: 'var(--lime)' },
   roleRevoked: { icon: ShieldOff, tone: 'var(--cream-deep)' },
   removedFromGroup: { icon: UserMinus, tone: 'var(--status-overdue)' },
+  swapProposed: { icon: ArrowLeftRight, tone: 'var(--sky)' },
+  swapAccepted: { icon: Handshake, tone: 'var(--lime)' },
+  swapDeclined: { icon: CircleX, tone: 'var(--cream-deep)' },
 };
 
 function isPresent(value: string | null): value is string {

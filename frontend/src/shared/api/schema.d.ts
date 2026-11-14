@@ -503,6 +503,99 @@ export interface paths {
         patch: operations["TasksController_reassign"];
         trace?: never;
     };
+    "/api/groups/{groupId}/swaps": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The caller's pending swaps in the group, sent and received, that can still be accepted. */
+        get: operations["TaskSwapsController_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/tasks/{taskId}/swaps": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Offers the caller's task for another member's task; proposing the same pair again returns
+         *     the pending swap. Errors: 404 NOT_FOUND, 403 FORBIDDEN, 403 NOT_ASSIGNEE,
+         *     400 VALIDATION (requestedTaskId invalid), 409 SWAP_STALE (a task is done or past due),
+         *     409 MEMBER_ABSENT.
+         */
+        post: operations["TaskSwapsController_propose"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/swaps/{swapId}/accept": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * The recipient accepts: both tasks change hands at once and become manual assignments.
+         *     Idempotent. Errors: 404 NOT_FOUND, 403 FORBIDDEN, 409 SWAP_STALE, 409 MEMBER_ABSENT.
+         */
+        post: operations["TaskSwapsController_accept"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/swaps/{swapId}/decline": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** The recipient declines; nothing changes hands. Idempotent. Errors: 404, 403, 409 SWAP_STALE. */
+        post: operations["TaskSwapsController_decline"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/swaps/{swapId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** The proposer withdraws a pending swap. Idempotent. Errors: 404, 403, 409 SWAP_STALE. */
+        delete: operations["TaskSwapsController_cancel"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/me/calendar/connect": {
         parameters: {
             query?: never;
@@ -654,7 +747,7 @@ export interface components {
             database: "up" | "down";
         };
         /** @enum {string} */
-        ErrorCode: "VALIDATION" | "TOKEN_INVALID" | "WRONG_PASSWORD" | "UNAUTHENTICATED" | "INVALID_CREDENTIALS" | "FORBIDDEN" | "ADMIN_ONLY" | "NOT_ASSIGNEE" | "EMAIL_NOT_VERIFIED" | "NOT_FOUND" | "EMAIL_TAKEN" | "LAST_ADMIN" | "TASK_DONE" | "UNDO_EXPIRED" | "CANNOT_REMOVE_SELF" | "CALENDAR_NOT_CONNECTED" | "CONFLICT" | "INVITE_INVALID" | "FILE_TOO_LARGE" | "ACCOUNT_LOCKED" | "TOO_MANY_REQUESTS" | "INTERNAL" | "NOT_IMPLEMENTED" | "SERVICE_UNAVAILABLE";
+        ErrorCode: "VALIDATION" | "TOKEN_INVALID" | "WRONG_PASSWORD" | "UNAUTHENTICATED" | "INVALID_CREDENTIALS" | "FORBIDDEN" | "ADMIN_ONLY" | "NOT_ASSIGNEE" | "EMAIL_NOT_VERIFIED" | "NOT_FOUND" | "EMAIL_TAKEN" | "LAST_ADMIN" | "TASK_DONE" | "UNDO_EXPIRED" | "SWAP_STALE" | "MEMBER_ABSENT" | "CANNOT_REMOVE_SELF" | "CALENDAR_NOT_CONNECTED" | "CONFLICT" | "INVITE_INVALID" | "FILE_TOO_LARGE" | "ACCOUNT_LOCKED" | "TOO_MANY_REQUESTS" | "INTERNAL" | "NOT_IMPLEMENTED" | "SERVICE_UNAVAILABLE";
         ApiErrorDto: {
             code: components["schemas"]["ErrorCode"];
             /**
@@ -891,6 +984,36 @@ export interface components {
             /** Format: uuid */
             assigneeId: string;
         };
+        /** @enum {string} */
+        SwapStatus: "pending" | "accepted" | "declined" | "cancelled";
+        SwapTaskDto: {
+            id: string;
+            title: string;
+            /** @description ISO date-time, UTC */
+            dueAt: string;
+            /** @description 1–5 */
+            difficulty: number;
+        };
+        SwapDto: {
+            status: components["schemas"]["SwapStatus"];
+            id: string;
+            groupId: string;
+            proposerId: string;
+            recipientId: string;
+            /** @description The proposer's task, which the recipient would take over */
+            offeredTask: components["schemas"]["SwapTaskDto"];
+            /** @description The recipient's task, which the proposer would take over */
+            requestedTask: components["schemas"]["SwapTaskDto"];
+            /** @description ISO date-time, UTC */
+            createdAt: string;
+        };
+        ProposeSwapDto: {
+            /**
+             * Format: uuid
+             * @description Another member's open, upcoming task in the same group
+             */
+            requestedTaskId: string;
+        };
         CalendarConnectDto: {
             /** @description Google consent page; the frontend navigates to it */
             url: string;
@@ -908,7 +1031,7 @@ export interface components {
             lastSyncedAt: string | null;
         };
         /** @enum {string} */
-        NotificationType: "groupCreated" | "groupJoined" | "memberJoined" | "taskAssigned" | "taskUnassigned" | "taskOverdue" | "roleGranted" | "roleRevoked" | "removedFromGroup";
+        NotificationType: "groupCreated" | "groupJoined" | "memberJoined" | "taskAssigned" | "taskUnassigned" | "taskOverdue" | "roleGranted" | "roleRevoked" | "removedFromGroup" | "swapProposed" | "swapAccepted" | "swapDeclined";
         NotificationDataDto: {
             groupName?: string;
             taskTitle?: string;
@@ -2021,6 +2144,158 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["TaskDto"];
                 };
+            };
+            /** @description Error: { code, fields?, ... } */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
+        };
+    };
+    TaskSwapsController_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                groupId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SwapDto"][];
+                };
+            };
+            /** @description Error: { code, fields?, ... } */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
+        };
+    };
+    TaskSwapsController_propose: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                taskId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProposeSwapDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SwapDto"];
+                };
+            };
+            /** @description Error: { code, fields?, ... } */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
+        };
+    };
+    TaskSwapsController_accept: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                swapId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SwapDto"];
+                };
+            };
+            /** @description Error: { code, fields?, ... } */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
+        };
+    };
+    TaskSwapsController_decline: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                swapId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SwapDto"];
+                };
+            };
+            /** @description Error: { code, fields?, ... } */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
+        };
+    };
+    TaskSwapsController_cancel: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                swapId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Error: { code, fields?, ... } */
             default: {

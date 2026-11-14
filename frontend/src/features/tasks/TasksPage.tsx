@@ -24,6 +24,7 @@ import { PageSpinner } from '../../shared/ui/Spinner';
 import { useCurrentGroup } from '../groups/useCurrentGroup';
 import { arrangeTasks, type ArrangedTasks, type TaskScope } from './filterTasks';
 import { Onboarding } from './Onboarding';
+import { SwapRequests } from './SwapRequests';
 import { useTaskActions } from './taskActionsContext';
 import { TaskCard } from './TaskCard';
 import { TasksAside } from './TasksAside';
@@ -348,6 +349,7 @@ export function TasksPage(): JSX.Element {
 
       <div className={styles.layout}>
         <div className={styles.mainCol}>
+          <SwapRequests />
           <TasksToolbar
             scope={scope}
             status={status}

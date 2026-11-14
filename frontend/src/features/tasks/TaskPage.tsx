@@ -1,6 +1,7 @@
 import { clsx } from 'clsx';
 import {
   ArrowLeft,
+  ArrowLeftRight,
   CalendarClock,
   Check,
   Pencil,
@@ -27,6 +28,7 @@ import { EmptyState } from '../../shared/ui/EmptyState';
 import { Pill } from '../../shared/ui/Pill';
 import { PageSpinner } from '../../shared/ui/Spinner';
 import { useCurrentGroup } from '../groups/useCurrentGroup';
+import { canProposeSwap } from './swaps';
 import { useTaskActions } from './taskActionsContext';
 import { DifficultyDots } from './TaskCard';
 import styles from './TaskPage.module.css';
@@ -163,6 +165,8 @@ export function TaskPage(): JSX.Element {
       task={task}
       onEdit={() => actions.edit(task)}
       onReassign={() => actions.reassign(task)}
+      onProposeSwap={() => actions.proposeSwap(task)}
+      canSwap={canProposeSwap(task, me.id)}
       onDelete={() =>
         actions.remove(task, () => {
           void navigate(backTo, { replace: true });
@@ -188,6 +192,8 @@ interface TaskDetailsProps {
   toggle: () => void;
   onEdit: () => void;
   onReassign: () => void;
+  onProposeSwap: () => void;
+  canSwap: boolean;
   onDelete: () => void;
   backTo: string;
   backLabel: string;
@@ -261,6 +267,8 @@ function TaskButtons({
   toggle,
   onEdit,
   onReassign,
+  onProposeSwap,
+  canSwap,
   onDelete,
 }: TaskButtonsProps): JSX.Element {
   const { t } = useTranslation();
@@ -282,6 +290,16 @@ function TaskButtons({
         assigneeName !== undefined &&
         assigneeName !== '' &&
         !done && <p className={styles.muted}>{t('taskPage.notYours', { name: assigneeName })}</p>
+      )}
+      {canSwap && (
+        <Button
+          variant="secondary"
+          size="sm"
+          icon={<ArrowLeftRight size={15} />}
+          onClick={onProposeSwap}
+        >
+          {t('swaps.propose')}
+        </Button>
       )}
       {isAdmin && (
         <div className={styles.adminActions}>
