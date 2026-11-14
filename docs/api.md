@@ -135,7 +135,7 @@
 
 ## Листи
 
-Шаблони й відправка — `backend/src/mail` (`MailService.send(template, to, data, locale)`). Лист іде мовою акаунта одержувача (`User.locale`); запрошення людині без акаунта — мовою того, хто запрошує. Шаблони: `verifyEmail`, `resetPassword`, `invite`, `taskAssigned`, `taskDueSoon`, `taskOverdue`; поля даних описані в `backend/src/mail/templates/index.ts`. Посилання в листах фронтенд очікує на `/verify-email/:token`, `/reset-password/:token`, `/invite/:token`, `/g/:groupId/tasks/:taskId`, `/settings`.
+Шаблони й відправка — `backend/src/mail` (`MailService.send(template, to, data, locale)`). Лист іде мовою акаунта одержувача (`User.locale`); запрошення людині без акаунта — мовою того, хто запрошує. Шаблони: `verifyEmail`, `resetPassword`, `invite`, `taskAssigned`, `taskDueSoon`, `taskOverdue`. Кожен шаблон — компонент React Email (`backend/src/mail/templates/*.tsx`) зі zod-схемою своїх даних: вона типізує `MailService.send`, а dev-ендпоінт повертає 400 з переліком хибних полів. Тексти — `backend/src/mail/locales/{uk,en}.json` (i18next; тест перевіряє, що ключі в обох мовах однакові). Дані користувача React екранує, тож ім'я чи назва групи ніколи не стають розміткою; текстова версія листа генерується з HTML. `taskDueSoon` також приймає `reminderMinutes` (час нагадування з налаштувань) і пише «до терміну залишилось менше …» відповідно до нього. Посилання в листах фронтенд очікує на `/verify-email/:token`, `/reset-password/:token`, `/invite/:token`, `/g/:groupId/tasks/:taskId`, `/settings`.
 
 ## Статистика та налаштування
 
