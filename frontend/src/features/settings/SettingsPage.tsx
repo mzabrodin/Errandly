@@ -59,7 +59,7 @@ const SECTIONS = [
 ] as const;
 
 const SECTION_IDS = SECTIONS.map((section) => section.id);
-type ReminderMinutes = NonNullable<SettingsPatch['reminderMinutes']>;
+type ReminderMinutes = NonNullable<SettingsPatch['calendarReminderMinutes']>;
 
 const REMINDER_OPTIONS: readonly ReminderMinutes[] = [15, 30, 60, 180, 1440];
 
@@ -315,6 +315,31 @@ function NotificationsSection({ settings, user }: { settings: Settings; user: Us
           />
         ))}
       </div>
+      <div className={styles.row}>
+        <Field label={t('settings.emailReminder')} hint={t('settings.emailReminderHint')}>
+          {(props) => (
+            <Select
+              {...props}
+              value={settings.emailReminderMinutes}
+              disabled={!settings.notifications.dueSoon || update.isPending}
+              onChange={(event) => {
+                const emailReminderMinutes = toReminderMinutes(event.target.value);
+                if (emailReminderMinutes === undefined) return;
+                update.mutate(
+                  { emailReminderMinutes },
+                  { onSuccess: () => toast(t('settings.saved')) },
+                );
+              }}
+            >
+              {REMINDER_OPTIONS.map((minutes) => (
+                <option key={minutes} value={minutes}>
+                  {t(`settings.reminderOptions.${minutes}`)}
+                </option>
+              ))}
+            </Select>
+          )}
+        </Field>
+      </div>
       <p className={styles.note}>
         <Bell size={15} />
         {t('settings.inAppNote')}
@@ -393,12 +418,12 @@ function CalendarSection({ settings }: { settings: Settings }): JSX.Element {
               {(props) => (
                 <Select
                   {...props}
-                  value={settings.reminderMinutes}
+                  value={settings.calendarReminderMinutes}
                   onChange={(event) => {
-                    const reminderMinutes = toReminderMinutes(event.target.value);
-                    if (reminderMinutes === undefined) return;
+                    const calendarReminderMinutes = toReminderMinutes(event.target.value);
+                    if (calendarReminderMinutes === undefined) return;
                     update.mutate(
-                      { reminderMinutes },
+                      { calendarReminderMinutes },
                       { onSuccess: () => toast(t('settings.saved')) },
                     );
                   }}
@@ -685,10 +710,10 @@ export function SettingsPage(): JSX.Element {
 
   // Return from the Google OAuth consent screen
   useEffect(() => {
-    if (params.get('calendar') === 'connected') {
-      toast(t('settings.connectedToast'));
-      setParams({}, { replace: true });
-    }
+    const result = params.get('calendar');
+    if (result === 'connected') toast(t('settings.connectedToast'));
+    if (result === 'error') toast(t('settings.connectFailed'), 'error');
+    if (result !== null) setParams({}, { replace: true });
   }, [params, setParams, toast, t]);
 
   if (isPending || !user) return <PageSpinner label={t('common.loading')} />;

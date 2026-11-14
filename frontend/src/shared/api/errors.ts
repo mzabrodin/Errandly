@@ -6,6 +6,7 @@ import { ApiError } from './client';
 export function errorMessage(error: unknown, t: TFunction): string {
   if (error instanceof ApiError) {
     if (error.status === 403) return t('errors.forbidden');
+    if (error.status === 503) return t('errors.unavailable');
     return t('errors.unknown');
   }
   if (error instanceof TypeError) return t('errors.network');
