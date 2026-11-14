@@ -6,6 +6,7 @@ export interface TaskActions {
   create: (defaultDay?: Date) => void;
   edit: (task: Task) => void;
   reassign: (task: Task) => void;
+  proposeSwap: (task: Task) => void;
   remove: (task: Task, onDeleted?: () => void) => void;
 }
 

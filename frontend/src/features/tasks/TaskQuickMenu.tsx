@@ -1,5 +1,14 @@
 import { clsx } from 'clsx';
-import { ArrowRight, Check, Clock, Pencil, Trash2, Undo2, UserRoundCog } from 'lucide-react';
+import {
+  ArrowLeftRight,
+  ArrowRight,
+  Check,
+  Clock,
+  Pencil,
+  Trash2,
+  Undo2,
+  UserRoundCog,
+} from 'lucide-react';
 import {
   useEffect,
   useId,
@@ -18,6 +27,7 @@ import { handleMenuKeys } from '../../shared/lib/menuKeys';
 import { Avatar } from '../../shared/ui/Avatar';
 import { Pill } from '../../shared/ui/Pill';
 import { useCurrentGroup } from '../groups/useCurrentGroup';
+import { canProposeSwap } from './swaps';
 import { useTaskActions } from './taskActionsContext';
 import styles from './TaskQuickMenu.module.css';
 import { canToggleTask, useToggleTask } from './useToggleTask';
@@ -106,6 +116,7 @@ function QuickMenuHead({
 interface QuickMenuItemsProps {
   task: Task;
   canToggle: boolean;
+  canSwap: boolean;
   isAdmin: boolean;
   /** The mutation lives in TaskQuickMenu: the menu unmounts after a click, but the toast must wait for the response */
   toggle: (task: Task) => void;
@@ -116,6 +127,7 @@ interface QuickMenuItemsProps {
 function QuickMenuItems({
   task,
   canToggle,
+  canSwap,
   isAdmin,
   toggle,
   run,
@@ -138,6 +150,17 @@ function QuickMenuItems({
         >
           {done ? <Undo2 size={17} /> : <Check size={17} />}
           {done ? t('taskPage.undo') : t('taskPage.markDone')}
+        </button>
+      )}
+      {canSwap && (
+        <button
+          type="button"
+          role="menuitem"
+          className={styles.item}
+          onClick={run(() => actions.proposeSwap(task))}
+        >
+          <ArrowLeftRight size={17} />
+          {t('swaps.propose')}
         </button>
       )}
       {isAdmin && !done && (
@@ -291,6 +314,7 @@ export function TaskQuickMenu({ task, children }: TaskQuickMenuProps): JSX.Eleme
             <QuickMenuItems
               task={task}
               canToggle={canToggle}
+              canSwap={canProposeSwap(task, me.id)}
               isAdmin={isAdmin}
               toggle={toggle}
               run={run}

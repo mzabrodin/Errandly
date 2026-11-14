@@ -5,6 +5,7 @@ import type {
   GroupRole,
   Recurrence,
   Settings,
+  SwapStatus,
   Task,
   TaskStatus,
   User,
@@ -37,6 +38,17 @@ interface DbAbsence {
 
 type DbTask = Omit<Task, 'status'>;
 
+export interface DbSwap {
+  id: string;
+  groupId: string;
+  offeredTaskId: string;
+  requestedTaskId: string;
+  proposerId: string;
+  recipientId: string;
+  status: SwapStatus;
+  createdAt: string;
+}
+
 interface DbInvite {
   token: string;
   groupId: string;
@@ -56,10 +68,11 @@ export interface Db {
   invites: DbInvite[];
   settings: Record<string, Settings>;
   notifications: (AppNotification & { userId: string })[];
+  swaps: DbSwap[];
 }
 
 const STORAGE_KEY = 'errandly-mock-db';
-const DB_VERSION = 6;
+const DB_VERSION = 7;
 const DAY_MS = 24 * 60 * 60 * 1000;
 export const HORIZON_DAYS = 28;
 
@@ -387,6 +400,7 @@ function seed(): Db {
     invites: [],
     settings: {},
     notifications: [],
+    swaps: [],
   };
 
   seedUsers(db);
@@ -402,7 +416,34 @@ function seed(): Db {
   });
 
   seedNotifications(db);
+  seedSwaps(db);
   return db;
+}
+
+/** Bohdan offers his next task for Anya's, so the demo user sees an incoming swap */
+function seedSwaps(target: Db): void {
+  const next = (userId: string) =>
+    target.tasks
+      .filter(
+        (task) =>
+          task.groupId === 'g-room12' &&
+          task.assigneeId === userId &&
+          new Date(task.dueAt).getTime() > Date.now() + 24 * 60 * 60 * 1000,
+      )
+      .toSorted((a, b) => a.dueAt.localeCompare(b.dueAt))[0];
+  const offered = next('u-bohdan');
+  const requested = next('u-anya');
+  if (!offered || !requested) return;
+  target.swaps.push({
+    id: id('swap'),
+    groupId: 'g-room12',
+    offeredTaskId: offered.id,
+    requestedTaskId: requested.id,
+    proposerId: 'u-bohdan',
+    recipientId: 'u-anya',
+    status: 'pending',
+    createdAt: hoursAgo(2),
+  });
 }
 
 function hoursAgo(hours: number): string {

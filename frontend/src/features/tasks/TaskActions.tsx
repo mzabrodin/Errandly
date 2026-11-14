@@ -1,6 +1,7 @@
 import { useCallback, useMemo, useState, type JSX, type ReactNode } from 'react';
 
 import type { Task } from '../../shared/api/types';
+import { ProposeSwapModal } from './ProposeSwapModal';
 import { DeleteTaskModal, ReassignModal } from './TaskActionModals';
 import { TaskActionsContext, type TaskActions } from './taskActionsContext';
 import { TaskFormModal } from './TaskFormModal';
@@ -15,6 +16,7 @@ interface FormState {
 export function TaskActionsProvider({ children }: { children: ReactNode }): JSX.Element {
   const [form, setForm] = useState<FormState>({ open: false, task: null });
   const [reassigning, setReassigning] = useState<Task | null>(null);
+  const [swapping, setSwapping] = useState<Task | null>(null);
   const [deleting, setDeleting] = useState<{
     task: Task;
     onDeleted?: (() => void) | undefined;
@@ -31,7 +33,7 @@ export function TaskActionsProvider({ children }: { children: ReactNode }): JSX.
   );
 
   const value = useMemo<TaskActions>(
-    () => ({ create, edit, reassign: setReassigning, remove }),
+    () => ({ create, edit, reassign: setReassigning, proposeSwap: setSwapping, remove }),
     [create, edit, remove],
   );
 
@@ -45,6 +47,7 @@ export function TaskActionsProvider({ children }: { children: ReactNode }): JSX.
         onClose={() => setForm((current) => ({ ...current, open: false }))}
       />
       <ReassignModal task={reassigning} onClose={() => setReassigning(null)} />
+      <ProposeSwapModal task={swapping} onClose={() => setSwapping(null)} />
       <DeleteTaskModal
         task={deleting?.task ?? null}
         onClose={() => setDeleting(null)}

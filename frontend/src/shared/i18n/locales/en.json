@@ -336,7 +336,10 @@
       "taskOverdue": "Overdue: <b>“{{task}}”</b>. Mark it if you’ve already done it",
       "roleGranted": "You were made an admin of the group <b>“{{group}}”</b>",
       "roleRevoked": "You’re no longer an admin of the group “{{group}}”",
-      "removedFromGroup": "You were removed from the group “{{group}}”"
+      "removedFromGroup": "You were removed from the group “{{group}}”",
+      "swapProposed": "<b>{{actor}}</b> offers “{{task}}” for one of your tasks",
+      "swapAccepted": "<b>{{actor}}</b> accepted your swap: “{{task}}” is yours now",
+      "swapDeclined": "<b>{{actor}}</b> declined your swap: “{{task}}” stays with you"
     }
   },
   "onboarding": {
@@ -561,5 +564,25 @@
     "title": "page not found",
     "text": "The link may be outdated or contain a typo.",
     "back": "Home"
+  },
+  "swaps": {
+    "title": "Swap offers",
+    "propose": "Offer a swap",
+    "proposeTitle": "Swap tasks",
+    "proposeHint": "Pick the task you’ll take instead of “{{task}}”. The tasks change hands once the other person agrees.",
+    "none": "Other members have no open tasks in the next 4 weeks",
+    "sent": "Swap offered to {{name}}",
+    "incoming": "<b>{{name}}</b> offers to swap tasks",
+    "outgoing": "You offered a swap to <b>{{name}}</b>",
+    "youGive": "You give",
+    "youTake": "You take",
+    "accept": "Accept",
+    "decline": "Decline",
+    "cancel": "Withdraw",
+    "accepted": "Swap accepted",
+    "declined": "Swap declined",
+    "cancelled": "Swap withdrawn",
+    "stale": "The tasks have changed, so this offer no longer applies",
+    "absent": "One of you is away on the task’s day"
   }
 }
