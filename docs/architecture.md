@@ -237,6 +237,28 @@ OAuth-клієнт Google (`common/google/google-clients.ts`, `GoogleClients`) �
 | `OAuthSignIn`        | `GoogleOAuthSignIn`         | вхід через провайдера (FR-07): `SignInProviders.for(provider)` — `Record<AuthProvider, OAuthSignIn>`, тож новий провайдер без адаптера не компілюється; Microsoft чи GitHub — новий клас |
 | `AssignmentStrategy` | `LeastLoadRotationStrategy` | алгоритм розподілу (FR-27–29) окремо від сервісу задач; інший алгоритм — інший клас                                                                                                      |
 
+## Зупинка й тайм-аути
+
+На SIGTERM чи SIGINT (у compose `init: true`, тож сигнал доходить до Node) Nest проходить фази в такому порядку:
+
+1. `onModuleDestroy`: `ShutdownState` вмикає `shutdownGate`, тож нові запити отримують `503 SERVICE_UNAVAILABLE` з `Connection: close`.
+2. `beforeApplicationShutdown`: `EventDispatcher`, `SeriesTopUp` і `ReminderJobs` не починають нового запуску й чекають поточний (`ExclusiveRunner.stop()`). Диспетчер доставляє подію, яку вже почав, а решту пачки повертає в чергу без очікування оренди.
+3. HTTP-сервер закривається, щойно відповість на запити, що вже виконуються.
+4. `onApplicationShutdown`: закриваються SMTP і S3, останнім — пул PostgreSQL.
+
+Якщо зупинка триває довше за `SHUTDOWN_TIMEOUT_MS` (20 с, менше за `stop_grace_period: 30s` у compose), процес виходить з кодом 1.
+
+Тайм-аути зовнішніх викликів не дають одному завислому з'єднанню тримати запит, доставку чи зупинку:
+
+| Що           | Тайм-аути                                                                                                     |
+| ------------ | ------------------------------------------------------------------------------------------------------------- |
+| HTTP-сервер  | заголовки — 15 с, увесь запит — 30 с                                                                          |
+| PostgreSQL   | з'єднання — 5 с, запит — 30 с, транзакція без дій — 60 с (CLI-скрипти міграцій працюють без цих лімітів)      |
+| SMTP         | з'єднання й привітання — 10 с, сокет — 30 с; у production справжній сервер без `SMTP_SECURE` вимагає STARTTLS |
+| S3           | з'єднання — 5 с, запит — 15 с                                                                                 |
+| Google API   | 10 с                                                                                                          |
+| Health-проби | 3 с кожна                                                                                                     |
+
 ## Логування
 
 nestjs-pino пише JSON-логи з `X-Request-Id` (nginx передає його далі), кодом помилки контракту (`errorCode`) і без секретів: заголовки авторизації, cookie, паролі, токени, токени запрошень і OAuth-параметри `code`/`state` в URL замасковано. SQL пишеться на рівні `debug` без параметрів. `EventDispatcher` попереджає про кожен повтор і пише помилку, коли здається.

@@ -10,6 +10,7 @@ import type { EventPublicationStore } from './event-publication.store.js';
 import type { EventPublicationRow } from './event-publications.schema.js';
 
 const NOW = '2026-11-09T10:00:00.000Z';
+const noop = (): void => undefined;
 
 function publication(overrides: Partial<EventPublicationRow> = {}): EventPublicationRow {
   return {
@@ -31,6 +32,7 @@ function setup(due: EventPublicationRow[], run?: RegisteredListener['run']) {
     claimDue: vi.fn<EventPublicationStore['claimDue']>().mockResolvedValue(due),
     complete: vi.fn<EventPublicationStore['complete']>().mockResolvedValue(),
     fail: vi.fn<EventPublicationStore['fail']>().mockResolvedValue(),
+    release: vi.fn<EventPublicationStore['release']>().mockResolvedValue(),
   };
   const bus = {
     listener: (): RegisteredListener | undefined =>
@@ -128,13 +130,37 @@ describe('EventDispatcher', () => {
     await expect(dispatcher.tick()).resolves.toBeUndefined();
   });
 
-  it('does not poll when the interval is 0 and stops the poller on shutdown', () => {
+  it('does not poll when the interval is 0 and stops the poller on shutdown', async () => {
     const { dispatcher, scheduler } = setup([]);
 
     dispatcher.onApplicationBootstrap();
-    dispatcher.onApplicationShutdown();
+    await dispatcher.beforeApplicationShutdown();
 
     expect(scheduler.addInterval).not.toHaveBeenCalled();
     expect(scheduler.deleteInterval).toHaveBeenCalledWith('event-dispatcher');
+  });
+
+  it('on shutdown, finishes the delivery in flight and hands the rest of the batch back', async () => {
+    let release = noop;
+    const run = vi.fn<RegisteredListener['run']>(
+      () =>
+        new Promise<void>((resolve) => {
+          release = resolve;
+        }),
+    );
+    const { dispatcher, store } = setup(
+      [publication({ id: 'p1' }), publication({ id: 'p2' }), publication({ id: 'p3' })],
+      run,
+    );
+
+    const tick = dispatcher.tick();
+    await vi.waitFor(() => expect(run).toHaveBeenCalledOnce());
+    const stopping = dispatcher.beforeApplicationShutdown();
+    release();
+    await Promise.all([tick, stopping]);
+
+    expect(run).toHaveBeenCalledOnce();
+    expect(store.complete).toHaveBeenCalledWith('p1', expect.any(Date));
+    expect(store.release).toHaveBeenCalledWith(['p2', 'p3'], new Date(NOW));
   });
 });

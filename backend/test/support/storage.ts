@@ -1,10 +1,13 @@
-import type { OnModuleDestroy, OnModuleInit } from '@nestjs/common';
+import type { OnApplicationShutdown, OnModuleInit } from '@nestjs/common';
 
 import { ObjectStorage, type StoredObject } from '../../src/common/storage/object-storage.js';
 import type { S3ObjectStorage } from '../../src/common/storage/s3-object-storage.js';
 
 /** The real S3 storage (SeaweedFS); `failNext` emulates a storage outage */
-export class FlakyObjectStorage extends ObjectStorage implements OnModuleInit, OnModuleDestroy {
+export class FlakyObjectStorage
+  extends ObjectStorage
+  implements OnModuleInit, OnApplicationShutdown
+{
   private failures = 0;
 
   constructor(private readonly inner: S3ObjectStorage) {
@@ -15,8 +18,8 @@ export class FlakyObjectStorage extends ObjectStorage implements OnModuleInit, O
     return this.inner.onModuleInit();
   }
 
-  onModuleDestroy(): void {
-    this.inner.onModuleDestroy();
+  onApplicationShutdown(): void {
+    this.inner.onApplicationShutdown();
   }
 
   failNext(count = 1): void {

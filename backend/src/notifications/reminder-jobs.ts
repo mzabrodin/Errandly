@@ -1,4 +1,10 @@
-import { Inject, Injectable, Logger, type OnApplicationBootstrap } from '@nestjs/common';
+import {
+  Inject,
+  Injectable,
+  Logger,
+  type BeforeApplicationShutdown,
+  type OnApplicationBootstrap,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Cron, CronExpression } from '@nestjs/schedule';
 
@@ -22,7 +28,7 @@ const OVERDUE_LOOKBACK_MS = 2 * DAY_MS;
 
 /** FR-25, FR-38; also at start-up, so runs missed while the server was down catch up (SYS-25) */
 @Injectable()
-export class ReminderJobs implements OnApplicationBootstrap {
+export class ReminderJobs implements OnApplicationBootstrap, BeforeApplicationShutdown {
   private readonly logger = new Logger(ReminderJobs.name);
   private readonly runner = new ExclusiveRunner(this.logger, 'Reminders');
   private readonly enabled: boolean;
@@ -43,6 +49,11 @@ export class ReminderJobs implements OnApplicationBootstrap {
 
   onApplicationBootstrap(): void {
     if (this.enabled) void this.tick();
+  }
+
+  /** Before the pool closes; later cron ticks do nothing */
+  beforeApplicationShutdown(): Promise<void> {
+    return this.runner.stop();
   }
 
   @Cron(CronExpression.EVERY_5_MINUTES)

@@ -41,6 +41,15 @@ export class EventPublicationStore {
       .where(eq(eventPublications.id, id));
   }
 
+  /** Gives claimed publications back before their lease ends (shutdown) */
+  async release(ids: readonly string[], at: Date): Promise<void> {
+    if (ids.length === 0) return;
+    await this.db
+      .update(eventPublications)
+      .set({ nextAttemptAt: at })
+      .where(and(inArray(eventPublications.id, ids), isNull(eventPublications.completedAt)));
+  }
+
   /** Deliveries still waiting although they were due before `before`: the dispatcher is stuck */
   countOverdue(before: Date): Promise<number> {
     return this.db.$count(

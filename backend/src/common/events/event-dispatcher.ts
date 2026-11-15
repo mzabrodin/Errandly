@@ -1,8 +1,8 @@
 import {
   Injectable,
   Logger,
+  type BeforeApplicationShutdown,
   type OnApplicationBootstrap,
-  type OnApplicationShutdown,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { SchedulerRegistry } from '@nestjs/schedule';
@@ -30,7 +30,7 @@ export function retryDelayMs(failedAttempts: number): number {
 
 /** Delivers after-commit events from event_publications (EVENTS_POLL_INTERVAL_MS, 0 = off) */
 @Injectable()
-export class EventDispatcher implements OnApplicationBootstrap, OnApplicationShutdown {
+export class EventDispatcher implements OnApplicationBootstrap, BeforeApplicationShutdown {
   private readonly logger = new Logger(EventDispatcher.name);
   private readonly runner = new ExclusiveRunner(this.logger, 'Event dispatch');
 
@@ -50,10 +50,12 @@ export class EventDispatcher implements OnApplicationBootstrap, OnApplicationShu
     this.scheduler.addInterval(INTERVAL_NAME, timer);
   }
 
-  onApplicationShutdown(): void {
+  /** Before the pool closes: the delivery in flight finishes, the rest of the batch is handed back */
+  async beforeApplicationShutdown(): Promise<void> {
     if (this.scheduler.doesExist('interval', INTERVAL_NAME)) {
       this.scheduler.deleteInterval(INTERVAL_NAME);
     }
+    await this.runner.stop();
   }
 
   /** One poll; overlapping ticks are skipped and a failing database is only logged */
@@ -64,11 +66,19 @@ export class EventDispatcher implements OnApplicationBootstrap, OnApplicationShu
   async dispatchDue(): Promise<number> {
     const now = this.clock.now();
     const due = await this.store.claimDue(now, BATCH_SIZE, addMs(now, LEASE_MS));
+    let delivered = 0;
     for (const publication of due) {
+      if (this.runner.isStopping) break;
       // oxlint-disable-next-line no-await-in-loop -- one at a time keeps external APIs (Google) under their rate limits
       await this.deliver(publication);
+      delivered += 1;
     }
-    return due.length;
+    // Cut short by a shutdown: the rest is due again at once instead of after the lease
+    await this.store.release(
+      due.slice(delivered).map(({ id }) => id),
+      this.clock.now(),
+    );
+    return delivered;
   }
 
   private async deliver(publication: EventPublicationRow): Promise<void> {

@@ -5,6 +5,7 @@ import { errorMessage } from './errors/error-message.js';
 /** One run at a time for a scheduled job: a tick that finds the last run still going is skipped */
 export class ExclusiveRunner {
   private current: Promise<void> | undefined;
+  private stopped = false;
 
   constructor(
     private readonly logger: Logger,
@@ -13,14 +14,21 @@ export class ExclusiveRunner {
 
   /** A failure is logged, never thrown: the next tick simply tries again */
   run(job: () => Promise<unknown>): Promise<void> {
-    if (this.current) return Promise.resolve();
+    if (this.current || this.stopped) return Promise.resolve();
     this.current = this.guarded(job).finally(() => {
       this.current = undefined;
     });
     return this.current;
   }
 
-  idle(): Promise<void> {
+  /** A job checks it between its steps, so a shutdown does not wait for a whole batch */
+  get isStopping(): boolean {
+    return this.stopped;
+  }
+
+  /** Graceful shutdown: no new run starts, and the one in flight is awaited */
+  stop(): Promise<void> {
+    this.stopped = true;
     return this.current ?? Promise.resolve();
   }
 

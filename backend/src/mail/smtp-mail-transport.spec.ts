@@ -1,7 +1,7 @@
 import type { ConfigService } from '@nestjs/config';
 import nodemailer from 'nodemailer';
 
-import type { EnvironmentVariables } from '../config/env.validation.js';
+import { NodeEnv, type EnvironmentVariables } from '../config/env.validation.js';
 import { SmtpMailTransport } from './smtp-mail-transport.js';
 
 vi.mock('nodemailer', () => ({
@@ -24,6 +24,12 @@ function createTransport(env: Partial<EnvironmentVariables> = {}): SmtpMailTrans
   return new SmtpMailTransport(config);
 }
 
+/** The options a production transport is created with */
+function tls(env: Partial<EnvironmentVariables>): unknown {
+  createTransport({ NODE_ENV: NodeEnv.Production, ...env });
+  return vi.mocked(nodemailer.createTransport).mock.lastCall?.[0];
+}
+
 describe('SmtpMailTransport', () => {
   beforeEach(() => {
     sendMail.mockReset().mockResolvedValue({ messageId: '<id@mailpit>' });
@@ -32,14 +38,26 @@ describe('SmtpMailTransport', () => {
       .mockReturnValue({ sendMail } as never);
   });
 
-  it('connects without auth when SMTP_USER is empty', () => {
+  it('connects without auth when SMTP_USER is empty, with timeouts', () => {
     createTransport({ SMTP_USER: '' });
     expect(nodemailer.createTransport).toHaveBeenCalledWith({
       host: 'localhost',
       port: 1025,
       secure: false,
+      requireTLS: false,
+      connectionTimeout: 10_000,
+      greetingTimeout: 10_000,
+      socketTimeout: 30_000,
       auth: undefined,
     });
+  });
+
+  it('requires TLS from a real server in production unless the connection is already secure', () => {
+    expect(tls({ SMTP_HOST: 'smtp.gmail.com' })).toMatchObject({ requireTLS: true });
+    expect(tls({ SMTP_HOST: 'smtp.gmail.com', SMTP_SECURE: true })).toMatchObject({
+      requireTLS: false,
+    });
+    expect(tls({ SMTP_HOST: 'mailpit' })).toMatchObject({ requireTLS: false });
   });
 
   it('passes credentials when SMTP_USER is set', () => {
