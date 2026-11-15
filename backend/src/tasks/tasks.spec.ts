@@ -182,7 +182,7 @@ class FakeRepository {
     );
   }
 
-  openTasksOf(groupId: string, userId: string, after: Date) {
+  openTasksOf(groupId: string, userId: string, after: Date | null) {
     return Promise.resolve(
       this.tasks
         .filter(
@@ -190,7 +190,7 @@ class FakeRepository {
             task.groupId === groupId &&
             task.assigneeId === userId &&
             task.completedAt === null &&
-            task.dueAt > after,
+            (after === null || task.dueAt > after),
         )
         .toSorted((a, b) => a.dueAt.getTime() - b.dueAt.getTime())
         .map((task) => this.join(task)),
@@ -438,6 +438,71 @@ describe('TasksService', () => {
     expect(repository.tasks.find((task) => task.id === first.id)?.completedAt).not.toBeNull();
   });
 
+  it('hands a manual task back to the rotation when the assignee is cleared', async () => {
+    const { service, published } = setup();
+    // Anya's own load makes Bohdan the automatic pick
+    await service.create(G, 'anya', input({ assigneeId: 'anya', difficulty: 5 }));
+    const task = await service.create(G, 'anya', input({ assigneeId: 'anya', title: 'Dishes' }));
+    published.length = 0;
+
+    await expect(
+      service.update(task.id, 'anya', 'one', input({ dueAt: task.dueAt, title: 'Dishes' })),
+    ).resolves.toMatchObject({ assigneeId: 'bohdan', manuallyAssigned: false });
+    expect(published).toContainEqual([
+      'task.assigned',
+      expect.objectContaining({
+        taskId: task.id,
+        assigneeId: 'bohdan',
+        previousAssigneeId: 'anya',
+      }),
+    ]);
+  });
+
+  it('keeps an automatic assignee when the form leaves the assignee empty', async () => {
+    const { service } = setup();
+    const task = await service.create(G, 'anya', input());
+
+    await expect(
+      service.update(task.id, 'anya', 'one', input({ dueAt: task.dueAt, title: 'Renamed' })),
+    ).resolves.toMatchObject({ assigneeId: task.assigneeId, manuallyAssigned: false });
+  });
+
+  it('rebuilds a series from an overdue instance without recreating past dates', async () => {
+    const { service, repository, clock } = setup();
+    const first = await service.create(
+      G,
+      'anya',
+      input({ recurrence: { type: 'weekly', weekdays: [1] } }),
+    );
+    clock.advance(4 * DAY);
+
+    await service.update(
+      first.id,
+      'anya',
+      'series',
+      input({ recurrence: { type: 'daily' }, dueAt: first.dueAt }),
+    );
+
+    const past = repository.tasks.filter((task) => task.dueAt <= clock.now());
+    expect(past.map((task) => task.id)).toEqual([first.id]);
+  });
+
+  it('turns a one-off task into a series', async () => {
+    const { service, repository } = setup();
+    const task = await service.create(G, 'anya', input());
+
+    const edited = await service.update(
+      task.id,
+      'anya',
+      'one',
+      input({ recurrence: { type: 'daily' }, dueAt: task.dueAt }),
+    );
+
+    expect(edited.recurrence).toEqual({ type: 'daily' });
+    expect(repository.tasks).toHaveLength(28);
+    expect(repository.series).toHaveLength(1);
+  });
+
   it('deletes one instance, or the unfinished series while keeping done ones', async () => {
     const { service, repository } = setup();
     const first = await service.create(
@@ -505,6 +570,17 @@ describe('redistribution', () => {
       repository.tasks.every((task) => task.assigneeId === 'anya' && !task.manuallyAssigned),
     ).toBe(true);
     expect(repository.series[0]?.assigneeId).toBeNull();
+  });
+
+  it('moves the overdue tasks of a member who left too', async () => {
+    const { service, groups, listeners, repository, clock } = setup();
+    const task = await service.create(G, 'anya', input({ assigneeId: 'bohdan' }));
+    clock.advance(2 * DAY);
+    groups.roles.delete('bohdan');
+
+    await listeners.get('group.memberLeft')?.({ groupId: G, userId: 'bohdan' } as never, TX);
+
+    expect(repository.tasks.find((row) => row.id === task.id)?.assigneeId).toBe('anya');
   });
 
   it('moves automatic tasks on absent days and keeps manual ones (FR-17)', async () => {

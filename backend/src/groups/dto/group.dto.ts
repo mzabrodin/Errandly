@@ -1,20 +1,10 @@
-import {
-  IsEmail,
-  IsIn,
-  IsNotEmpty,
-  IsOptional,
-  IsString,
-  Matches,
-  MaxLength,
-} from 'class-validator';
+import { IsEmail, IsIn, IsNotEmpty, IsOptional, IsString, MaxLength } from 'class-validator';
 
 import { GROUP_ROLES, LIMITS, type GroupRole } from '../../common/domain.js';
 import { ApiEnum } from '../../common/http/api-docs.js';
 import { NormalizeEmail, Trim } from '../../common/validation/transforms.js';
 import { code } from '../../common/validation/validation.js';
-import { IsOnOrAfter } from '../../common/validation/validators.js';
-
-const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
+import { IsIsoDate, IsOnOrAfter } from '../../common/validation/validators.js';
 
 export class GroupSummaryDto {
   id!: string;
@@ -99,11 +89,13 @@ export class AcceptInviteDto {
 /** The caller's own absence; tasks in this period are reassigned (FR-15) */
 export class CreateAbsenceDto {
   /** First day, yyyy-mm-dd */
-  @Matches(ISO_DATE, code('required'))
+  @IsNotEmpty(code('required'))
+  @IsIsoDate()
   from!: string;
 
   /** Last day, yyyy-mm-dd, not before `from` */
-  @Matches(ISO_DATE, code('beforeFrom'))
+  @IsNotEmpty(code('required'))
+  @IsIsoDate()
   @IsOnOrAfter('from')
   to!: string;
 }

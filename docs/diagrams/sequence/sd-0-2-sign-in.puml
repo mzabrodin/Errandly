@@ -28,7 +28,10 @@ alt Невідомий email
 else Обліковий запис заблоковано
   Ctrl --> SPA : 423 ACCOUNT_LOCKED + retryAfterSeconds
 else Пароль хибний
-  Svc -> Repo : saveLoginAttempts: +1, на 5-й — блокування на 15 хв
+  Svc -> Repo : countFailedLogin(userId): атомарно +1
+  opt 5-та невдача поспіль
+    Svc -> Repo : saveLoginAttempts: блокування на 15 хв, скинути лічильник
+  end
   Ctrl --> SPA : 401 INVALID_CREDENTIALS (на 5-й — 423)
 else Пароль правильний
   Svc -> Repo : saveLoginAttempts: скинути лічильник

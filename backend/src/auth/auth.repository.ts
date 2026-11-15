@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { and, eq, gt, isNull, ne } from 'drizzle-orm';
+import { and, eq, gt, isNull, ne, sql } from 'drizzle-orm';
 
 import type { AuthProvider, EmailTokenPurpose } from '../common/domain.js';
 import { DATABASE, type Database, type DbExecutor } from '../db/database.js';
@@ -60,6 +60,16 @@ export class AuthRepository {
       .update(passwordCredentials)
       .set(attempts)
       .where(eq(passwordCredentials.userId, userId));
+  }
+
+  /** Atomic, so parallel wrong passwords all count (FR-06) */
+  async countFailedLogin(userId: string, db: DbExecutor = this.db): Promise<number> {
+    const [row] = await db
+      .update(passwordCredentials)
+      .set({ failedLogins: sql`${passwordCredentials.failedLogins} + 1` })
+      .where(eq(passwordCredentials.userId, userId))
+      .returning({ failedLogins: passwordCredentials.failedLogins });
+    return row?.failedLogins ?? 0;
   }
 
   /** A Google-only account keeps no password; a squatter's password goes when the owner links */

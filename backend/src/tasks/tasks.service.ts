@@ -82,7 +82,7 @@ export class TasksService {
     }
     const resultId = await this.db.transaction(async (tx) => {
       await this.assertAssignable(task.groupId, input.assigneeId, tx);
-      return scope === 'series' && task.series.recurrenceType !== 'once'
+      return rebuildsSeries(task, scope, input)
         ? this.rebuildSeries(task, userId, input, now, tx)
         : this.updateOne(task, userId, input, tx);
     });
@@ -165,8 +165,13 @@ export class TasksService {
       tx,
     );
     await this.bus.publish(tx, 'task.changed', { taskId: task.id, groupId: task.groupId });
-    if (input.assigneeId !== null && current.completedAt === null) {
+    if (current.completedAt !== null) return task.id;
+    if (input.assigneeId !== null) {
       await this.planner.assignManually(current, input.assigneeId, userId, tx);
+    } else if (current.manuallyAssigned) {
+      // Back to automatic (FR-27) from the edited due date
+      const edited = requireFound(await this.repository.findTask(task.id, tx));
+      await this.planner.reassign(task.groupId, [edited], tx);
     }
     return task.id;
   }
@@ -187,7 +192,8 @@ export class TasksService {
       endedAt: null,
     };
     await this.repository.updateSeries(series.id, changes, tx);
-    const [first] = await this.materialize({ ...series, ...changes }, userId, now, tx);
+    // Past dates keep what they have: rebuilding from an overdue instance must not recreate them
+    const [first] = await this.materialize({ ...series, ...changes }, userId, now, tx, now);
     // Every new date clashed with a completed instance: show the edited one
     return first?.id ?? task.id;
   }
@@ -197,10 +203,12 @@ export class TasksService {
     actorId: string,
     now: Date,
     tx: DbExecutor,
+    after?: Date,
   ): Promise<TaskRow[]> {
+    const until = new Date(Math.max(now.getTime() + HORIZON_MS, series.startsAt.getTime()));
     return this.planner.materialize(
       series,
-      { until: new Date(Math.max(now.getTime() + HORIZON_MS, series.startsAt.getTime())) },
+      after === undefined ? { until } : { after, until },
       actorId,
       tx,
     );
@@ -259,6 +267,12 @@ export class TasksService {
     const task = requireFound(await this.repository.findTask(taskId));
     return toTaskDto(task, this.clock.now());
   }
+}
+
+/** `series` on a recurring task, or a one-off task that becomes recurring */
+function rebuildsSeries(task: TaskWithSeries, scope: EditScope, input: UpdateTaskDto): boolean {
+  if (task.series.recurrenceType === 'once') return input.recurrence.type !== 'once';
+  return scope === 'series';
 }
 
 function seriesFields(input: CreateTaskDto | UpdateTaskDto) {

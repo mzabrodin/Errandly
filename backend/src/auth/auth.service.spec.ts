@@ -39,6 +39,13 @@ class FakeRepository {
     return Promise.resolve();
   }
 
+  countFailedLogin(userId: string) {
+    const current = this.credentials.get(userId);
+    if (!current) return Promise.resolve(0);
+    current.failedLogins += 1;
+    return Promise.resolve(current.failedLogins);
+  }
+
   saveLoginAttempts(userId: string, attempts: LoginAttempts) {
     const current = this.credentials.get(userId);
     if (current) this.credentials.set(userId, { ...current, ...attempts });

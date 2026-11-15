@@ -3,6 +3,7 @@ import { ApiTags } from '@nestjs/swagger';
 
 import { ApiSession } from '../common/http/api-docs.js';
 import { CurrentUser, type RequestUser } from '../common/http/auth.js';
+import { StrictRateLimit } from '../common/http/rate-limit.js';
 import { AuthService } from './auth.service.js';
 import { ChangePasswordDto } from './dto/auth.dto.js';
 
@@ -18,6 +19,7 @@ export class AccountController {
    * Errors: 400 WRONG_PASSWORD, 400 VALIDATION (newPassword weak).
    */
   @Post('password')
+  @StrictRateLimit()
   @HttpCode(HttpStatus.NO_CONTENT)
   changePassword(@CurrentUser() user: RequestUser, @Body() body: ChangePasswordDto): Promise<void> {
     return this.auth.changePassword(user, body.currentPassword, body.newPassword);

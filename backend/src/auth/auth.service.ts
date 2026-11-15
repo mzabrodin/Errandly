@@ -10,7 +10,7 @@ import { hashToken } from '../common/tokens.js';
 import { DATABASE, type Database } from '../db/database.js';
 import { UsersApi, type UserDto } from '../users/index.js';
 import { AuthRepository } from './auth.repository.js';
-import { afterFailedLogin, lockRemainingSeconds } from './auth.rules.js';
+import { lockAfter, lockRemainingSeconds } from './auth.rules.js';
 import type { LoginDto, RegisterDto } from './dto/auth.dto.js';
 import { PasswordHasher } from './password-hasher.js';
 import { SessionService, type IssuedSession } from './sessions.service.js';
@@ -77,13 +77,12 @@ export class AuthService {
     }
 
     if (!(await this.hasher.verify(input.password, credentials.passwordHash))) {
-      const attempts = afterFailedLogin(credentials.failedLogins, now);
-      await this.repository.saveLoginAttempts(user.id, attempts);
-      const lockedNow = lockRemainingSeconds(attempts.lockedUntil, now);
-      if (lockedNow !== null) {
-        throw new DomainError('ACCOUNT_LOCKED', { retryAfterSeconds: lockedNow });
-      }
-      throw new DomainError('INVALID_CREDENTIALS');
+      const lock = lockAfter(await this.repository.countFailedLogin(user.id), now);
+      if (lock === null) throw new DomainError('INVALID_CREDENTIALS');
+      await this.repository.saveLoginAttempts(user.id, lock);
+      throw new DomainError('ACCOUNT_LOCKED', {
+        retryAfterSeconds: lockRemainingSeconds(lock.lockedUntil, now) ?? 0,
+      });
     }
 
     if (credentials.failedLogins > 0 || credentials.lockedUntil !== null) {
