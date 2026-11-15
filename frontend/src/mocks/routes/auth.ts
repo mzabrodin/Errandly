@@ -98,7 +98,7 @@ export const authHandlers = [
     return emptyResponse();
   }),
 
-  http.get(`${API}/auth/google`, () => {
+  http.get(`${API}/auth/oauth/google`, () => {
     // OAuth simulation: sign in as the demo user
     db.sessionUserId = 'u-anya';
     persist();

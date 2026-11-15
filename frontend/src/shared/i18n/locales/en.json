@@ -131,7 +131,8 @@
       "emailTakenActions": "Sign in or reset your password.",
       "invalidCredentials": "Wrong email or password",
       "locked": "Too many failed attempts. Sign-in is locked for {{minutes}} min.",
-      "tokenInvalid": "The link is invalid or already used. Request a new one."
+      "tokenInvalid": "The link is invalid or already used. Request a new one.",
+      "oauthFailed": "Couldn’t sign in with {{provider}}. Please try again."
     },
     "forgotTitle": "password recovery",
     "forgotSubtitle": "We’ll email you a link to change your password. It’s valid for 1 hour.",
