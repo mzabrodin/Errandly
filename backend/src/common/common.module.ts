@@ -1,4 +1,4 @@
-import { Global, Module } from '@nestjs/common';
+import { Global, Module, type OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { APP_FILTER } from '@nestjs/core';
 import { ThrottlerModule } from '@nestjs/throttler';
@@ -12,6 +12,7 @@ import { EventDispatcher } from './events/event-dispatcher.js';
 import { EventPublicationStore } from './events/event-publication.store.js';
 import { GoogleClients } from './google/google-clients.js';
 import { rateLimits } from './http/rate-limit.js';
+import { DataRetention } from './retention.js';
 import { ShutdownState } from './shutdown.js';
 import { ObjectStorage } from './storage/object-storage.js';
 import { S3ObjectStorage } from './storage/s3-object-storage.js';
@@ -39,8 +40,10 @@ import { S3ObjectStorage } from './storage/s3-object-storage.js';
     TokenCipher,
     GoogleClients,
     ShutdownState,
+    DataRetention,
   ],
   exports: [
+    DataRetention,
     Clock,
     EventBus,
     EventPublicationStore,
@@ -50,4 +53,13 @@ import { S3ObjectStorage } from './storage/s3-object-storage.js';
     TokenCipher,
   ],
 })
-export class CommonModule {}
+export class CommonModule implements OnModuleInit {
+  constructor(
+    private readonly retention: DataRetention,
+    private readonly events: EventPublicationStore,
+  ) {}
+
+  onModuleInit(): void {
+    this.retention.register('events', (now) => this.events.purge(now));
+  }
+}

@@ -1,7 +1,8 @@
-import { Module } from '@nestjs/common';
+import { Module, type OnModuleInit } from '@nestjs/common';
 import { APP_GUARD } from '@nestjs/core';
 
 import { CallerThrottlerGuard } from '../common/http/rate-limit.js';
+import { DataRetention } from '../common/retention.js';
 import { MailModule } from '../mail/index.js';
 import { UsersModule } from '../users/index.js';
 import { AccountController } from './account.controller.js';
@@ -29,12 +30,21 @@ import { SessionService } from './sessions.service.js';
     GoogleOAuthSignIn,
     SignInProviders,
     OAuthSignInService,
-    // Default-deny for the whole API: routes opt out with @Public() (SYS-07)
-    // Global guards run in registration order: identify the caller, count it, then deny anonymous ones
+    // Global guards run in registration order: identify the caller, count it, then deny anonymous
+    // ones (default-deny for the whole API: routes opt out with @Public(), SYS-07)
     { provide: APP_GUARD, useClass: SessionGuard },
     { provide: APP_GUARD, useClass: CallerThrottlerGuard },
     { provide: APP_GUARD, useClass: AuthenticatedGuard },
   ],
   exports: [PasswordHasher],
 })
-export class AuthModule {}
+export class AuthModule implements OnModuleInit {
+  constructor(
+    private readonly retention: DataRetention,
+    private readonly repository: AuthRepository,
+  ) {}
+
+  onModuleInit(): void {
+    this.retention.register('auth', (now) => this.repository.purge(now));
+  }
+}

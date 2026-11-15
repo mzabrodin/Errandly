@@ -1,12 +1,18 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { and, asc, eq, inArray, isNull, lte } from 'drizzle-orm';
+import { and, asc, eq, inArray, isNull, lt, lte } from 'drizzle-orm';
 
 import { DATABASE, type Database, type DbExecutor } from '../../db/database.js';
+import { addMs, DAY_MS } from '../time.js';
 import {
   eventPublications,
   type EventPublicationRow,
   type NewEventPublicationRow,
 } from './event-publications.schema.js';
+
+/** Delivered rows still hold payloads such as invitee emails and encrypted refresh tokens */
+const DELIVERED_RETENTION_MS = 7 * DAY_MS;
+/** Rows a listener gave up on stay a while longer, for looking into the failure */
+const GAVE_UP_RETENTION_MS = 30 * DAY_MS;
 
 @Injectable()
 export class EventPublicationStore {
@@ -48,6 +54,23 @@ export class EventPublicationStore {
       .update(eventPublications)
       .set({ nextAttemptAt: at })
       .where(and(inArray(eventPublications.id, ids), isNull(eventPublications.completedAt)));
+  }
+
+  async purge(now: Date): Promise<Record<string, number>> {
+    const delivered = await this.db
+      .delete(eventPublications)
+      .where(lt(eventPublications.completedAt, addMs(now, -DELIVERED_RETENTION_MS)));
+    // A listener gives up within an hour of the publication, so its age tells when
+    const gaveUp = await this.db
+      .delete(eventPublications)
+      .where(
+        and(
+          isNull(eventPublications.completedAt),
+          isNull(eventPublications.nextAttemptAt),
+          lt(eventPublications.publishedAt, addMs(now, -GAVE_UP_RETENTION_MS)),
+        ),
+      );
+    return { event_publications: (delivered.rowCount ?? 0) + (gaveUp.rowCount ?? 0) };
   }
 
   /** Deliveries still waiting although they were due before `before`: the dispatcher is stuck */

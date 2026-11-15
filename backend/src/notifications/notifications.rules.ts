@@ -18,6 +18,29 @@ export interface Recipient {
 const DIGEST_HOUR = 9;
 const DIGEST_DAYS = 7;
 
+export interface PurgeCutoffs {
+  /** Read notifications created before it */
+  readBefore: Date;
+  /** Any notification created before it */
+  before: Date;
+  /** Reminder records for tasks due before it: the jobs look back 2 days at most */
+  remindersBefore: Date;
+  /** Digest records for weeks starting before it (yyyy-mm-dd): only this week stops a second one */
+  digestsBefore: string;
+}
+
+/** The bell shows the newest 50; what is older than this is never seen again (NFR-LEG-01) */
+export function purgeCutoffs(now: Date): PurgeCutoffs {
+  return {
+    readBefore: addMs(now, -30 * DAY_MS),
+    before: addMs(now, -90 * DAY_MS),
+    remindersBefore: addMs(now, -7 * DAY_MS),
+    digestsBefore: addMs(now, -28 * DAY_MS)
+      .toISOString()
+      .slice(0, 10),
+  };
+}
+
 export function assignmentRecipients(
   event: DomainEventMap['task.assigned'],
   admins: readonly string[],

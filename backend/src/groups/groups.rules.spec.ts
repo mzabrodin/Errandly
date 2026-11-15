@@ -6,12 +6,22 @@ import {
   isInviteActive,
   isLastAdminWithOthers,
   pickMemberColor,
+  purgeCutoffs,
   type Member,
 } from './groups.rules.js';
 
 const anya: Member = { userId: 'anya', role: 'admin' };
 const oleh: Member = { userId: 'oleh', role: 'member' };
 const marta: Member = { userId: 'marta', role: 'admin' };
+
+describe('purgeCutoffs', () => {
+  it('drops dead invites and past absences 30 days after they stop mattering', () => {
+    expect(purgeCutoffs(new Date('2026-11-15T03:00:00Z'))).toEqual({
+      invitesBefore: new Date('2026-10-16T03:00:00Z'),
+      absencesEndedBefore: '2026-10-16',
+    });
+  });
+});
 
 describe('group rules', () => {
   describe('the last admin (FR-16)', () => {
