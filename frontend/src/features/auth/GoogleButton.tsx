@@ -2,7 +2,6 @@ import type { JSX } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { oauthSignInUrl } from '../../shared/api/auth';
-import { mocksEnabled } from '../../shared/lib/env';
 import { Button } from '../../shared/ui/Button';
 
 function GoogleIcon(): JSX.Element {
@@ -32,18 +31,12 @@ function GoogleIcon(): JSX.Element {
 export function GoogleButton({ next }: { next: string }): JSX.Element {
   const { t } = useTranslation();
 
-  const start = async () => {
-    if (mocksEnabled) {
-      // The service worker does not intercept navigation, so with mocks the redirect is simulated by hand
-      await fetch(oauthSignInUrl('google', next), { redirect: 'manual' });
-      window.location.assign(next);
-      return;
-    }
+  const start = (): void => {
     window.location.assign(oauthSignInUrl('google', next));
   };
 
   return (
-    <Button variant="secondary" block icon={<GoogleIcon />} onClick={() => void start()}>
+    <Button variant="secondary" block icon={<GoogleIcon />} onClick={start}>
       {t('auth.google')}
     </Button>
   );
