@@ -1,0 +1,11 @@
+name: Set up Node
+description: Node from .nvmrc and the workspace dependencies
+runs:
+  using: composite
+  steps:
+    - uses: actions/setup-node@v7
+      with:
+        node-version-file: .nvmrc
+        cache: npm
+    - run: npm ci
+      shell: bash
