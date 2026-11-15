@@ -13,9 +13,9 @@ skinparam NoteBackgroundColor #FFFFE0
 start
 fork
   if (Є чинна сесія (cookie errandly_session)?) then (ні)
-    :ref SD-0.1–0.3: Автентифікація
+    :ref SD-0.1–0.4: Автентифікація
     (реєстрація, вхід, відновлення пароля,
-    вхід через Google — заплановано);
+    вхід через Google);
   else (так)
   endif
   if (Email підтверджено?) then (ні)

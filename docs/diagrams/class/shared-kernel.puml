@@ -32,6 +32,10 @@ package "Спільне ядро" {
     +details
   }
   class ApiExceptionFilter <<APP_FILTER>>
+  class GoogleClients {
+    +oauthClient(callbackPath)
+    +client(refreshToken)
+  }
 }
 
 package "Порти й адаптери" {
@@ -74,4 +78,5 @@ Argon2PasswordHasher -up-|> PasswordHasher
 SmtpMailTransport -up-|> MailTransport
 S3ObjectStorage -up-|> ObjectStorage
 GoogleCalendarGateway -up-|> CalendarGateway
+GoogleCalendarGateway ..> GoogleClients
 @enduml

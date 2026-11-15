@@ -223,15 +223,19 @@ flowchart LR
 
 Зовнішні залежності сховані за абстрактними класами, які в Nest водночас є токенами DI. Сервіси залежать від порту, а реалізацію підставляє модуль. У тестах підставляється фейк.
 
-| Порт                 | Реалізація                  | Навіщо                                                                                                           |
-| -------------------- | --------------------------- | ---------------------------------------------------------------------------------------------------------------- |
-| `Clock`              | `SystemClock`               | статус, вікно скасування 24 год, повтори; у тестах `FixedClock`                                                  |
-| `PasswordHasher`     | `Argon2PasswordHasher`      | argon2id з параметрами OWASP (NFR-SEC-01); алгоритм можна замінити без змін у сервісах                           |
-| `MailTransport`      | `SmtpMailTransport`         | SMTP (Mailpit, Gmail); HTTP-провайдер — інша реалізація                                                          |
-| `ObjectStorage`      | `S3ObjectStorage`           | файли поза базою (аватарки) через S3 API: SeaweedFS у compose; R2, AWS S3 чи Supabase Storage — лише інші `S3_*` |
-| `CalendarGateway`    | `GoogleCalendarGateway`     | `CalendarGateways.for(provider)` обирає шлюз за провайдером; Outlook — новий клас                                |
-| `AssignmentStrategy` | `LeastLoadRotationStrategy` | алгоритм розподілу (FR-27–29) окремо від сервісу задач; інший алгоритм — інший клас                              |
+OAuth-клієнт Google (`common/google/google-clients.ts`, `GoogleClients`) спільний для входу й календаря, тому лежить у спільному ядрі: кожен потік отримує свій клієнт зі своєю адресою повернення (`oauthClient(callbackPath)`), а виклики API від імені користувача — `client(refreshToken)`.
+
+| Порт                 | Реалізація                  | Навіщо                                                                                                                                                                                   |
+| -------------------- | --------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Clock`              | `SystemClock`               | статус, вікно скасування 24 год, повтори; у тестах `FixedClock`                                                                                                                          |
+| `PasswordHasher`     | `Argon2PasswordHasher`      | argon2id з параметрами OWASP (NFR-SEC-01); алгоритм можна замінити без змін у сервісах                                                                                                   |
+| `MailTransport`      | `SmtpMailTransport`         | SMTP (Mailpit, Gmail); HTTP-провайдер — інша реалізація                                                                                                                                  |
+| `ObjectStorage`      | `S3ObjectStorage`           | файли поза базою (аватарки) через S3 API: SeaweedFS у compose; R2, AWS S3 чи Supabase Storage — лише інші `S3_*`                                                                         |
+| `CalendarGateway`    | `GoogleCalendarGateway`     | `CalendarGateways.for(provider)` обирає шлюз за провайдером; Outlook — новий клас                                                                                                        |
+| `CalendarOAuth`      | `GoogleCalendarOAuth`       | згода на календар (`calendar.app.created`), обмін коду на refresh-токен, відкликання                                                                                                     |
+| `OAuthSignIn`        | `GoogleOAuthSignIn`         | вхід через провайдера (FR-07): `SignInProviders.for(provider)` — `Record<AuthProvider, OAuthSignIn>`, тож новий провайдер без адаптера не компілюється; Microsoft чи GitHub — новий клас |
+| `AssignmentStrategy` | `LeastLoadRotationStrategy` | алгоритм розподілу (FR-27–29) окремо від сервісу задач; інший алгоритм — інший клас                                                                                                      |
 
 ## Логування
 
-nestjs-pino пише JSON-логи з `X-Request-Id` (nginx передає його далі), кодом помилки контракту (`errorCode`) і без секретів: заголовки авторизації, cookie, паролі, токени й токени запрошень в URL замасковано. SQL пишеться на рівні `debug` без параметрів. `EventDispatcher` попереджає про кожен повтор і пише помилку, коли здається.
+nestjs-pino пише JSON-логи з `X-Request-Id` (nginx передає його далі), кодом помилки контракту (`errorCode`) і без секретів: заголовки авторизації, cookie, паролі, токени, токени запрошень і OAuth-параметри `code`/`state` в URL замасковано. SQL пишеться на рівні `debug` без параметрів. `EventDispatcher` попереджає про кожен повтор і пише помилку, коли здається.
