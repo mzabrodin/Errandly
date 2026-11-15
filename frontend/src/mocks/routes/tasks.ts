@@ -4,6 +4,7 @@ import type { TaskInput } from '../../shared/api/types';
 import { LIMITS } from '../../shared/lib/limits';
 import { UNDO_WINDOW_MS } from '../../shared/lib/time';
 import {
+  autoAssign,
   createSeries,
   db,
   isCompleted,
@@ -125,19 +126,40 @@ function seriesInput(groupId: string, input: TaskInput): SeriesInput {
   };
 }
 
-/** Rebuilds the series' future unfinished instances; returns the first new one */
+/** Rebuilds the series' future unfinished instances; returns the first new one, else the task */
 function rebuildSeries(task: DbTaskRecord, input: TaskInput): DbTaskRecord {
   const now = Date.now();
+  const isFuture = (item: DbTaskRecord): boolean => new Date(item.dueAt).getTime() >= now;
   db.tasks = db.tasks.filter(
-    (item) =>
-      !(
-        item.seriesId === task.seriesId &&
-        !isCompleted(item) &&
-        new Date(item.dueAt).getTime() >= now
-      ),
+    (item) => !(item.seriesId === task.seriesId && !isCompleted(item) && isFuture(item)),
   );
-  const [first] = createSeries(db, seriesInput(task.groupId, input), task.seriesId);
-  return must(first, 'series task');
+  const created = createSeries(db, seriesInput(task.groupId, input), task.seriesId);
+  // Dates that already passed keep what they have
+  const past = new Set(created.filter((item) => !isFuture(item)));
+  db.tasks = db.tasks.filter((item) => !past.has(item));
+  return created.find(isFuture) ?? task;
+}
+
+/** `series` on a recurring task, or a one-off task that becomes recurring */
+function rebuildsSeries(task: DbTaskRecord, scope: string | null, input: TaskInput): boolean {
+  if (task.recurrence.type === 'once') return input.recurrence.type !== 'once';
+  return scope === 'series';
+}
+
+/** A chosen member is a manual assignment; none hands a manual task back to the rotation */
+function applyAssignee(task: DbTaskRecord, assigneeId: string | null, actorId: string): void {
+  if (isCompleted(task)) return;
+  const previous = task.assigneeId;
+  if (assigneeId !== null && assigneeId !== '') {
+    task.assigneeId = assigneeId;
+    task.manuallyAssigned = true;
+  } else if (task.manuallyAssigned) {
+    // Not counted towards the load of whoever has it now
+    task.assigneeId = null;
+    task.assigneeId = autoAssign(db, task.groupId, task);
+    task.manuallyAssigned = false;
+  }
+  if (task.assigneeId !== previous) onAssigned(task, actorId, previous);
 }
 
 const taskQueryHandlers = [
@@ -196,7 +218,7 @@ const taskEditHandlers = [
     const fields = validateTask(input, task.dueAt);
     if (fields) return error(400, 'VALIDATION', { fields });
 
-    if (scope === 'series' && task.recurrence.type !== 'once') {
+    if (rebuildsSeries(task, scope, input)) {
       const first = rebuildSeries(task, input);
       persist();
       return HttpResponse.json(withStatus(first));
@@ -208,17 +230,7 @@ const taskEditHandlers = [
       dueAt: input.dueAt,
       difficulty: input.difficulty,
     });
-    if (
-      input.assigneeId !== null &&
-      input.assigneeId !== '' &&
-      input.assigneeId !== task.assigneeId &&
-      !isCompleted(task)
-    ) {
-      const previous = task.assigneeId;
-      task.assigneeId = input.assigneeId;
-      task.manuallyAssigned = true;
-      onAssigned(task, auth.user.id, previous);
-    }
+    applyAssignee(task, input.assigneeId, auth.user.id);
     persist();
     return HttpResponse.json(withStatus(task));
   }),
