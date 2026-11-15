@@ -2,9 +2,10 @@ import { z } from 'zod';
 
 import type { TokenCipher } from '../../common/crypto/token-cipher.js';
 import { LOCALES, type AuthProvider } from '../../common/domain.js';
+import { MINUTE_MS } from '../../common/time.js';
 import { hashToken } from '../../common/tokens.js';
 
-export const SIGN_IN_STATE_TTL_MS = 10 * 60 * 1000;
+export const SIGN_IN_STATE_TTL_MS = 10 * MINUTE_MS;
 
 const payloadSchema = z.object({
   provider: z.string(),

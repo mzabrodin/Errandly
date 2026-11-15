@@ -1,8 +1,9 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { and, asc, count, eq, inArray, isNull } from 'drizzle-orm';
+import { and, asc, count, eq, inArray, isNull, type SQL } from 'drizzle-orm';
 
 import type { GroupRole } from '../common/domain.js';
 import { DATABASE, type Database, type DbExecutor } from '../db/database.js';
+import { insertedRow } from '../db/inserted-row.js';
 import {
   absences,
   groups,
@@ -33,14 +34,16 @@ export interface NewInvite {
   expiresAt: Date;
 }
 
+function membershipKey(groupId: string, userId: string): SQL | undefined {
+  return and(eq(memberships.groupId, groupId), eq(memberships.userId, userId));
+}
+
 @Injectable()
 export class GroupsRepository {
   constructor(@Inject(DATABASE) private readonly db: Database) {}
 
   async insertGroup(name: string, createdBy: string, db: DbExecutor = this.db): Promise<GroupRow> {
-    const [row] = await db.insert(groups).values({ name, createdBy }).returning();
-    if (!row) throw new Error('INSERT … RETURNING returned no row');
-    return row;
+    return insertedRow(await db.insert(groups).values({ name, createdBy }).returning());
   }
 
   async findGroup(id: string, db: DbExecutor = this.db): Promise<GroupRow | undefined> {
@@ -89,7 +92,7 @@ export class GroupsRepository {
     const [row] = await db
       .select()
       .from(memberships)
-      .where(and(eq(memberships.groupId, groupId), eq(memberships.userId, userId)))
+      .where(membershipKey(groupId, userId))
       .limit(1);
     return row;
   }
@@ -138,23 +141,16 @@ export class GroupsRepository {
     role: GroupRole,
     db: DbExecutor = this.db,
   ): Promise<void> {
-    await db
-      .update(memberships)
-      .set({ role })
-      .where(and(eq(memberships.groupId, groupId), eq(memberships.userId, userId)));
+    await db.update(memberships).set({ role }).where(membershipKey(groupId, userId));
   }
 
   /** The member's absences go with it (absences_membership_fk cascades) */
   async deleteMembership(groupId: string, userId: string, db: DbExecutor = this.db): Promise<void> {
-    await db
-      .delete(memberships)
-      .where(and(eq(memberships.groupId, groupId), eq(memberships.userId, userId)));
+    await db.delete(memberships).where(membershipKey(groupId, userId));
   }
 
   async insertInvite(invite: NewInvite, db: DbExecutor = this.db): Promise<InviteRow> {
-    const [row] = await db.insert(invites).values(invite).returning();
-    if (!row) throw new Error('INSERT … RETURNING returned no row');
-    return row;
+    return insertedRow(await db.insert(invites).values(invite).returning());
   }
 
   async findInviteByHash(tokenHash: string): Promise<InviteRow | undefined> {

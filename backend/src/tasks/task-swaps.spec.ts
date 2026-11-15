@@ -3,6 +3,9 @@ import { DomainError } from '../common/errors/domain-error.js';
 import type { EventBus } from '../common/events/event-bus.js';
 import type { Database } from '../db/database.js';
 import type { GroupMember, GroupsApi } from '../groups/index.js';
+import type { UsersApi } from '../users/index.js';
+import { LeastLoadRotationStrategy } from './assignment/least-load-rotation.strategy.js';
+import { TaskPlanner } from './task-planner.js';
 import type { TaskSwapsRepository } from './task-swaps.repository.js';
 import { TaskSwaps } from './task-swaps.service.js';
 import type { TaskChanges, TasksRepository, TaskWithSeries } from './tasks.repository.js';
@@ -137,6 +140,13 @@ function setup(members: GroupMember[] = []) {
     db,
     swaps as unknown as TaskSwapsRepository,
     tasks as unknown as TasksRepository,
+    new TaskPlanner(
+      tasks as unknown as TasksRepository,
+      groups,
+      {} as UsersApi,
+      new LeastLoadRotationStrategy(),
+      bus,
+    ),
     groups,
     bus,
     new FixedClock(NOW),

@@ -5,6 +5,8 @@ import { Cron, CronExpression } from '@nestjs/schedule';
 import { Clock } from '../common/clock.js';
 import { DEFAULT_EMAIL_REMINDER_MINUTES, type ReminderKind } from '../common/domain.js';
 import { EventBus } from '../common/events/event-bus.js';
+import { ExclusiveRunner } from '../common/exclusive-runner.js';
+import { addMs, DAY_MS } from '../common/time.js';
 import type { EnvironmentVariables } from '../config/env.validation.js';
 import { DATABASE, type Database } from '../db/database.js';
 import { TasksApi, type TaskView } from '../tasks/index.js';
@@ -13,7 +15,6 @@ import { NotificationFeed } from './notification-feed.js';
 import { NotificationsRepository } from './notifications.repository.js';
 import { digestWeek, isDueSoon } from './notifications.rules.js';
 
-const DAY_MS = 24 * 60 * 60 * 1000;
 // The longest reminder setting
 const DUE_SOON_WINDOW_MS = DAY_MS;
 // A first run after a long pause doesn't dig up old history
@@ -23,8 +24,8 @@ const OVERDUE_LOOKBACK_MS = 2 * DAY_MS;
 @Injectable()
 export class ReminderJobs implements OnApplicationBootstrap {
   private readonly logger = new Logger(ReminderJobs.name);
+  private readonly runner = new ExclusiveRunner(this.logger, 'Reminders');
   private readonly enabled: boolean;
-  private running = false;
 
   // oxlint-disable-next-line max-params -- Nest constructor injection: each parameter is a dependency, never a positional argument
   constructor(
@@ -45,18 +46,8 @@ export class ReminderJobs implements OnApplicationBootstrap {
   }
 
   @Cron(CronExpression.EVERY_5_MINUTES)
-  async tick(): Promise<void> {
-    if (!this.enabled || this.running) return;
-    this.running = true;
-    try {
-      await this.run();
-    } catch (error: unknown) {
-      this.logger.warn(
-        `Reminders failed: ${error instanceof Error ? error.message : 'unknown error'}`,
-      );
-    } finally {
-      this.running = false;
-    }
+  tick(): Promise<void> {
+    return this.enabled ? this.runner.run(() => this.run()) : Promise.resolve();
   }
 
   async run(): Promise<void> {
@@ -67,10 +58,7 @@ export class ReminderJobs implements OnApplicationBootstrap {
 
   async dueSoon(): Promise<number> {
     const now = this.clock.now();
-    const tasks = await this.tasks.openAssignedDueBetween(
-      now,
-      new Date(now.getTime() + DUE_SOON_WINDOW_MS),
-    );
+    const tasks = await this.tasks.openAssignedDueBetween(now, addMs(now, DUE_SOON_WINDOW_MS));
     const minutes = await this.repository.emailReminderMinutesOfMany([
       ...new Set(tasks.flatMap((task) => (task.assigneeId === null ? [] : [task.assigneeId]))),
     ]);
@@ -86,10 +74,7 @@ export class ReminderJobs implements OnApplicationBootstrap {
 
   async overdue(): Promise<number> {
     const now = this.clock.now();
-    const tasks = await this.tasks.openAssignedDueBetween(
-      new Date(now.getTime() - OVERDUE_LOOKBACK_MS),
-      now,
-    );
+    const tasks = await this.tasks.openAssignedDueBetween(addMs(now, -OVERDUE_LOOKBACK_MS), now);
     return this.record(tasks, 'overdue');
   }
 

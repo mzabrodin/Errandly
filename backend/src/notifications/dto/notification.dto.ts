@@ -1,7 +1,7 @@
-import { ApiProperty } from '@nestjs/swagger';
 import { ArrayMaxSize, IsArray, IsOptional, IsUUID } from 'class-validator';
 
 import { NOTIFICATION_TYPES, type NotificationType } from '../../common/domain.js';
+import { ApiEnum } from '../../common/http/api-docs.js';
 import { code } from '../../common/validation/validation.js';
 
 /** Values substituted into the localized notification text */
@@ -15,7 +15,7 @@ export class NotificationDataDto {
 
 export class NotificationDto {
   id!: string;
-  @ApiProperty({ enum: NOTIFICATION_TYPES, enumName: 'NotificationType' })
+  @ApiEnum(NOTIFICATION_TYPES, 'NotificationType')
   type!: NotificationType;
   createdAt!: string;
   read!: boolean;

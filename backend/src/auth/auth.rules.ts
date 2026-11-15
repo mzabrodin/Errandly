@@ -1,6 +1,4 @@
-const MINUTE_MS = 60 * 1000;
-const HOUR_MS = 60 * MINUTE_MS;
-const DAY_MS = 24 * HOUR_MS;
+import { addMs, DAY_MS, HOUR_MS, MINUTE_MS } from '../common/time.js';
 
 /** NFR-SEC-03: sliding, from the last use */
 export const SESSION_TTL_MS = 30 * DAY_MS;
@@ -29,13 +27,13 @@ export function lockRemainingSeconds(lockedUntil: Date | null, now: Date): numbe
 export function afterFailedLogin(failedLogins: number, now: Date): LoginAttempts {
   const failures = failedLogins + 1;
   if (failures >= MAX_FAILED_LOGINS) {
-    return { failedLogins: 0, lockedUntil: new Date(now.getTime() + LOCKOUT_MS) };
+    return { failedLogins: 0, lockedUntil: addMs(now, LOCKOUT_MS) };
   }
   return { failedLogins: failures, lockedUntil: null };
 }
 
 export function sessionExpiry(now: Date): Date {
-  return new Date(now.getTime() + SESSION_TTL_MS);
+  return addMs(now, SESSION_TTL_MS);
 }
 
 export function shouldRefreshSession(lastSeenAt: Date, now: Date): boolean {
@@ -48,8 +46,4 @@ export function shouldRefreshSession(lastSeenAt: Date, now: Date): boolean {
  */
 export function safeNext(next: string | undefined): string {
   return next !== undefined && /^\/(?![/\\])[\x21-\x7e]*$/.test(next) ? next : '/';
-}
-
-export function firstName(name: string): string {
-  return name.trim().split(/\s+/)[0] ?? name;
 }

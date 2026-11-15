@@ -1,14 +1,17 @@
 import { Inject, Injectable } from '@nestjs/common';
 
 import { Clock } from '../common/clock.js';
+import type { SwapStatus } from '../common/domain.js';
 import { DomainError } from '../common/errors/domain-error.js';
+import { requireFound } from '../common/errors/require-found.js';
 import { EventBus } from '../common/events/event-bus.js';
 import { DATABASE, type Database, type DbExecutor } from '../db/database.js';
 import { GroupsApi, type GroupMember } from '../groups/index.js';
 import type { SwapDto, SwapTaskDto } from './dto/swap.dto.js';
+import { TaskPlanner } from './task-planner.js';
 import { TaskSwapsRepository } from './task-swaps.repository.js';
 import { TasksRepository, type TaskWithSeries } from './tasks.repository.js';
-import { swapProblem } from './tasks.rules.js';
+import { SWAP_TRANSITIONS, swapProblem } from './tasks.rules.js';
 import type { TaskSwapRow } from './tasks.schema.js';
 
 interface SwapWithTasks {
@@ -24,6 +27,7 @@ export class TaskSwaps {
     @Inject(DATABASE) private readonly db: Database,
     private readonly repository: TaskSwapsRepository,
     private readonly tasks: TasksRepository,
+    private readonly planner: TaskPlanner,
     private readonly groups: GroupsApi,
     private readonly bus: EventBus,
     private readonly clock: Clock,
@@ -43,8 +47,7 @@ export class TaskSwaps {
   }
 
   async propose(taskId: string, userId: string, requestedTaskId: string): Promise<SwapDto> {
-    const offered = await this.tasks.findTask(taskId);
-    if (!offered) throw new DomainError('NOT_FOUND');
+    const offered = requireFound(await this.tasks.findTask(taskId));
     await this.groups.requireMember(offered.groupId, userId);
     if (offered.assigneeId !== userId) throw new DomainError('NOT_ASSIGNEE');
     const requested = await this.tasks.findTask(requestedTaskId);
@@ -97,20 +100,19 @@ export class TaskSwaps {
   async accept(swapId: string, userId: string): Promise<SwapDto> {
     await this.visibleSwap(swapId, userId, 'recipient');
     await this.db.transaction(async (tx) => {
-      const swap = await this.locked(swapId, tx);
-      if (swap.status === 'accepted') return;
-      if (swap.status !== 'pending') throw new DomainError('SWAP_STALE');
+      const swap = await this.lockPending(swapId, 'accepted', tx);
+      if (!swap) return;
       // A fixed lock order, so two accepts sharing a task cannot deadlock
-      const [first, second] = [swap.offeredTaskId, swap.requestedTaskId].toSorted();
-      if (first === undefined || second === undefined) throw new Error('A swap has two tasks');
-      await this.tasks.lockTask(first, tx);
-      await this.tasks.lockTask(second, tx);
+      for (const taskId of [swap.offeredTaskId, swap.requestedTaskId].toSorted()) {
+        // oxlint-disable-next-line no-await-in-loop -- the order is what prevents the deadlock
+        await this.tasks.lockTask(taskId, tx);
+      }
       const item = await this.loadTasks(swap, tx);
       const members = await this.groups.members(swap.groupId, tx);
       const problem = problemOf(item, members, this.clock.now());
       if (problem !== null) throw new DomainError(problem);
-      await this.handOver(item.offered, swap.recipientId, swap, tx);
-      await this.handOver(item.requested, swap.proposerId, swap, tx);
+      await this.planner.assignManually(item.offered, swap.recipientId, swap.recipientId, tx);
+      await this.planner.assignManually(item.requested, swap.proposerId, swap.recipientId, tx);
       await this.repository.decide(swapId, 'accepted', this.clock.now(), tx);
       await this.publishDecision(swap, true, tx);
     });
@@ -120,9 +122,8 @@ export class TaskSwaps {
   async decline(swapId: string, userId: string): Promise<SwapDto> {
     await this.visibleSwap(swapId, userId, 'recipient');
     await this.db.transaction(async (tx) => {
-      const swap = await this.locked(swapId, tx);
-      if (swap.status === 'declined') return;
-      if (swap.status !== 'pending') throw new DomainError('SWAP_STALE');
+      const swap = await this.lockPending(swapId, 'declined', tx);
+      if (!swap) return;
       await this.repository.decide(swapId, 'declined', this.clock.now(), tx);
       await this.publishDecision(swap, false, tx);
     });
@@ -132,28 +133,9 @@ export class TaskSwaps {
   async cancel(swapId: string, userId: string): Promise<void> {
     await this.visibleSwap(swapId, userId, 'proposer');
     await this.db.transaction(async (tx) => {
-      const swap = await this.locked(swapId, tx);
-      if (swap.status === 'cancelled') return;
-      if (swap.status !== 'pending') throw new DomainError('SWAP_STALE');
+      const swap = await this.lockPending(swapId, 'cancelled', tx);
+      if (!swap) return;
       await this.repository.decide(swapId, 'cancelled', this.clock.now(), tx);
-    });
-  }
-
-  private async handOver(
-    task: TaskWithSeries,
-    assigneeId: string,
-    swap: TaskSwapRow,
-    tx: DbExecutor,
-  ): Promise<void> {
-    const previousAssigneeId = task.assigneeId;
-    await this.tasks.updateTask(task.id, { assigneeId, manuallyAssigned: true }, tx);
-    await this.bus.publish(tx, 'task.assigned', {
-      taskId: task.id,
-      groupId: task.groupId,
-      assigneeId,
-      previousAssigneeId,
-      actorId: swap.recipientId,
-      bulk: false,
     });
   }
 
@@ -174,30 +156,33 @@ export class TaskSwaps {
     userId: string,
     side: 'proposer' | 'recipient',
   ): Promise<TaskSwapRow> {
-    const swap = await this.repository.find(swapId);
-    if (!swap) throw new DomainError('NOT_FOUND');
+    const swap = requireFound(await this.repository.find(swapId));
     await this.groups.requireMember(swap.groupId, userId);
     const actor = side === 'proposer' ? swap.proposerId : swap.recipientId;
     if (actor !== userId) throw new DomainError('FORBIDDEN');
     return swap;
   }
 
-  private async locked(swapId: string, tx: DbExecutor): Promise<TaskSwapRow> {
-    const swap = await this.repository.lock(swapId, tx);
-    if (!swap) throw new DomainError('NOT_FOUND');
-    return swap;
+  /** null when the swap already has this decision, so a repeated click changes nothing */
+  private async lockPending(
+    swapId: string,
+    decision: SwapStatus,
+    tx: DbExecutor,
+  ): Promise<TaskSwapRow | null> {
+    const swap = requireFound(await this.repository.lock(swapId, tx));
+    const outcome = SWAP_TRANSITIONS.decide(swap.status, decision);
+    if (outcome === 'invalid') throw new DomainError('SWAP_STALE');
+    return outcome === 'apply' ? swap : null;
   }
 
   private async load(swapId: string): Promise<SwapDto> {
-    const swap = await this.repository.find(swapId);
-    if (!swap) throw new DomainError('NOT_FOUND');
+    const swap = requireFound(await this.repository.find(swapId));
     return toSwapDto(await this.loadTasks(swap));
   }
 
   private async loadTasks(swap: TaskSwapRow, db?: DbExecutor): Promise<SwapWithTasks> {
     const [item] = await this.withTasks([swap], db);
-    if (!item) throw new DomainError('NOT_FOUND');
-    return item;
+    return requireFound(item);
   }
 
   private async withTasks(swaps: TaskSwapRow[], db?: DbExecutor): Promise<SwapWithTasks[]> {

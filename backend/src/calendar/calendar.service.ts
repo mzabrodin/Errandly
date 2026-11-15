@@ -4,6 +4,7 @@ import { Clock } from '../common/clock.js';
 import { TokenCipher } from '../common/crypto/token-cipher.js';
 import type { CalendarProvider } from '../common/domain.js';
 import { DomainError } from '../common/errors/domain-error.js';
+import { requireFound } from '../common/errors/require-found.js';
 import { EventBus } from '../common/events/event-bus.js';
 import { DATABASE, type Database, type DbExecutor } from '../db/database.js';
 import { UsersApi } from '../users/index.js';
@@ -43,10 +44,7 @@ export class CalendarService implements OnModuleInit {
   ) {}
 
   onModuleInit(): void {
-    this.bus.onInTransaction('user.deleted', async ({ userId }, tx) => {
-      const connection = await this.repository.findByUser(userId, tx);
-      if (connection) await this.close(connection, tx);
-    });
+    this.bus.onInTransaction('user.deleted', ({ userId }, tx) => this.closeIfConnected(userId, tx));
     this.bus.onAfterCommit('calendar.connectionClosed', 'calendar.removeCalendar', (event) =>
       this.removeCalendar(event.provider, event.calendarId, event.refreshTokenEncrypted),
     );
@@ -71,17 +69,16 @@ export class CalendarService implements OnModuleInit {
   }
 
   async disconnect(userId: string): Promise<CalendarStatusDto> {
-    await this.db.transaction(async (tx) => {
-      const connection = await this.repository.findByUser(userId, tx);
-      if (connection) await this.close(connection, tx);
-    });
+    await this.db.transaction((tx) => this.closeIfConnected(userId, tx));
     return toStatus(undefined);
   }
 
   async syncNow(userId: string): Promise<CalendarStatusDto> {
     await this.db.transaction(async (tx) => {
-      const connection = await this.repository.findByUser(userId, tx);
-      if (!connection) throw new DomainError('CALENDAR_NOT_CONNECTED');
+      const connection = requireFound(
+        await this.repository.findByUser(userId, tx),
+        'CALENDAR_NOT_CONNECTED',
+      );
       await this.repository.resume(connection.id, this.clock.now(), tx);
       await this.bus.publish(tx, 'calendar.resyncRequested', { userId });
     });
@@ -89,8 +86,7 @@ export class CalendarService implements OnModuleInit {
   }
 
   private async connect(userId: string, grant: CalendarGrant): Promise<void> {
-    const user = await this.users.findById(userId);
-    if (!user) throw new DomainError('UNAUTHENTICATED');
+    const user = requireFound(await this.users.findById(userId), 'UNAUTHENTICATED');
     const existing = await this.repository.findByUser(userId);
     const sameAccount = existing?.accountEmail === grant.email;
     const calendarId =
@@ -123,6 +119,11 @@ export class CalendarService implements OnModuleInit {
       calendarId: connection.calendarId,
       refreshToken: grant.refreshToken,
     });
+  }
+
+  private async closeIfConnected(userId: string, tx: DbExecutor): Promise<void> {
+    const connection = await this.repository.findByUser(userId, tx);
+    if (connection) await this.close(connection, tx);
   }
 
   private async close(connection: CalendarConnectionRow, tx: DbExecutor): Promise<void> {

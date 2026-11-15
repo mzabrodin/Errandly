@@ -1,4 +1,3 @@
-import { ApiProperty } from '@nestjs/swagger';
 import {
   IsIn,
   IsInt,
@@ -19,6 +18,7 @@ import {
   type EditScope,
   type TaskStatus,
 } from '../../common/domain.js';
+import { ApiEnum } from '../../common/http/api-docs.js';
 import { Trim } from '../../common/validation/transforms.js';
 import { code } from '../../common/validation/validation.js';
 import { IsFutureDate } from '../../common/validation/validators.js';
@@ -37,7 +37,7 @@ export class TaskDto {
   @RecurrenceProperty()
   recurrence!: RecurrenceDto;
   /** Computed: done → overdue → unassigned → planned */
-  @ApiProperty({ enum: TASK_STATUSES, enumName: 'TaskStatus' })
+  @ApiEnum(TASK_STATUSES, 'TaskStatus')
   status!: TaskStatus;
   assigneeId!: string | null;
   /** Set by an admin; the algorithm never overwrites it (FR-30) */
@@ -106,7 +106,7 @@ export class TasksQueryDto {
 
 export class EditScopeQueryDto {
   /** `one` changes this instance only, `series` all upcoming unfinished ones */
-  @ApiProperty({ enum: EDIT_SCOPES, enumName: 'EditScope' })
+  @ApiEnum(EDIT_SCOPES, 'EditScope')
   @IsIn(EDIT_SCOPES, code('invalid'))
   scope!: EditScope;
 }

@@ -2,6 +2,7 @@ import { Inject, Injectable } from '@nestjs/common';
 import { and, asc, eq, gt, gte, inArray, isNotNull, isNull, lt, lte } from 'drizzle-orm';
 
 import { DATABASE, type Database, type DbExecutor } from '../db/database.js';
+import { insertedRow } from '../db/inserted-row.js';
 import type { AssignedTask } from './assignment/assignment-strategy.js';
 import {
   tasks,
@@ -58,6 +59,13 @@ const seriesColumns = {
   timezone: taskSeries.timezone,
 };
 
+function selectWithSeries(db: DbExecutor) {
+  return db
+    .select({ task: tasks, series: seriesColumns })
+    .from(tasks)
+    .innerJoin(taskSeries, eq(taskSeries.id, tasks.seriesId));
+}
+
 function withSeries(rows: { task: TaskRow; series: TaskWithSeries['series'] }[]): TaskWithSeries[] {
   return rows.map(({ task, series }) => ({ ...task, series }));
 }
@@ -67,9 +75,7 @@ export class TasksRepository {
   constructor(@Inject(DATABASE) private readonly db: Database) {}
 
   async insertSeries(values: NewTaskSeriesRow, db: DbExecutor = this.db): Promise<TaskSeriesRow> {
-    const [row] = await db.insert(taskSeries).values(values).returning();
-    if (!row) throw new Error('INSERT … RETURNING returned no row');
-    return row;
+    return insertedRow(await db.insert(taskSeries).values(values).returning());
   }
 
   async findSeries(id: string, db: DbExecutor = this.db): Promise<TaskSeriesRow | undefined> {
@@ -120,26 +126,13 @@ export class TasksRepository {
   }
 
   async findTask(id: string, db: DbExecutor = this.db): Promise<TaskWithSeries | undefined> {
-    const [row] = withSeries(
-      await db
-        .select({ task: tasks, series: seriesColumns })
-        .from(tasks)
-        .innerJoin(taskSeries, eq(taskSeries.id, tasks.seriesId))
-        .where(eq(tasks.id, id))
-        .limit(1),
-    );
+    const [row] = withSeries(await selectWithSeries(db).where(eq(tasks.id, id)).limit(1));
     return row;
   }
 
   async findTasks(ids: readonly string[], db: DbExecutor = this.db): Promise<TaskWithSeries[]> {
     if (ids.length === 0) return [];
-    return withSeries(
-      await db
-        .select({ task: tasks, series: seriesColumns })
-        .from(tasks)
-        .innerJoin(taskSeries, eq(taskSeries.id, tasks.seriesId))
-        .where(inArray(tasks.id, [...ids])),
-    );
+    return withSeries(await selectWithSeries(db).where(inArray(tasks.id, [...ids])));
   }
 
   /** NO KEY UPDATE, so a calendar sync holding the task does not block edits */
@@ -220,10 +213,7 @@ export class TasksRepository {
     db: DbExecutor = this.db,
   ): Promise<TaskWithSeries[]> {
     return withSeries(
-      await db
-        .select({ task: tasks, series: seriesColumns })
-        .from(tasks)
-        .innerJoin(taskSeries, eq(taskSeries.id, tasks.seriesId))
+      await selectWithSeries(db)
         .where(
           and(
             eq(tasks.groupId, groupId),
@@ -260,10 +250,7 @@ export class TasksRepository {
     db: DbExecutor = this.db,
   ): Promise<TaskWithSeries[]> {
     return withSeries(
-      await db
-        .select({ task: tasks, series: seriesColumns })
-        .from(tasks)
-        .innerJoin(taskSeries, eq(taskSeries.id, tasks.seriesId))
+      await selectWithSeries(db)
         .where(
           and(
             eq(tasks.groupId, groupId),

@@ -1,6 +1,7 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import pg from 'pg';
 
+import { errorMessage } from '../common/errors/error-message.js';
 import { PG_POOL } from './database.js';
 
 @Injectable()
@@ -15,9 +16,7 @@ export class DatabaseHealth {
       await this.pool.query('select 1');
       return true;
     } catch (error: unknown) {
-      this.logger.warn(
-        `Database is unreachable: ${error instanceof Error ? error.message : 'unknown error'}`,
-      );
+      this.logger.warn(`Database is unreachable: ${errorMessage(error)}`);
       return false;
     }
   }

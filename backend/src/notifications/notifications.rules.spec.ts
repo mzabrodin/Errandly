@@ -3,7 +3,6 @@ import type { TaskView } from '../tasks/index.js';
 import {
   assignmentRecipients,
   digestWeek,
-  firstName,
   isDueSoon,
   reminderMinutesOption,
   summarizeWeek,
@@ -75,10 +74,6 @@ describe('reminders', () => {
   it('falls back to a day for a reminder time the settings do not offer', () => {
     expect(reminderMinutesOption(180)).toBe(180);
     expect(reminderMinutesOption(45)).toBe(1440);
-  });
-
-  it('greets by first name', () => {
-    expect(firstName('  Anya Koval ')).toBe('Anya');
   });
 });
 

@@ -3,6 +3,7 @@ import { and, asc, eq, or } from 'drizzle-orm';
 
 import type { SwapStatus } from '../common/domain.js';
 import { DATABASE, type Database, type DbExecutor } from '../db/database.js';
+import { insertedRow } from '../db/inserted-row.js';
 import { taskSwaps, type NewTaskSwapRow, type TaskSwapRow } from './tasks.schema.js';
 
 @Injectable()
@@ -10,9 +11,7 @@ export class TaskSwapsRepository {
   constructor(@Inject(DATABASE) private readonly db: Database) {}
 
   async insert(values: NewTaskSwapRow, db: DbExecutor = this.db): Promise<TaskSwapRow> {
-    const [row] = await db.insert(taskSwaps).values(values).returning();
-    if (!row) throw new Error('Insert returned no row');
-    return row;
+    return insertedRow(await db.insert(taskSwaps).values(values).returning());
   }
 
   async find(id: string, db: DbExecutor = this.db): Promise<TaskSwapRow | undefined> {

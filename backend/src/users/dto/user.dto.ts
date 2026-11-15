@@ -1,6 +1,5 @@
-import { ApiProperty } from '@nestjs/swagger';
-
 import { LOCALES, type Locale } from '../../common/domain.js';
+import { ApiEnum } from '../../common/http/api-docs.js';
 
 /** The signed-in account as the frontend sees it */
 export class UserDto {
@@ -13,7 +12,7 @@ export class UserDto {
   /** Whether `timezone` follows the device (the frontend updates it) or was chosen by hand */
   timezoneAuto!: boolean;
   /** UI and email language */
-  @ApiProperty({ enum: LOCALES, enumName: 'Locale' })
+  @ApiEnum(LOCALES, 'Locale')
   locale!: Locale;
   /** The uploaded photo, else the Google photo, else null */
   avatarUrl!: string | null;

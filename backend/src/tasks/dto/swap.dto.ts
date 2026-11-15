@@ -1,7 +1,7 @@
-import { ApiProperty } from '@nestjs/swagger';
 import { IsUUID } from 'class-validator';
 
 import { SWAP_STATUSES, type SwapStatus } from '../../common/domain.js';
+import { ApiEnum } from '../../common/http/api-docs.js';
 import { code } from '../../common/validation/validation.js';
 
 export class SwapTaskDto {
@@ -16,7 +16,7 @@ export class SwapTaskDto {
 export class SwapDto {
   id!: string;
   groupId!: string;
-  @ApiProperty({ enum: SWAP_STATUSES, enumName: 'SwapStatus' })
+  @ApiEnum(SWAP_STATUSES, 'SwapStatus')
   status!: SwapStatus;
   proposerId!: string;
   recipientId!: string;

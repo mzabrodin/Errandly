@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { and, desc, eq, inArray, isNull, sql } from 'drizzle-orm';
+import { and, desc, eq, inArray, isNull, sql, type SQL } from 'drizzle-orm';
 
 import {
   DEFAULT_EMAIL_REMINDER_MINUTES,
@@ -23,6 +23,18 @@ export interface PreferenceOverride {
   event: NotificationEvent;
   channel: NotificationChannel;
   enabled: boolean;
+}
+
+function preferenceKey(
+  userId: string,
+  event: NotificationEvent,
+  channel: NotificationChannel,
+): SQL | undefined {
+  return and(
+    eq(notificationPreferences.userId, userId),
+    eq(notificationPreferences.event, event),
+    eq(notificationPreferences.channel, channel),
+  );
 }
 
 @Injectable()
@@ -89,15 +101,7 @@ export class NotificationsRepository {
     channel: NotificationChannel,
     db: DbExecutor = this.db,
   ): Promise<void> {
-    await db
-      .delete(notificationPreferences)
-      .where(
-        and(
-          eq(notificationPreferences.userId, userId),
-          eq(notificationPreferences.event, event),
-          eq(notificationPreferences.channel, channel),
-        ),
-      );
+    await db.delete(notificationPreferences).where(preferenceKey(userId, event, channel));
   }
 
   async insert(rows: NewNotificationRow[], db: DbExecutor = this.db): Promise<void> {
@@ -178,13 +182,7 @@ export class NotificationsRepository {
     const [row] = await db
       .select({ enabled: notificationPreferences.enabled })
       .from(notificationPreferences)
-      .where(
-        and(
-          eq(notificationPreferences.userId, userId),
-          eq(notificationPreferences.event, event),
-          eq(notificationPreferences.channel, 'email'),
-        ),
-      )
+      .where(preferenceKey(userId, event, 'email'))
       .limit(1);
     return row?.enabled;
   }

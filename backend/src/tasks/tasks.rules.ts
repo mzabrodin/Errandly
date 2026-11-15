@@ -1,13 +1,19 @@
 import { TZDate } from '@date-fns/tz';
 import { addDays, addMonths, format, getISODay } from 'date-fns';
 
-import { HORIZON_DAYS, type TaskStatus } from '../common/domain.js';
+import {
+  HORIZON_DAYS,
+  LOAD_WINDOW_DAYS,
+  type SwapStatus,
+  type TaskStatus,
+} from '../common/domain.js';
+import { defineTransitions } from '../common/state-machine.js';
+import { DAY_MS } from '../common/time.js';
 import type { RecurrenceDto } from './dto/recurrence.dto.js';
 
-const DAY_MS = 24 * 60 * 60 * 1000;
 export const HORIZON_MS = HORIZON_DAYS * DAY_MS;
-export const UNDO_WINDOW_MS = DAY_MS;
-export const LOAD_WINDOW_MS = 28 * DAY_MS;
+const UNDO_WINDOW_MS = DAY_MS;
+export const LOAD_WINDOW_MS = LOAD_WINDOW_DAYS * DAY_MS;
 const MAX_OCCURRENCES = 400;
 
 export interface OccurrenceWindow {
@@ -65,6 +71,14 @@ export interface SwapParties {
   proposerAbsences: readonly { from: string; to: string }[];
   recipientAbsences: readonly { from: string; to: string }[];
 }
+
+/** FR-26: a pending swap is accepted, declined or cancelled once; the decision is final */
+export const SWAP_TRANSITIONS = defineTransitions<SwapStatus>({
+  pending: ['accepted', 'declined', 'cancelled'],
+  accepted: [],
+  declined: [],
+  cancelled: [],
+});
 
 export function swapProblem(
   parties: SwapParties,

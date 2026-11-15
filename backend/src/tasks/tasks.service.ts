@@ -3,6 +3,7 @@ import { Inject, Injectable } from '@nestjs/common';
 import { Clock } from '../common/clock.js';
 import type { EditScope } from '../common/domain.js';
 import { DomainError } from '../common/errors/domain-error.js';
+import { requireFound } from '../common/errors/require-found.js';
 import { EventBus } from '../common/events/event-bus.js';
 import { DATABASE, type Database, type DbExecutor } from '../db/database.js';
 import { GroupsApi } from '../groups/index.js';
@@ -113,17 +114,7 @@ export class TasksService {
       const current = await this.locked(taskId, tx);
       if (current.assigneeId !== userId) throw new DomainError('NOT_ASSIGNEE');
       if (current.completedAt !== null) return;
-      await this.repository.updateTask(
-        taskId,
-        { completedAt: this.clock.now(), completedBy: userId },
-        tx,
-      );
-      await this.bus.publish(tx, 'task.completed', {
-        taskId,
-        groupId: task.groupId,
-        userId,
-        done: true,
-      });
+      await this.setDone(task, userId, true, tx);
     });
     return this.load(taskId);
   }
@@ -140,13 +131,7 @@ export class TasksService {
         }
       }
       if (current.completedAt === null) return;
-      await this.repository.updateTask(taskId, { completedAt: null, completedBy: null }, tx);
-      await this.bus.publish(tx, 'task.completed', {
-        taskId,
-        groupId: task.groupId,
-        userId,
-        done: false,
-      });
+      await this.setDone(task, userId, false, tx);
     });
     return this.load(taskId);
   }
@@ -157,7 +142,7 @@ export class TasksService {
       const current = await this.locked(taskId, tx);
       if (current.completedAt !== null) throw new DomainError('TASK_DONE');
       await this.assertAssignable(task.groupId, assigneeId, tx);
-      await this.setAssignee(current, assigneeId, userId, tx);
+      await this.planner.assignManually(current, assigneeId, userId, tx);
     });
     return this.load(taskId);
   }
@@ -181,7 +166,7 @@ export class TasksService {
     );
     await this.bus.publish(tx, 'task.changed', { taskId: task.id, groupId: task.groupId });
     if (input.assigneeId !== null && current.completedAt === null) {
-      await this.setAssignee(current, input.assigneeId, userId, tx);
+      await this.planner.assignManually(current, input.assigneeId, userId, tx);
     }
     return task.id;
   }
@@ -193,8 +178,7 @@ export class TasksService {
     now: Date,
     tx: DbExecutor,
   ): Promise<string> {
-    const series = await this.repository.findSeries(task.seriesId, tx);
-    if (!series) throw new DomainError('NOT_FOUND');
+    const series = requireFound(await this.repository.findSeries(task.seriesId, tx));
     await this.deletion.delete(await this.repository.unfinishedOfSeries(series.id, now, tx), tx);
     const changes = {
       ...seriesFields(input),
@@ -222,21 +206,21 @@ export class TasksService {
     );
   }
 
-  private async setAssignee(
-    task: TaskRow,
-    assigneeId: string,
-    actorId: string,
+  private async setDone(
+    task: TaskWithSeries,
+    userId: string,
+    done: boolean,
     tx: DbExecutor,
   ): Promise<void> {
-    await this.repository.updateTask(task.id, { assigneeId, manuallyAssigned: true }, tx);
-    if (assigneeId === task.assigneeId) return;
-    await this.bus.publish(tx, 'task.assigned', {
+    const changes = done
+      ? { completedAt: this.clock.now(), completedBy: userId }
+      : { completedAt: null, completedBy: null };
+    await this.repository.updateTask(task.id, changes, tx);
+    await this.bus.publish(tx, 'task.completed', {
       taskId: task.id,
       groupId: task.groupId,
-      assigneeId,
-      previousAssigneeId: task.assigneeId,
-      actorId,
-      bulk: false,
+      userId,
+      done,
     });
   }
 
@@ -250,35 +234,29 @@ export class TasksService {
   }
 
   private async timezoneOf(userId: string, tx: DbExecutor): Promise<string> {
-    const user = await this.users.findById(userId, tx);
-    if (!user) throw new DomainError('UNAUTHENTICATED');
+    const user = requireFound(await this.users.findById(userId, tx), 'UNAUTHENTICATED');
     return user.timezone;
   }
 
   /** 404 before 403 */
   private async visibleTask(taskId: string, userId: string): Promise<TaskWithSeries> {
-    const task = await this.repository.findTask(taskId);
-    if (!task) throw new DomainError('NOT_FOUND');
+    const task = requireFound(await this.repository.findTask(taskId));
     await this.groups.requireMember(task.groupId, userId);
     return task;
   }
 
   private async adminTask(taskId: string, userId: string): Promise<TaskWithSeries> {
-    const task = await this.repository.findTask(taskId);
-    if (!task) throw new DomainError('NOT_FOUND');
+    const task = requireFound(await this.repository.findTask(taskId));
     await this.groups.requireAdmin(task.groupId, userId);
     return task;
   }
 
   private async locked(taskId: string, tx: DbExecutor): Promise<TaskRow> {
-    const task = await this.repository.lockTask(taskId, tx);
-    if (!task) throw new DomainError('NOT_FOUND');
-    return task;
+    return requireFound(await this.repository.lockTask(taskId, tx));
   }
 
   private async load(taskId: string): Promise<TaskDto> {
-    const task = await this.repository.findTask(taskId);
-    if (!task) throw new DomainError('NOT_FOUND');
+    const task = requireFound(await this.repository.findTask(taskId));
     return toTaskDto(task, this.clock.now());
   }
 }

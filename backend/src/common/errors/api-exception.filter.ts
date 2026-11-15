@@ -28,9 +28,13 @@ const HTTP_STATUS_CODES: Partial<Record<number, ErrorCode>> = {
 const UNIQUE_VIOLATION = '23505';
 const FOREIGN_KEY_VIOLATION = '23503';
 
-/** Drizzle may wrap the pg error in `cause` */
+/** The error and what it wraps: Drizzle puts the pg error in `cause` */
+function* causes(error: unknown): Generator<Error> {
+  for (let current = error; current instanceof Error; current = current.cause) yield current;
+}
+
 export function postgresErrorCode(error: unknown): string | undefined {
-  for (let current = error; current instanceof Error; current = current.cause) {
+  for (const current of causes(error)) {
     const code: unknown = Reflect.get(current, 'code');
     if (typeof code === 'string' && /^[0-9A-Z]{5}$/.test(code)) return code;
   }
@@ -39,15 +43,11 @@ export function postgresErrorCode(error: unknown): string | undefined {
 
 /** Turns a race the service's own check missed into its business error (EMAIL_TAKEN) */
 export function isUniqueViolation(error: unknown, constraint: string): boolean {
-  for (let current = error; current instanceof Error; current = current.cause) {
-    if (
+  return [...causes(error)].some(
+    (current) =>
       Reflect.get(current, 'code') === UNIQUE_VIOLATION &&
-      Reflect.get(current, 'constraint') === constraint
-    ) {
-      return true;
-    }
-  }
-  return false;
+      Reflect.get(current, 'constraint') === constraint,
+  );
 }
 
 // The request log line picks the code up from here (see logger.module.ts)

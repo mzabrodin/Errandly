@@ -1,6 +1,7 @@
 import { Inject, Injectable, Logger, type OnModuleInit } from '@nestjs/common';
 
 import { DomainError } from '../common/errors/domain-error.js';
+import { requireFound } from '../common/errors/require-found.js';
 import { EventBus } from '../common/events/event-bus.js';
 import { ObjectStorage, type StoredObject } from '../common/storage/object-storage.js';
 import { DATABASE, type Database, type DbExecutor } from '../db/database.js';
@@ -56,11 +57,12 @@ export class AvatarsService implements OnModuleInit {
   }
 
   private async setKey(tx: DbExecutor, userId: string, key: string | null): Promise<UserRow> {
-    const current = await this.users.lockById(userId, tx);
-    if (!current) throw new DomainError('UNAUTHENTICATED');
+    const current = requireFound(await this.users.lockById(userId, tx), 'UNAUTHENTICATED');
     if (current.uploadedAvatarKey === key) return current;
-    const updated = await this.users.update(userId, { uploadedAvatarKey: key }, tx);
-    if (!updated) throw new DomainError('UNAUTHENTICATED');
+    const updated = requireFound(
+      await this.users.update(userId, { uploadedAvatarKey: key }, tx),
+      'UNAUTHENTICATED',
+    );
     if (current.uploadedAvatarKey !== null) {
       await this.bus.publish(tx, 'user.avatarDiscarded', { key: current.uploadedAvatarKey });
     }

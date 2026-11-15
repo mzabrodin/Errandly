@@ -7,6 +7,7 @@ import {
   type NotificationType,
 } from '../common/domain.js';
 import type { DomainEventMap } from '../common/events/domain-events.js';
+import { addMs, DAY_MS, MINUTE_MS } from '../common/time.js';
 import type { TaskView } from '../tasks/index.js';
 
 export interface Recipient {
@@ -14,7 +15,6 @@ export interface Recipient {
   type: NotificationType;
 }
 
-const MINUTE_MS = 60_000;
 const DIGEST_HOUR = 9;
 const DIGEST_DAYS = 7;
 
@@ -54,10 +54,6 @@ export function reminderMinutesOption(minutes: number): (typeof REMINDER_MINUTES
   );
 }
 
-export function firstName(name: string): string {
-  return name.trim().split(/\s+/)[0] ?? name;
-}
-
 export interface DigestWeek {
   /** The local Monday, yyyy-mm-dd */
   weekStart: string;
@@ -75,7 +71,7 @@ export function digestWeek(now: Date, timeZone: string): DigestWeek | null {
     weekStart: format(monday, 'yyyy-MM-dd'),
     lastWeekFrom: new Date(addDays(monday, -DIGEST_DAYS).getTime()),
     lastWeekTo: new Date(monday.getTime()),
-    until: new Date(now.getTime() + DIGEST_DAYS * 24 * 60 * MINUTE_MS),
+    until: addMs(now, DIGEST_DAYS * DAY_MS),
   };
 }
 
