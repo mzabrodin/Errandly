@@ -9,7 +9,6 @@ import { CalendarRepository } from './calendar.repository.js';
 import { CalendarService } from './calendar.service.js';
 import { CalendarGateways } from './gateways/calendar-gateways.js';
 import { GoogleCalendarGateway } from './gateways/google-calendar.gateway.js';
-import { GoogleClients } from './google/google-clients.js';
 import { CalendarOAuth } from './oauth/calendar-oauth.js';
 import { GoogleCalendarOAuth } from './oauth/google-calendar-oauth.js';
 
@@ -21,7 +20,6 @@ import { GoogleCalendarOAuth } from './oauth/google-calendar-oauth.js';
     CalendarApi,
     CalendarService,
     CalendarSync,
-    GoogleClients,
     GoogleCalendarGateway,
     CalendarGateways,
     { provide: CalendarOAuth, useClass: GoogleCalendarOAuth },

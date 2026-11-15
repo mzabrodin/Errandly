@@ -7,6 +7,7 @@ import type TestAgent from 'supertest/lib/agent.js';
 import { AppModule } from '../../src/app.module.js';
 import { configureApp } from '../../src/app.setup.js';
 import { Argon2PasswordHasher, PasswordHasher } from '../../src/auth/index.js';
+import { GoogleOAuthSignIn } from '../../src/auth/oauth/google-oauth-sign-in.js';
 import { GoogleCalendarGateway } from '../../src/calendar/gateways/google-calendar.gateway.js';
 import { CalendarOAuth } from '../../src/calendar/oauth/calendar-oauth.js';
 import { Clock, FixedClock } from '../../src/common/clock.js';
@@ -19,6 +20,7 @@ import { truncateAll } from '../../src/db/tables.js';
 import { MailTransport } from '../../src/mail/mail-transport.js';
 import { FakeCalendarOAuth, FakeGoogleCalendar } from './calendar.js';
 import { RecordingMailTransport } from './mailbox.js';
+import { FakeOAuthSignIn } from './oauth.js';
 import { FlakyObjectStorage } from './storage.js';
 
 /** Cheap enough for hundreds of hashes per run; production uses the OWASP parameters */
@@ -38,6 +40,8 @@ export interface TestApp {
   storage: FlakyObjectStorage;
   google: FakeGoogleCalendar;
   oauth: FakeCalendarOAuth;
+  /** Google sign-in */
+  identity: FakeOAuthSignIn;
   /** Runs the after-commit listeners that are due, as the poller would */
   deliverEvents: () => Promise<number>;
   /** A cookie-keeping client, like one browser */
@@ -53,6 +57,7 @@ export async function createTestApp(): Promise<TestApp> {
   const mailbox = new RecordingMailTransport();
   const google = new FakeGoogleCalendar();
   const oauth = new FakeCalendarOAuth();
+  const identity = new FakeOAuthSignIn();
   const moduleRef = await Test.createTestingModule({ imports: [AppModule] })
     .overrideProvider(Clock)
     .useValue(clock)
@@ -64,6 +69,8 @@ export async function createTestApp(): Promise<TestApp> {
     .useValue(google)
     .overrideProvider(CalendarOAuth)
     .useValue(oauth)
+    .overrideProvider(GoogleOAuthSignIn)
+    .useValue(identity)
     .overrideProvider(ObjectStorage)
     .useFactory({
       factory: (config: ConfigService<EnvironmentVariables, true>) =>
@@ -89,6 +96,7 @@ export async function createTestApp(): Promise<TestApp> {
     storage,
     google,
     oauth,
+    identity,
     deliverEvents: () => dispatcher.dispatchDue(),
     agent: () => request.agent(app.getHttpServer()),
     reset: async () => {
@@ -97,6 +105,7 @@ export async function createTestApp(): Promise<TestApp> {
       storage.clear();
       google.clear();
       oauth.clear();
+      identity.clear();
       clock.set(START);
     },
     close: () => app.close(),

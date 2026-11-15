@@ -42,6 +42,14 @@ export function shouldRefreshSession(lastSeenAt: Date, now: Date): boolean {
   return now.getTime() - lastSeenAt.getTime() >= SESSION_REFRESH_MS;
 }
 
+/**
+ * Only a path inside the app, never another site (`//evil.com`, `/\evil.com`, `https://…`).
+ * Printable ASCII only: browsers drop tabs and newlines, so `/\t/evil.com` would become `//evil.com`.
+ */
+export function safeNext(next: string | undefined): string {
+  return next !== undefined && /^\/(?![/\\])[\x21-\x7e]*$/.test(next) ? next : '/';
+}
+
 export function firstName(name: string): string {
   return name.trim().split(/\s+/)[0] ?? name;
 }

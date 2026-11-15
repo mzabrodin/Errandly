@@ -1,4 +1,4 @@
-import type { GoogleClients } from '../google/google-clients.js';
+import type { GoogleClients } from '../../common/google/google-clients.js';
 import { CalendarGateways } from './calendar-gateways.js';
 import { GoogleCalendarGateway } from './google-calendar.gateway.js';
 

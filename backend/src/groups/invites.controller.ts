@@ -3,7 +3,7 @@ import { ApiCookieAuth, ApiTags } from '@nestjs/swagger';
 
 import { ApiErrorResponses } from '../common/http/api-docs.js';
 import { CurrentUser, OptionalUser, Public, type RequestUser } from '../common/http/auth.js';
-import { ParseId } from '../common/http/stubs.js';
+import { ParseId } from '../common/http/parse-id.js';
 import { AcceptInviteDto, CreateInviteDto, InviteDto, InviteInfoDto } from './dto/group.dto.js';
 import { InvitesService } from './invites.service.js';
 

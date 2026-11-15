@@ -68,11 +68,22 @@ export class VerifyEmailDto {
   token!: string;
 }
 
-export class GoogleAuthQueryDto {
-  /** Frontend path to return to after signing in */
+export class OAuthQueryDto {
+  /** Frontend path to return to after signing in; anything but an app path becomes `/` */
   @IsOptional()
   @IsString(code('type'))
   next?: string;
+
+  /** Current UI language; the language of an account created now */
+  @ApiProperty({ enum: LOCALES, enumName: 'Locale', required: false })
+  @IsOptional()
+  @IsIn(LOCALES, code('invalid'))
+  locale?: Locale;
+
+  /** The device's IANA time zone; the time zone of an account created now */
+  @IsOptional()
+  @IsTimeZone()
+  timezone?: string;
 }
 
 export class ChangePasswordDto {

@@ -2,7 +2,6 @@ import {
   BadRequestException,
   Logger,
   NotFoundException,
-  NotImplementedException,
   PayloadTooLargeException,
   type ArgumentsHost,
 } from '@nestjs/common';
@@ -50,7 +49,6 @@ describe('toApiError', () => {
   it.each([
     [new NotFoundException(), 404, 'NOT_FOUND'],
     [new PayloadTooLargeException(), 413, 'FILE_TOO_LARGE'],
-    [new NotImplementedException(), 501, 'NOT_IMPLEMENTED'],
     [new BadRequestException('Unexpected token in JSON'), 400, 'VALIDATION'],
   ])('maps %o to %i %s', (exception, status, code) => {
     expect(toApiError(exception)).toEqual({ status, body: { code } });

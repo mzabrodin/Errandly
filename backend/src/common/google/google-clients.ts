@@ -3,20 +3,19 @@ import { ConfigService } from '@nestjs/config';
 import { OAuth2Client } from 'google-auth-library';
 
 import type { EnvironmentVariables } from '../../config/env.validation.js';
-import { API_PREFIX, appLink } from '../../config/urls.js';
+import { appLink } from '../../config/urls.js';
 
-export const CALLBACK_PATH = `/${API_PREFIX}/me/calendar/callback`;
-
+/** One OAuth client for Google sign-in and the calendar; each flow has its own redirect URI */
 @Injectable()
 export class GoogleClients {
   private readonly clientId: string | undefined;
   private readonly clientSecret: string | undefined;
-  private readonly redirectUri: string;
+  private readonly appUrl: string;
 
   constructor(config: ConfigService<EnvironmentVariables, true>) {
     this.clientId = config.get('GOOGLE_CLIENT_ID', { infer: true });
     this.clientSecret = config.get('GOOGLE_CLIENT_SECRET', { infer: true });
-    this.redirectUri = appLink(config.get('APP_URL', { infer: true }), CALLBACK_PATH);
+    this.appUrl = config.get('APP_URL', { infer: true });
   }
 
   get configured(): boolean {
@@ -28,15 +27,25 @@ export class GoogleClients {
     return this.clientId;
   }
 
-  client(refreshToken?: string): OAuth2Client {
+  /** `callbackPath` is the API path Google redirects back to, e.g. /api/auth/google/callback */
+  oauthClient(callbackPath: string): OAuth2Client {
+    return this.create(appLink(this.appUrl, callbackPath));
+  }
+
+  /** For API calls on the user's behalf */
+  client(refreshToken: string): OAuth2Client {
+    const client = this.create(undefined);
+    client.setCredentials({ refresh_token: refreshToken });
+    return client;
+  }
+
+  private create(redirectUri: string | undefined): OAuth2Client {
     if (!this.configured) throw new Error('GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET are not set');
-    const client = new OAuth2Client({
+    return new OAuth2Client({
       ...(this.clientId !== undefined && { clientId: this.clientId }),
       ...(this.clientSecret !== undefined && { clientSecret: this.clientSecret }),
-      redirectUri: this.redirectUri,
+      ...(redirectUri !== undefined && { redirectUri }),
     });
-    if (refreshToken !== undefined) client.setCredentials({ refresh_token: refreshToken });
-    return client;
   }
 }
 

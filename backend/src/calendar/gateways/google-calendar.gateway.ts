@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 
-import { GoogleClients, httpStatus, oauthError } from '../google/google-clients.js';
+import { GoogleClients, httpStatus, oauthError } from '../../common/google/google-clients.js';
 import {
   CalendarAccessRevoked,
   CalendarGateway,
