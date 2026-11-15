@@ -10,18 +10,18 @@
 
 Тіло помилки: `{ "code": "...", "fields"?: { "<поле>": "<код>" }, "retryAfterSeconds"?: number, "groups"?: string[] }` (схема `ApiErrorDto`, коди — `backend/src/common/errors/error-codes.ts`).
 
-| Статус | Коди                                                                                                                                    |
-| ------ | --------------------------------------------------------------------------------------------------------------------------------------- |
-| 400    | `VALIDATION` (з `fields`), `TOKEN_INVALID`, `WRONG_PASSWORD`                                                                            |
-| 401    | `UNAUTHENTICATED`, `INVALID_CREDENTIALS`                                                                                                |
-| 403    | `FORBIDDEN` (не учасник групи; запит з чужого `Origin`), `ADMIN_ONLY`, `NOT_ASSIGNEE`, `EMAIL_NOT_VERIFIED`                             |
-| 404    | `NOT_FOUND` (зокрема id не у форматі UUID і невідомий маршрут)                                                                          |
-| 409    | `EMAIL_TAKEN`, `LAST_ADMIN`, `TASK_DONE`, `UNDO_EXPIRED`, `CANNOT_REMOVE_SELF`, `CALENDAR_NOT_CONNECTED`, `SWAP_STALE`, `MEMBER_ABSENT` |
-| 410    | `INVITE_INVALID`                                                                                                                        |
-| 413    | `FILE_TOO_LARGE` (аватарка > 512 КБ)                                                                                                    |
-| 423    | `ACCOUNT_LOCKED` (+ `retryAfterSeconds`)                                                                                                |
-| 429    | `TOO_MANY_REQUESTS` (ліміт запитів на акаунт, без сесії — на IP; `retryAfterSeconds` і заголовок `Retry-After`)                         |
-| 500    | `INTERNAL` (деталі лише в логах сервера за `X-Request-Id`)                                                                              |
+| Статус | Коди                                                                                                                                           |
+| ------ | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| 400    | `VALIDATION` (з `fields`), `TOKEN_INVALID`, `WRONG_PASSWORD`                                                                                   |
+| 401    | `UNAUTHENTICATED`, `INVALID_CREDENTIALS`                                                                                                       |
+| 403    | `FORBIDDEN` (не учасник групи; запит з чужого `Origin`), `ADMIN_ONLY`, `NOT_ASSIGNEE`, `EMAIL_NOT_VERIFIED`                                    |
+| 404    | `NOT_FOUND` (зокрема id не у форматі UUID і невідомий маршрут)                                                                                 |
+| 409    | `EMAIL_TAKEN`, `LAST_ADMIN`, `TASK_DONE`, `UNDO_EXPIRED`, `CANNOT_REMOVE_SELF`, `CALENDAR_NOT_CONNECTED`, `SWAP_STALE`, `MEMBER_ABSENT`        |
+| 410    | `INVITE_INVALID`                                                                                                                               |
+| 413    | `FILE_TOO_LARGE` (аватарка > 512 КБ)                                                                                                           |
+| 423    | `ACCOUNT_LOCKED` (+ `retryAfterSeconds`)                                                                                                       |
+| 429    | `TOO_MANY_REQUESTS` (ліміт запитів на акаунт, без сесії — на IP, а nginx ще ріже понад 20 запитів/с з IP; `retryAfterSeconds` і `Retry-After`) |
+| 500    | `INTERNAL` (деталі лише в логах сервера за `X-Request-Id`)                                                                                     |
 
 Коди полів у `fields`: `required`, `tooLong`, `invalid`, `weak` (пароль), `inPast` (термін), `range` (складність 1–5), `noWeekdays`, `beforeFrom` (кінець відсутності раніше за початок; неіснуючий день на кшталт `2026-02-30` — `invalid`), `type` (неправильний тип значення або файлу), `unknown` (поле, якого немає в контракті). Для кожного поля — один код, найважливіший.
 
