@@ -9,9 +9,7 @@ import {
   type NewEventPublicationRow,
 } from './event-publications.schema.js';
 
-/** Delivered rows still hold payloads such as invitee emails and encrypted refresh tokens */
 const DELIVERED_RETENTION_MS = 7 * DAY_MS;
-/** Rows a listener gave up on stay a while longer, for looking into the failure */
 const GAVE_UP_RETENTION_MS = 30 * DAY_MS;
 
 @Injectable()
@@ -47,7 +45,6 @@ export class EventPublicationStore {
       .where(eq(eventPublications.id, id));
   }
 
-  /** Gives claimed publications back before their lease ends (shutdown) */
   async release(ids: readonly string[], at: Date): Promise<void> {
     if (ids.length === 0) return;
     await this.db

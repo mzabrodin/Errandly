@@ -30,7 +30,6 @@ describe('Data retention (integration)', () => {
 
   const daysAgo = (days: number): Date => new Date(t.clock.now().getTime() - days * DAY);
 
-  /** Inserts rows to be purged (`old*`) and rows to be kept (`kept*`) in every purged table */
   async function seed(): Promise<void> {
     const user = await createUser(t.db);
     const userId = user.id;
@@ -57,7 +56,6 @@ describe('Data retention (integration)', () => {
     await t.db.insert(invites).values([
       { groupId, tokenHash: 'old-expired', expiresAt: daysAgo(31) },
       { groupId, tokenHash: 'old-revoked', expiresAt: later, revokedAt: daysAgo(31) },
-      // Still answers "invalid" for a while
       { groupId, tokenHash: 'kept-expired', expiresAt: daysAgo(3) },
       { groupId, tokenHash: 'kept-live', expiresAt: later },
     ]);
@@ -111,7 +109,6 @@ describe('Data retention (integration)', () => {
       { ...event, completedAt: daysAgo(8) },
       { ...event, publishedAt: daysAgo(31), attempts: 5, nextAttemptAt: null },
       { ...event, completedAt: daysAgo(1) },
-      // Gave up recently, and one still waiting for its next attempt
       { ...event, publishedAt: daysAgo(2), attempts: 5, nextAttemptAt: null },
       { ...event, publishedAt: daysAgo(31), attempts: 2, nextAttemptAt: later },
     ]);

@@ -50,7 +50,6 @@ export class EventDispatcher implements OnApplicationBootstrap, BeforeApplicatio
     this.scheduler.addInterval(INTERVAL_NAME, timer);
   }
 
-  /** Before the pool closes: the delivery in flight finishes, the rest of the batch is handed back */
   async beforeApplicationShutdown(): Promise<void> {
     if (this.scheduler.doesExist('interval', INTERVAL_NAME)) {
       this.scheduler.deleteInterval(INTERVAL_NAME);
@@ -73,7 +72,7 @@ export class EventDispatcher implements OnApplicationBootstrap, BeforeApplicatio
       await this.deliver(publication);
       delivered += 1;
     }
-    // Cut short by a shutdown: the rest is due again at once instead of after the lease
+    // A batch cut short by a shutdown is due again at once, not after the lease
     await this.store.release(
       due.slice(delivered).map(({ id }) => id),
       this.clock.now(),

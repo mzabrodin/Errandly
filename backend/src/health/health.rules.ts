@@ -5,11 +5,9 @@ export const COMPONENT_STATUSES = ['up', 'down'] as const;
 export type ComponentStatus = (typeof COMPONENT_STATUSES)[number];
 
 export interface HealthComponents {
-  /** Critical: without it the app cannot serve anything */
   database: ComponentStatus;
   storage: ComponentStatus;
   mail: ComponentStatus;
-  /** Down when after-commit deliveries wait long past their time */
   events: ComponentStatus;
 }
 

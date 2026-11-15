@@ -36,10 +36,7 @@ export function rateLimits(perMinute: number, authPerMinute: number): ThrottlerM
   };
 }
 
-/**
- * Runs between SessionGuard and AuthenticatedGuard (AuthModule): a signed-in caller is counted by
- * account, because flatmates usually share one home IP; anyone else, rejected ones too, by IP.
- */
+/** By account, since flatmates usually share one home IP; without a session, by IP */
 @Injectable()
 export class CallerThrottlerGuard extends ThrottlerGuard {
   protected override async getTracker(request: Record<string, unknown>): Promise<string> {

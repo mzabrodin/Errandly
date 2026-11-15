@@ -42,7 +42,6 @@ services:
   postgresql:
     <<: *service
     image: postgres:18-alpine
-    # Time for the smart shutdown to finish before Docker kills it
     stop_grace_period: 30s
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-errandly}
@@ -97,7 +96,6 @@ services:
     restart: 'no'
     image: errandly/backend:local
     build: *backend-build
-    # tini as PID 1 forwards signals and reaps zombies
     init: true
     command: ['node', 'backend/dist/db/migrate.js']
     environment:
@@ -113,7 +111,7 @@ services:
     image: errandly/backend:local
     build: *backend-build
     init: true
-    # Above SHUTDOWN_TIMEOUT_MS (20 s): requests and deliveries in flight get to finish
+    # Above SHUTDOWN_TIMEOUT_MS
     stop_grace_period: 30s
     environment:
       NODE_ENV: production

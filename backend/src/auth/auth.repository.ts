@@ -62,7 +62,6 @@ export class AuthRepository {
       .where(eq(passwordCredentials.userId, userId));
   }
 
-  /** Expired sessions, and email links that were used or expired: none of them works any more */
   async purge(now: Date, db: DbExecutor = this.db): Promise<Record<string, number>> {
     const expiredSessions = await db.delete(sessions).where(lt(sessions.expiresAt, now));
     const deadLinks = await db

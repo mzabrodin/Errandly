@@ -13,7 +13,6 @@ import {
   type HealthStatus,
 } from './health.rules.js';
 
-/** Load balancers poll often; SMTP and S3 are asked at most this often */
 const CACHE_MS = 30 * SECOND_MS;
 const PROBE_TIMEOUT_MS = 3 * SECOND_MS;
 /** Longer than the dispatcher's lease, so a delivery cut off by a restart is not counted */
@@ -39,7 +38,6 @@ export class HealthService {
     private readonly clock: Clock,
   ) {}
 
-  /** Readiness: the database on every call, the rest from a short cache */
   async check(): Promise<HealthReport> {
     const [database, external] = await Promise.all([this.databaseStatus(), this.external()]);
     const components = { database, ...external };
@@ -82,7 +80,6 @@ function toStatus(up: boolean): ComponentStatus {
   return up ? 'up' : 'down';
 }
 
-/** A probe that fails or hangs counts as down */
 async function probe(check: Promise<boolean>): Promise<ComponentStatus> {
   let timer: NodeJS.Timeout | undefined;
   const timeout = new Promise<boolean>((resolve) => {

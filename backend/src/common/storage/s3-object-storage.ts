@@ -59,7 +59,6 @@ export class S3ObjectStorage extends ObjectStorage implements OnModuleInit, OnAp
     }
   }
 
-  /** After the HTTP server has answered the requests in flight */
   onApplicationShutdown(): void {
     this.client.destroy();
   }

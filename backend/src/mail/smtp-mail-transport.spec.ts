@@ -24,7 +24,6 @@ function createTransport(env: Partial<EnvironmentVariables> = {}): SmtpMailTrans
   return new SmtpMailTransport(config);
 }
 
-/** The options a production transport is created with */
 function tls(env: Partial<EnvironmentVariables>): unknown {
   createTransport({ NODE_ENV: NodeEnv.Production, ...env });
   return vi.mocked(nodemailer.createTransport).mock.lastCall?.[0];
