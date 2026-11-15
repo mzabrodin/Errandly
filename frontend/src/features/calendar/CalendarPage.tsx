@@ -3,7 +3,6 @@ import { Check, ChevronLeft, ChevronRight, Plane, Plus } from 'lucide-react';
 import { useMemo, useState, type JSX } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import { errorMessage } from '../../shared/api/errors';
 import { useTasks } from '../../shared/api/tasks';
 import type { Member, Task, TaskStatus } from '../../shared/api/types';
 import {
@@ -28,7 +27,7 @@ import { firstName } from '../../shared/lib/names';
 import { toStringList } from '../../shared/lib/translationList';
 import { Avatar } from '../../shared/ui/Avatar';
 import { Button } from '../../shared/ui/Button';
-import { EmptyState } from '../../shared/ui/EmptyState';
+import { LoadError } from '../../shared/ui/LoadError';
 import { PageHeader } from '../../shared/ui/PageHeader';
 import { Segmented } from '../../shared/ui/Segmented';
 import { Spinner } from '../../shared/ui/Spinner';
@@ -435,10 +434,7 @@ export function CalendarPage(): JSX.Element {
       <CalendarLegend members={group.members} />
 
       {error ? (
-        <EmptyState
-          title={errorMessage(error, t)}
-          action={<Button onClick={() => void refetch()}>{t('common.retry')}</Button>}
-        />
+        <LoadError error={error} onRetry={() => void refetch()} />
       ) : view === 'week' ? (
         <WeekView days={days} todayStart={todayStart} tasksOn={tasksOn} />
       ) : (

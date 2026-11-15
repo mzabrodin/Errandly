@@ -14,7 +14,7 @@ import { useTranslation } from 'react-i18next';
 import { Link, useLocation, useNavigate, useParams } from 'react-router';
 
 import { ForbiddenView } from '../../pages/ForbiddenView';
-import { errorMessage, hasStatus } from '../../shared/api/errors';
+import { hasStatus } from '../../shared/api/errors';
 import { useSeries, useTask } from '../../shared/api/tasks';
 import type { Task } from '../../shared/api/types';
 import { formatDate, formatTime } from '../../shared/lib/dates';
@@ -26,6 +26,7 @@ import { Button, ButtonLink } from '../../shared/ui/Button';
 import { Card } from '../../shared/ui/Card';
 import { Cloud } from '../../shared/ui/Decor';
 import { EmptyState } from '../../shared/ui/EmptyState';
+import { LoadError } from '../../shared/ui/LoadError';
 import { Pill } from '../../shared/ui/Pill';
 import { PageSpinner } from '../../shared/ui/Spinner';
 import { useCurrentGroup } from '../groups/useCurrentGroup';
@@ -140,12 +141,7 @@ export function TaskPage(): JSX.Element {
     );
   }
   if (error !== null) {
-    return (
-      <EmptyState
-        title={errorMessage(error, t)}
-        action={<Button onClick={() => void refetch()}>{t('common.retry')}</Button>}
-      />
-    );
+    return <LoadError error={error} onRetry={() => void refetch()} />;
   }
 
   return (

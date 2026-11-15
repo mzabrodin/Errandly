@@ -4,8 +4,9 @@ import { useTranslation } from 'react-i18next';
 import { Link, useParams } from 'react-router';
 
 import { useVerifyEmail } from '../../shared/api/auth';
+import { errorMessage, isApiError } from '../../shared/api/errors';
 import { getPendingInvite } from '../../shared/lib/pendingInvite';
-import { ButtonLink } from '../../shared/ui/Button';
+import { Button, ButtonLink } from '../../shared/ui/Button';
 import { FormError } from '../../shared/ui/Field';
 import { Spinner } from '../../shared/ui/Spinner';
 import styles from './auth.module.css';
@@ -48,14 +49,20 @@ export function VerifyEmailPage(): JSX.Element {
             )}
           </>
         )}
-        {verify.isError && (
-          <>
-            <FormError>{t('auth.errors.tokenInvalid')}</FormError>
-            <Link to="/app" className={styles.link}>
-              {t('common.back')}
-            </Link>
-          </>
-        )}
+        {verify.isError &&
+          (isApiError(verify.error, 'TOKEN_INVALID') ? (
+            <>
+              <FormError>{t('auth.errors.tokenInvalid')}</FormError>
+              <Link to="/app" className={styles.link}>
+                {t('common.back')}
+              </Link>
+            </>
+          ) : (
+            <>
+              <FormError>{errorMessage(verify.error, t)}</FormError>
+              <Button onClick={() => verify.mutate(token)}>{t('common.retry')}</Button>
+            </>
+          ))}
       </div>
     </div>
   );

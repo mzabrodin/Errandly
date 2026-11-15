@@ -87,6 +87,7 @@ export function AvatarEditor({
               onClick={() =>
                 remove.mutate(undefined, {
                   onSuccess: () => toast(t('settings.avatar.removed')),
+                  onError: (removeError) => toast(errorMessage(removeError, t), 'error'),
                 })
               }
             >

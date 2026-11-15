@@ -3,6 +3,7 @@ import { useQuery, type UseMutationResult, type UseQueryResult } from '@tanstack
 import { api, unwrap } from './client';
 import { useInvalidatingMutation } from './mutation';
 import { statsKeys } from './stats';
+import { swapKeys } from './swapKeys';
 import type { EditScope, Task, TaskInput } from './types';
 
 export const taskKeys = {
@@ -49,7 +50,11 @@ function useTaskMutation<TInput, TResult = unknown>(
   groupId: string,
   request: (input: TInput) => Promise<TResult>,
 ): UseMutationResult<TResult, Error, TInput> {
-  return useInvalidatingMutation(request, [taskKeys.group(groupId), statsKeys.group(groupId)]);
+  return useInvalidatingMutation(request, [
+    taskKeys.group(groupId),
+    statsKeys.group(groupId),
+    swapKeys.group(groupId),
+  ]);
 }
 
 export function useCreateTask(groupId: string): UseMutationResult<Task, Error, TaskInput> {

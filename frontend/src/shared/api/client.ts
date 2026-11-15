@@ -19,7 +19,7 @@ export class ApiError extends Error {
     return this.body !== null && typeof this.body === 'object' ? this.body : {};
   }
 
-  get code(): string | undefined {
+  get code(): ApiErrorBody['code'] {
     return this.details.code;
   }
 }

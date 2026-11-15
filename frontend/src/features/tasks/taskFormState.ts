@@ -107,11 +107,19 @@ export function validateForm(state: FormState, dueChanged: boolean, t: TFunction
   return next;
 }
 
-/** Error for a specific field from the server response */
+const FIELD_MESSAGES: Partial<Record<string, Partial<Record<string, string>>>> = {
+  title: { required: 'taskForm.errors.titleRequired', tooLong: 'taskForm.errors.titleTooLong' },
+  description: { tooLong: 'taskForm.errors.descriptionTooLong' },
+  dueAt: { required: 'taskForm.errors.dueRequired', inPast: 'taskForm.errors.dueInPast' },
+  recurrence: { noWeekdays: 'taskForm.errors.noWeekdays' },
+  assigneeId: { invalid: 'taskForm.errors.assigneeInvalid' },
+};
+
+/** The fields the form shows a server error next to; any other one goes above the form */
+export const SERVER_ERROR_FIELDS = Object.keys(FIELD_MESSAGES);
+
 export function serverFieldError(error: unknown, field: string, t: TFunction): string | undefined {
   const code = error instanceof ApiError ? error.details.fields?.[field] : undefined;
-  if (code === 'inPast') return t('taskForm.errors.dueInPast');
-  if (code === 'required') return t('taskForm.errors.titleRequired');
-  if (code === 'tooLong') return t('taskForm.errors.titleTooLong');
-  return undefined;
+  if (code === undefined) return undefined;
+  return t(FIELD_MESSAGES[field]?.[code] ?? 'taskForm.errors.invalid');
 }

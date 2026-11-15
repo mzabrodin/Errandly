@@ -36,7 +36,20 @@
     "forbidden": "No access",
     "unavailable": "The service is temporarily unavailable. Please try again later.",
     "forbiddenText": "This group is only available to its members. If you were invited, ask the admin to send a new invitation.",
-    "toMyGroups": "To my groups"
+    "toMyGroups": "To my groups",
+    "validation": "Please check what you entered and try again.",
+    "sessionExpired": "Your session has ended. Please sign in again.",
+    "adminOnly": "Only a group admin can do this.",
+    "notAssignee": "Only the task’s assignee can do this.",
+    "emailNotVerified": "Confirm your email first with the link we sent you.",
+    "taskDone": "This task is already done, so it can’t be changed.",
+    "cannotRemoveSelf": "You can’t remove yourself — leave the group instead.",
+    "calendarNotConnected": "No calendar is connected. Connect one in Settings.",
+    "conflict": "Someone just changed this. Refresh the page and try again.",
+    "notFound": "This no longer exists — it may have been deleted.",
+    "tooManyRequests": "Too many requests. Wait a moment and try again.",
+    "tooManyRequestsWait": "Too many requests. Try again in {{minutes}} min.",
+    "offline": "You’re offline. Changes won’t be saved until you’re back online."
   },
   "landing": {
     "nav": {
@@ -164,7 +177,7 @@
   },
   "calendarSync": {
     "paused": "Calendar sync is paused",
-    "pausedText": "Your changes are saved in Errandly — we’ll retry the sync automatically.",
+    "pausedText": "Your changes are saved in Errandly but haven’t reached your calendar. Sync now, or reconnect if access was revoked.",
     "reconnect": "Reconnect"
   },
   "groups": {
@@ -423,7 +436,10 @@
       "titleTooLong": "Up to 100 characters",
       "dueRequired": "Enter a due date",
       "dueInPast": "The due date can’t be in the past",
-      "noWeekdays": "Pick at least one day"
+      "noWeekdays": "Pick at least one day",
+      "descriptionTooLong": "Up to 2000 characters",
+      "assigneeInvalid": "This member is no longer in the group. Pick someone else.",
+      "invalid": "Please check this field"
     },
     "zoneHint": "Time in {{zone}}, as set in your profile"
   },

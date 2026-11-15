@@ -2,6 +2,7 @@ import { ArrowLeftRight } from 'lucide-react';
 import type { JSX } from 'react';
 import { Trans, useTranslation } from 'react-i18next';
 
+import { errorMessage } from '../../shared/api/errors';
 import { useAnswerSwap, useCancelSwap, useSwaps } from '../../shared/api/swaps';
 import type { Swap } from '../../shared/api/types';
 import { formatDate, formatTime } from '../../shared/lib/dates';
@@ -11,7 +12,6 @@ import { FormError } from '../../shared/ui/Field';
 import { useToast } from '../../shared/ui/Toast';
 import { useCurrentGroup } from '../groups/useCurrentGroup';
 import styles from './SwapRequests.module.css';
-import { useSwapError } from './swaps';
 
 type SwapTask = Swap['offeredTask'];
 
@@ -90,9 +90,8 @@ export function SwapRequests(): JSX.Element | null {
   const { data: swaps } = useSwaps(group.id);
   const answer = useAnswerSwap(group.id);
   const cancel = useCancelSwap(group.id);
-  const swapError = useSwapError();
   const busy = answer.isPending || cancel.isPending;
-  const error = swapError(answer.error ?? cancel.error);
+  const failure = answer.error ?? cancel.error;
 
   if (!swaps || swaps.length === 0) return null;
 
@@ -120,7 +119,7 @@ export function SwapRequests(): JSX.Element | null {
           />
         ))}
       </ul>
-      {error !== null && <FormError>{error}</FormError>}
+      {failure && <FormError>{errorMessage(failure, t)}</FormError>}
     </section>
   );
 }

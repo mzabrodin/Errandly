@@ -3,11 +3,10 @@ import { useTranslation } from 'react-i18next';
 import { Outlet, useParams } from 'react-router';
 
 import { ForbiddenView } from '../../pages/ForbiddenView';
-import { errorMessage, hasStatus } from '../../shared/api/errors';
+import { hasStatus } from '../../shared/api/errors';
 import { useGroup } from '../../shared/api/groups';
 import { setLastGroupId } from '../../shared/lib/lastGroup';
-import { Button } from '../../shared/ui/Button';
-import { EmptyState } from '../../shared/ui/EmptyState';
+import { LoadError } from '../../shared/ui/LoadError';
 import { PageSpinner } from '../../shared/ui/Spinner';
 import { TaskActionsProvider } from '../tasks/TaskActions';
 import { GroupContext } from './groupContext';
@@ -26,12 +25,7 @@ export function GroupLayout(): JSX.Element {
     return <ForbiddenView />;
   }
   if (error) {
-    return (
-      <EmptyState
-        title={errorMessage(error, t)}
-        action={<Button onClick={() => void refetch()}>{t('common.retry')}</Button>}
-      />
-    );
+    return <LoadError error={error} onRetry={() => void refetch()} />;
   }
   return (
     <GroupContext.Provider value={group}>

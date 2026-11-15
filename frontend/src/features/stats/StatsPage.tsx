@@ -1,14 +1,13 @@
 import { useState, type JSX } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import { errorMessage } from '../../shared/api/errors';
 import { useStats } from '../../shared/api/stats';
 import type { Member, MemberStats, StatsPeriod } from '../../shared/api/types';
 import { Avatar } from '../../shared/ui/Avatar';
-import { Button } from '../../shared/ui/Button';
 import { Card } from '../../shared/ui/Card';
 import { Cloud, FlowerFace } from '../../shared/ui/Decor';
 import { EmptyState } from '../../shared/ui/EmptyState';
+import { LoadError } from '../../shared/ui/LoadError';
 import { PageHeader } from '../../shared/ui/PageHeader';
 import { Segmented } from '../../shared/ui/Segmented';
 import { PageSpinner } from '../../shared/ui/Spinner';
@@ -165,12 +164,7 @@ export function StatsPage(): JSX.Element {
       />
 
       {isPending && <PageSpinner label={t('common.loading')} />}
-      {error && (
-        <EmptyState
-          title={errorMessage(error, t)}
-          action={<Button onClick={() => void refetch()}>{t('common.retry')}</Button>}
-        />
-      )}
+      {error && <LoadError error={error} onRetry={() => void refetch()} />}
 
       {stats && totals.done + totals.overdue === 0 && <EmptyState title={t('stats.empty')} />}
 

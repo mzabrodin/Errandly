@@ -11,6 +11,7 @@ import {
   RefreshCw,
   Settings,
   Users,
+  WifiOff,
 } from 'lucide-react';
 import type { JSX } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -18,10 +19,12 @@ import { Link, NavLink, Outlet, useMatch, useNavigate } from 'react-router';
 
 import { NotificationBell } from '../features/notifications/NotificationBell';
 import { useLogout, useResendVerification, useSession } from '../shared/api/auth';
+import { errorMessage } from '../shared/api/errors';
 import { useGroups } from '../shared/api/groups';
-import { useConnectCalendar, useSettings } from '../shared/api/settings';
+import { useConnectCalendar, useSettings, useSyncCalendar } from '../shared/api/settings';
 import { getLastGroupId } from '../shared/lib/lastGroup';
 import { groupPath } from '../shared/lib/routes';
+import { useOnline } from '../shared/lib/useOnline';
 import { Avatar } from '../shared/ui/Avatar';
 import { Banner } from '../shared/ui/Banner';
 import { Button } from '../shared/ui/Button';
@@ -171,6 +174,16 @@ function UserMenu() {
   );
 }
 
+function OfflineBanner(): JSX.Element | null {
+  const { t } = useTranslation();
+  if (useOnline()) return null;
+  return (
+    <Banner tone="warning" icon={<WifiOff size={18} />}>
+      {t('errors.offline')}
+    </Banner>
+  );
+}
+
 function StatusBanners() {
   const { t } = useTranslation();
   const toast = useToast();
@@ -178,6 +191,7 @@ function StatusBanners() {
   const { data: settings } = useSettings();
   const resend = useResendVerification();
   const connect = useConnectCalendar();
+  const sync = useSyncCalendar();
 
   return (
     <>
@@ -193,6 +207,7 @@ function StatusBanners() {
               onClick={() =>
                 resend.mutate(undefined, {
                   onSuccess: () => toast(t('auth.verifyResent')),
+                  onError: (resendError) => toast(errorMessage(resendError, t), 'error'),
                 })
               }
             >
@@ -208,9 +223,32 @@ function StatusBanners() {
           tone="warning"
           icon={<RefreshCw size={18} />}
           action={
-            <Button size="sm" loading={connect.isPending} onClick={() => connect.mutate()}>
-              {t('calendarSync.reconnect')}
-            </Button>
+            <>
+              <Button
+                size="sm"
+                loading={sync.isPending}
+                onClick={() =>
+                  sync.mutate(undefined, {
+                    onSuccess: () => toast(t('settings.synced')),
+                    onError: (syncError) => toast(errorMessage(syncError, t), 'error'),
+                  })
+                }
+              >
+                {t('settings.syncNow')}
+              </Button>
+              <Button
+                size="sm"
+                variant="secondary"
+                loading={connect.isPending}
+                onClick={() =>
+                  connect.mutate(undefined, {
+                    onError: (connectError) => toast(errorMessage(connectError, t), 'error'),
+                  })
+                }
+              >
+                {t('calendarSync.reconnect')}
+              </Button>
+            </>
           }
         >
           <strong>{t('calendarSync.paused')}.</strong> {t('calendarSync.pausedText')}
@@ -256,6 +294,7 @@ export function AppLayout(): JSX.Element {
       </header>
 
       <div className={styles.banners}>
+        <OfflineBanner />
         <StatusBanners />
       </div>
 

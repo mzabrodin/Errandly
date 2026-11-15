@@ -164,7 +164,11 @@ function Absences(): JSX.Element {
                 type="button"
                 className={styles.iconButton}
                 aria-label={t('common.delete')}
-                onClick={() => remove.mutate(absence.id)}
+                onClick={() =>
+                  remove.mutate(absence.id, {
+                    onError: (removeError) => toast(errorMessage(removeError, t), 'error'),
+                  })
+                }
               >
                 <Trash2 size={16} />
               </button>

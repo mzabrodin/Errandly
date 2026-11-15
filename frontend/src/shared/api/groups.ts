@@ -9,6 +9,7 @@ import {
 import { api, unwrap } from './client';
 import { useInvalidatingMutation } from './mutation';
 import { statsKeys } from './stats';
+import { swapKeys } from './swapKeys';
 import { taskKeys } from './tasks';
 import type { Group, GroupRole, GroupSummary, Invite, InviteInfo } from './types';
 
@@ -79,6 +80,7 @@ function useGroupMutation<TInput>(
     groupKeys.all,
     taskKeys.group(groupId),
     statsKeys.group(groupId),
+    swapKeys.group(groupId),
   ]);
 }
 

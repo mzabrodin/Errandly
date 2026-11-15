@@ -1,5 +1,5 @@
 import { X } from 'lucide-react';
-import { useEffect, useRef, type JSX, type ReactNode } from 'react';
+import { useEffect, useId, useRef, type JSX, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import styles from './Modal.module.css';
@@ -23,6 +23,7 @@ export function Modal({
 }: ModalProps): JSX.Element {
   const { t } = useTranslation();
   const ref = useRef<HTMLDialogElement>(null);
+  const titleId = useId();
 
   useEffect(() => {
     const dialog = ref.current;
@@ -38,6 +39,7 @@ export function Modal({
       ref={ref}
       className={styles.dialog}
       data-size={size}
+      aria-labelledby={titleId}
       onCancel={(event) => {
         event.preventDefault();
         onClose();
@@ -49,7 +51,9 @@ export function Modal({
       {open && (
         <div className={styles.panel}>
           <header className={styles.header}>
-            <h2 className={styles.title}>{title}</h2>
+            <h2 id={titleId} className={styles.title}>
+              {title}
+            </h2>
             <button
               type="button"
               className={styles.close}

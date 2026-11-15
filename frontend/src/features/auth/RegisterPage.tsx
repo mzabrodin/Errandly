@@ -4,6 +4,7 @@ import { Link, useLocation, useNavigate } from 'react-router';
 
 import { useRegister } from '../../shared/api/auth';
 import { errorMessage, isApiError } from '../../shared/api/errors';
+import { LIMITS } from '../../shared/lib/limits';
 import { useDocumentTitle } from '../../shared/lib/useDocumentTitle';
 import { isValidEmail, isValidPassword } from '../../shared/lib/validation';
 import { Button } from '../../shared/ui/Button';
@@ -76,6 +77,7 @@ export function RegisterPage(): JSX.Element {
             <Input
               {...props}
               autoComplete="name"
+              maxLength={LIMITS.userName}
               placeholder={t('auth.namePlaceholder')}
               value={form.name}
               onChange={(event) => update('name')(event.target.value)}
