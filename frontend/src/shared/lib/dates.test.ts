@@ -1,16 +1,25 @@
 import {
   addDays,
+  addMonths,
+  daysBetween,
   deviceTimeZone,
+  formatDayLabel,
+  formatRelative,
   formatTime,
   fromLocalInputValue,
   groupByDay,
   isSameDay,
+  isSameMonth,
+  isToday,
+  monthGridRange,
+  now,
   setDisplayTimeZone,
   startOfDay,
   toDateInputValue,
   toIso,
   toLocalInputValue,
   weekRange,
+  zoneLabel,
 } from './dates';
 
 afterEach(() => setDisplayTimeZone(deviceTimeZone()));
@@ -71,5 +80,33 @@ describe('the profile time zone', () => {
     expect(toIso(due)).toBe('2026-10-27T00:00:00.000Z');
     expect(toLocalInputValue(due)).toBe('2026-10-26T20:00');
     expect(Number.isNaN(fromLocalInputValue('tomorrow').getTime())).toBe(true);
+  });
+});
+
+describe('calendar helpers', () => {
+  it('names today, tomorrow and yesterday, and nothing else', () => {
+    const today = now();
+
+    expect(formatDayLabel(today)).toBe('today');
+    expect(formatDayLabel(addDays(today, 1))).toBe('tomorrow');
+    expect(formatDayLabel(addDays(today, -1))).toBe('yesterday');
+    expect(formatDayLabel(addDays(today, 3))).toBeNull();
+    expect(isToday(today)).toBe(true);
+  });
+
+  it('covers whole weeks around a month, Monday to Sunday', () => {
+    setDisplayTimeZone('Europe/Kyiv');
+    const { from, to } = monthGridRange(new Date('2026-11-15T12:00:00Z'));
+
+    expect(toDateInputValue(from)).toBe('2026-10-26');
+    expect(toDateInputValue(to)).toBe('2026-12-07');
+    expect(daysBetween(from, to)).toHaveLength(42);
+    expect(isSameMonth(from, addMonths(from, 1))).toBe(false);
+  });
+
+  it('shows a zone with spaces and says how far away a time is', () => {
+    expect(zoneLabel('America/Argentina/Buenos_Aires')).toBe('America/Argentina/Buenos Aires');
+    expect(zoneLabel('America/Port_of_Spain')).toBe('America/Port of Spain');
+    expect(formatRelative(new Date(Date.now() + 3 * 60 * 60 * 1000))).toMatch(/3/);
   });
 });
