@@ -25,9 +25,8 @@ describe('unwrap', () => {
   });
 
   it('infers response types from the OpenAPI schema', () => {
-    expectTypeOf(() => unwrap(api.GET('/api/health'))).returns.resolves.toEqualTypeOf<{
-      status: 'ok' | 'error';
-      database: 'up' | 'down';
+    expectTypeOf(() => unwrap(api.GET('/api/health/live'))).returns.resolves.toEqualTypeOf<{
+      status: 'up';
     }>();
   });
 });

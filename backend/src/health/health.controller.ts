@@ -4,25 +4,30 @@ import { SkipThrottle } from '@nestjs/throttler';
 import type { Response } from 'express';
 
 import { Public } from '../common/http/auth.js';
-import { DatabaseHealth } from '../db/database-health.js';
-import { HealthResponseDto } from './dto/health-response.dto.js';
+import { HealthResponseDto, LivenessDto } from './dto/health-response.dto.js';
+import { HealthService } from './health.service.js';
 
-// Docker and CI poll it without a session, so it is neither guarded nor rate-limited
+// Docker, nginx and CI poll it without a session, so it is neither guarded nor rate-limited
 @ApiTags('health')
 @Public()
 @SkipThrottle()
 @Controller('health')
 export class HealthController {
-  constructor(private readonly database: DatabaseHealth) {}
+  constructor(private readonly health: HealthService) {}
 
+  /** Readiness: 200 when up or degraded, 503 when the database is down. */
   @Get()
-  @ApiOkResponse({ type: HealthResponseDto, description: 'The server and the database are up' })
-  @ApiServiceUnavailableResponse({ type: HealthResponseDto, description: 'The database is down' })
+  @ApiOkResponse({ type: HealthResponseDto, description: 'Up, or degraded but serving' })
+  @ApiServiceUnavailableResponse({ type: HealthResponseDto, description: 'Not ready' })
   async check(@Res({ passthrough: true }) res: Response): Promise<HealthResponseDto> {
-    if (await this.database.isUp()) {
-      return { status: 'ok', database: 'up' };
-    }
-    res.status(HttpStatus.SERVICE_UNAVAILABLE);
-    return { status: 'error', database: 'down' };
+    const report = await this.health.check();
+    if (report.status === 'down') res.status(HttpStatus.SERVICE_UNAVAILABLE);
+    return report;
+  }
+
+  /** Liveness: the process answers; no dependency is asked. */
+  @Get('live')
+  live(): LivenessDto {
+    return { status: 'up' };
   }
 }

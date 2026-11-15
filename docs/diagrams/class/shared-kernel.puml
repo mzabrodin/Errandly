@@ -22,6 +22,7 @@ package "Спільне ядро" {
     +claimDue(now, limit, leaseUntil)
     +complete(id, at)
     +fail(id, …)
+    +countOverdue(before)
   }
   abstract class Clock {
     +now()
@@ -46,12 +47,14 @@ package "Порти й адаптери" {
   class Argon2PasswordHasher
   abstract class MailTransport {
     +send(mail)
+    +verify()
   }
   class SmtpMailTransport
   abstract class ObjectStorage {
     +put(key, body, type)
     +get(key)
     +delete(key)
+    +ping()
   }
   class S3ObjectStorage
   abstract class CalendarGateway {

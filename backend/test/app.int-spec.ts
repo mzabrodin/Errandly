@@ -5,14 +5,42 @@ describe('App (integration)', () => {
 
   beforeAll(async () => {
     t = await createTestApp();
+    await t.reset();
   });
 
   afterAll(async () => {
     await t.close();
   });
 
-  it('/api/health (GET) works without a session', () => {
-    return t.agent().get('/api/health').expect(200).expect({ status: 'ok', database: 'up' });
+  it('/api/health (GET) checks every component without a session', () => {
+    return t
+      .agent()
+      .get('/api/health')
+      .expect(200)
+      .expect({
+        status: 'up',
+        components: { database: 'up', storage: 'up', mail: 'up', events: 'up' },
+      });
+  });
+
+  it('stays ready, but degraded, while storage and mail are down', async () => {
+    t.clock.advance(30 * 1000);
+    t.storage.failNext();
+    t.mailbox.failNext();
+
+    await t
+      .agent()
+      .get('/api/health')
+      .expect(200)
+      .expect({
+        status: 'degraded',
+        components: { database: 'up', storage: 'down', mail: 'down', events: 'up' },
+      });
+    t.mailbox.clear();
+  });
+
+  it('/api/health/live answers without asking any dependency', () => {
+    return t.agent().get('/api/health/live').expect(200).expect({ status: 'up' });
   });
 
   it('echoes the request id', () => {

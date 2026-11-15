@@ -39,6 +39,10 @@ export class FlakyObjectStorage extends ObjectStorage implements OnModuleInit, O
     return this.outage() ?? this.inner.delete(key);
   }
 
+  ping(): Promise<void> {
+    return this.outage() ?? this.inner.ping();
+  }
+
   private outage(): Promise<never> | undefined {
     if (this.failures === 0) return undefined;
     this.failures -= 1;

@@ -10,4 +10,6 @@ export abstract class MailTransport {
   abstract readonly isLocal: boolean;
 
   abstract send(mail: OutgoingMail): Promise<string>;
+  /** Rejects when the mail server cannot be reached (health check) */
+  abstract verify(): Promise<void>;
 }

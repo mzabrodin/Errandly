@@ -41,6 +41,14 @@ export class EventPublicationStore {
       .where(eq(eventPublications.id, id));
   }
 
+  /** Deliveries still waiting although they were due before `before`: the dispatcher is stuck */
+  countOverdue(before: Date): Promise<number> {
+    return this.db.$count(
+      eventPublications,
+      and(isNull(eventPublications.completedAt), lte(eventPublications.nextAttemptAt, before)),
+    );
+  }
+
   /** `nextAttemptAt: null` means the listener has given up */
   async fail(
     id: string,
