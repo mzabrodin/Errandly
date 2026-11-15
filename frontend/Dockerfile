@@ -8,7 +8,8 @@ COPY tsconfig.base.json ./
 COPY frontend frontend
 RUN npm run build -w frontend
 
-FROM nginx:1.30-alpine
+FROM nginxinc/nginx-unprivileged:1.30-alpine
 COPY frontend/nginx.conf /etc/nginx/conf.d/default.conf
+COPY frontend/security-headers.conf /etc/nginx/snippets/security-headers.conf
 COPY --from=build /app/frontend/dist /usr/share/nginx/html
-EXPOSE 80
+EXPOSE 8080

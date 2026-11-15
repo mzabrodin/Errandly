@@ -69,6 +69,11 @@ jobs:
         run: docker compose up --build -d --wait
       - name: Smoke test through nginx
         run: curl -fsS http://localhost:8080/api/health | grep -q '"database":"up"'
+      - name: Security headers on the SPA and the API
+        run: |
+          curl -fsSI http://localhost:8080/ | grep -qi '^content-security-policy:'
+          curl -fsSI http://localhost:8080/ | grep -qi '^x-frame-options: deny'
+          curl -fsSI http://localhost:8080/api/health | grep -qi '^x-content-type-options: nosniff'
       - name: Logs on failure
         if: failure()
         run: docker compose logs

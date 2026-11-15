@@ -15,7 +15,7 @@ node "Пристрій користувача" as device {
 }
 
 node "Сервер (Docker Compose)" as host {
-  node "frontend\nnginx" as nginx {
+  node "frontend\nnginx-unprivileged" as nginx {
     artifact "статика SPA" as static
   }
   node "backend\nnode:24-alpine" as backend {
