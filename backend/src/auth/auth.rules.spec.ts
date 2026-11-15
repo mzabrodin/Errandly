@@ -5,6 +5,7 @@ import {
   LOCKOUT_MS,
   lockRemainingSeconds,
   MAX_FAILED_LOGINS,
+  safeNext,
   SESSION_REFRESH_MS,
   SESSION_TTL_MS,
   sessionExpiry,
@@ -71,5 +72,24 @@ describe('auth rules', () => {
   it('greets by the first word of the name', () => {
     expect(firstName('  Anya Kovalenko ')).toBe('Anya');
     expect(firstName('Oleh')).toBe('Oleh');
+  });
+
+  describe('the return path after an OAuth sign-in', () => {
+    it.each(['/', '/g/1/tasks', '/invite/abc?x=1#top'])('keeps the app path %s', (path) => {
+      expect(safeNext(path)).toBe(path);
+    });
+
+    it.each([
+      undefined,
+      '',
+      'https://evil.com',
+      '//evil.com',
+      '/\\evil.com',
+      '/\t/evil.com',
+      'g/1',
+      '/шлях',
+    ])('sends %j to the start page', (path) => {
+      expect(safeNext(path)).toBe('/');
+    });
   });
 });

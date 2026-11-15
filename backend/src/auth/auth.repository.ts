@@ -1,13 +1,15 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { and, eq, gt, isNull, ne } from 'drizzle-orm';
 
-import type { EmailTokenPurpose } from '../common/domain.js';
+import type { AuthProvider, EmailTokenPurpose } from '../common/domain.js';
 import { DATABASE, type Database, type DbExecutor } from '../db/database.js';
 import type { LoginAttempts } from './auth.rules.js';
 import {
+  authIdentities,
   emailTokens,
   passwordCredentials,
   sessions,
+  type AuthIdentityRow,
   type PasswordCredentialsRow,
   type SessionRow,
 } from './auth.schema.js';
@@ -58,6 +60,61 @@ export class AuthRepository {
       .update(passwordCredentials)
       .set(attempts)
       .where(eq(passwordCredentials.userId, userId));
+  }
+
+  /** A Google-only account keeps no password; a squatter's password goes when the owner links */
+  async deletePassword(userId: string, db: DbExecutor = this.db): Promise<void> {
+    await db.delete(passwordCredentials).where(eq(passwordCredentials.userId, userId));
+  }
+
+  async findIdentity(
+    provider: AuthProvider,
+    providerUserId: string,
+    db: DbExecutor = this.db,
+  ): Promise<AuthIdentityRow | undefined> {
+    const [row] = await db
+      .select()
+      .from(authIdentities)
+      .where(
+        and(
+          eq(authIdentities.provider, provider),
+          eq(authIdentities.providerUserId, providerUserId),
+        ),
+      )
+      .limit(1);
+    return row;
+  }
+
+  async hasIdentity(
+    userId: string,
+    provider: AuthProvider,
+    db: DbExecutor = this.db,
+  ): Promise<boolean> {
+    const [row] = await db
+      .select({ id: authIdentities.id })
+      .from(authIdentities)
+      .where(and(eq(authIdentities.userId, userId), eq(authIdentities.provider, provider)))
+      .limit(1);
+    return row !== undefined;
+  }
+
+  async insertIdentity(
+    identity: Pick<
+      typeof authIdentities.$inferInsert,
+      'userId' | 'provider' | 'providerUserId' | 'email' | 'lastUsedAt'
+    >,
+    db: DbExecutor = this.db,
+  ): Promise<void> {
+    await db.insert(authIdentities).values(identity);
+  }
+
+  async touchIdentity(
+    id: string,
+    email: string,
+    lastUsedAt: Date,
+    db: DbExecutor = this.db,
+  ): Promise<void> {
+    await db.update(authIdentities).set({ email, lastUsedAt }).where(eq(authIdentities.id, id));
   }
 
   async insertSession(

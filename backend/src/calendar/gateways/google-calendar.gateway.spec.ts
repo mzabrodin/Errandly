@@ -1,4 +1,4 @@
-import type { GoogleClients } from '../google/google-clients.js';
+import type { GoogleClients } from '../../common/google/google-clients.js';
 import { CalendarAccessRevoked, type CalendarEvent } from './calendar-gateway.js';
 import { GoogleCalendarGateway } from './google-calendar.gateway.js';
 

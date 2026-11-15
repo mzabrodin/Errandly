@@ -1,7 +1,11 @@
 import { Injectable } from '@nestjs/common';
+import type { OAuth2Client } from 'google-auth-library';
 
-import { GoogleClients, httpStatus } from '../google/google-clients.js';
+import { GoogleClients, httpStatus } from '../../common/google/google-clients.js';
+import { API_PREFIX } from '../../config/urls.js';
 import { CalendarOAuth, type CalendarGrant } from './calendar-oauth.js';
+
+export const CALENDAR_CALLBACK_PATH = `/${API_PREFIX}/me/calendar/callback`;
 
 /** Least privilege (NFR-SEC-05) */
 export const CALENDAR_SCOPE = 'https://www.googleapis.com/auth/calendar.app.created';
@@ -18,7 +22,7 @@ export class GoogleCalendarOAuth extends CalendarOAuth {
   }
 
   authUrl(state: string): string {
-    return this.google.client().generateAuthUrl({
+    return this.client().generateAuthUrl({
       // Google issues a refresh token only with a fresh consent
       access_type: 'offline',
       prompt: 'consent',
@@ -28,7 +32,7 @@ export class GoogleCalendarOAuth extends CalendarOAuth {
   }
 
   async exchange(code: string): Promise<CalendarGrant> {
-    const client = this.google.client();
+    const client = this.client();
     const { tokens } = await client.getToken(code);
     // The consent screen lets the user untick the calendar
     const granted = (tokens.scope ?? '').split(' ');
@@ -47,10 +51,14 @@ export class GoogleCalendarOAuth extends CalendarOAuth {
 
   async revoke(refreshToken: string): Promise<void> {
     try {
-      await this.google.client().revokeToken(refreshToken);
+      await this.client().revokeToken(refreshToken);
     } catch (error) {
       // 400: already revoked in the Google account
       if (httpStatus(error) !== 400) throw error;
     }
+  }
+
+  private client(): OAuth2Client {
+    return this.google.oauthClient(CALENDAR_CALLBACK_PATH);
   }
 }

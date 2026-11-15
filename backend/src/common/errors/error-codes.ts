@@ -29,7 +29,6 @@ export const ERROR_STATUS = {
   ACCOUNT_LOCKED: HttpStatus.LOCKED,
   TOO_MANY_REQUESTS: HttpStatus.TOO_MANY_REQUESTS,
   INTERNAL: HttpStatus.INTERNAL_SERVER_ERROR,
-  NOT_IMPLEMENTED: HttpStatus.NOT_IMPLEMENTED,
   SERVICE_UNAVAILABLE: HttpStatus.SERVICE_UNAVAILABLE,
 } as const satisfies Record<string, HttpStatus>;
 

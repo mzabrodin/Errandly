@@ -3,7 +3,7 @@ import { ApiCreatedResponse, ApiTags } from '@nestjs/swagger';
 
 import { ApiSession } from '../common/http/api-docs.js';
 import { CurrentUser, type RequestUser } from '../common/http/auth.js';
-import { ParseId } from '../common/http/stubs.js';
+import { ParseId } from '../common/http/parse-id.js';
 import { AbsencesService } from './absences.service.js';
 import { CreateAbsenceDto } from './dto/group.dto.js';
 

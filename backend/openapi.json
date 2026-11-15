@@ -517,15 +517,44 @@
         ]
       }
     },
-    "/api/auth/google": {
+    "/api/auth/oauth/{provider}": {
       "get": {
-        "operationId": "GoogleAuthController_google",
+        "operationId": "OAuthController_start",
         "parameters": [
+          {
+            "name": "provider",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "enum": [
+                "google"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "name": "locale",
+            "required": false,
+            "in": "query",
+            "description": "Current UI language; the language of an account created now",
+            "schema": {
+              "$ref": "#/components/schemas/Locale"
+            }
+          },
           {
             "name": "next",
             "required": false,
             "in": "query",
-            "description": "Frontend path to return to after signing in",
+            "description": "Frontend path to return to after signing in; anything but an app path becomes `/`",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "timezone",
+            "required": false,
+            "in": "query",
+            "description": "The device's IANA time zone; the time zone of an account created now",
             "schema": {
               "type": "string"
             }
@@ -533,7 +562,7 @@
         ],
         "responses": {
           "302": {
-            "description": "Redirect to Google"
+            "description": "Redirect to the provider"
           },
           "default": {
             "description": "Error: { code, fields?, ... }",
@@ -546,7 +575,63 @@
             }
           }
         },
-        "summary": "Redirects to Google sign-in, then back to `next`. A separate flow from the calendar connection.",
+        "summary": "Redirects to the provider, which returns to the callback; on failure to /login?oauthError=.",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/auth/oauth/{provider}/callback": {
+      "get": {
+        "operationId": "OAuthController_callback",
+        "parameters": [
+          {
+            "name": "provider",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "enum": [
+                "google"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "name": "error",
+            "required": false,
+            "in": "query",
+            "description": "Set when the user cancels",
+            "schema": {}
+          },
+          {
+            "name": "state",
+            "required": false,
+            "in": "query",
+            "schema": {}
+          },
+          {
+            "name": "code",
+            "required": false,
+            "in": "query",
+            "schema": {}
+          }
+        ],
+        "responses": {
+          "302": {
+            "description": "Redirect into the app"
+          },
+          "default": {
+            "description": "Error: { code, fields?, ... }",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "The provider's redirect: signs in and returns to `next`, or to /login?oauthError=.",
         "tags": [
           "auth"
         ]
@@ -2182,7 +2267,6 @@
           "ACCOUNT_LOCKED",
           "TOO_MANY_REQUESTS",
           "INTERNAL",
-          "NOT_IMPLEMENTED",
           "SERVICE_UNAVAILABLE"
         ]
       },

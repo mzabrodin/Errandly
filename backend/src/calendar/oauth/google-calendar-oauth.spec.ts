@@ -1,4 +1,4 @@
-import type { GoogleClients } from '../google/google-clients.js';
+import type { GoogleClients } from '../../common/google/google-clients.js';
 import { CALENDAR_SCOPE, GoogleCalendarOAuth } from './google-calendar-oauth.js';
 
 function setup(tokens: Record<string, unknown>, revokeError?: unknown) {
@@ -16,7 +16,7 @@ function setup(tokens: Record<string, unknown>, revokeError?: unknown) {
   const clients = {
     configured: true,
     audience: 'client-id',
-    client: () => client,
+    oauthClient: () => client,
   } as unknown as GoogleClients;
   return { oauth: new GoogleCalendarOAuth(clients), options };
 }
