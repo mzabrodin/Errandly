@@ -88,15 +88,15 @@ flowchart LR
 
 Кожен модуль експортує з `index.ts` фасад (`GroupsApi`, `TasksApi`, …): `@Injectable()`-клас, який Nest-модуль додає в `exports`. Методи повертають прості типи або DTO, ніколи не рядки Drizzle, і приймають необов'язковий `DbExecutor`, щоб працювати в транзакції викликача.
 
-Фасади (реалізовані й заплановані):
+Фасади:
 
-| Модуль     | Публічне API                                                                                                                                         | Хто використовує                       |
-| ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------- |
-| `users`    | `UsersApi`: `findById`, `findByEmail`, `create`, `markEmailVerified` — ім'я, мова, часовий пояс для листів                                           | `auth`, згодом усі                     |
-| `groups`   | `GroupsApi`: `requireMember(groupId, userId)` → роль, `requireAdmin(…)`, `members(groupId)` з відсутностями, `admins(groupId)`, `names(groupIds)`    | `tasks`, `stats`, `notifications`      |
-| `tasks`    | `TasksApi`: `hold(taskId, tx)`, `find(taskId)`, `inGroup(groupId, from, to)`, `assignedTo(userId, from, until?)`, `openAssignedDueBetween(from, to)` | `calendar`, `notifications`, `stats`   |
-| `calendar` | `CalendarApi`: `settings(userId)`, `setReminderMinutes(userId, minutes)`                                                                             | `notifications` (сторінка налаштувань) |
-| `mail`     | `MailService.send(template, to, data, locale)`                                                                                                       | `notifications`, `auth`, `groups`      |
+| Модуль     | Публічне API                                                                                                                                         | Хто використовує                                       |
+| ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------ |
+| `users`    | `UsersApi`: `findById`, `findMany`, `findByEmail`, `create`, `markEmailVerified`, `setProviderAvatar` — ім'я, мова, часовий пояс                     | `auth`, `groups`, `tasks`, `calendar`, `notifications` |
+| `groups`   | `GroupsApi`: `requireMember(groupId, userId)` → роль, `requireAdmin(…)`, `members(groupId)` з відсутностями, `admins(groupId)`, `names(groupIds)`    | `tasks`, `stats`, `notifications`                      |
+| `tasks`    | `TasksApi`: `hold(taskId, tx)`, `find(taskId)`, `inGroup(groupId, from, to)`, `assignedTo(userId, from, until?)`, `openAssignedDueBetween(from, to)` | `calendar`, `notifications`, `stats`                   |
+| `calendar` | `CalendarApi`: `settings(userId)`, `setReminderMinutes(userId, minutes)`                                                                             | `notifications` (сторінка налаштувань)                 |
+| `mail`     | `MailService.send(template, to, data, locale)`                                                                                                       | `notifications`, `auth`, `groups`                      |
 
 ### Події
 
