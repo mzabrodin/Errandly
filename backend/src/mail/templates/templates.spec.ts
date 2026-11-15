@@ -1,5 +1,5 @@
 import { LOCALES, REMINDER_MINUTES } from '../../common/domain.js';
-import { parseTemplateData, renderSample, renderTemplate, templateNames } from './index.js';
+import { renderSample, renderTemplate, templateNames } from './index.js';
 
 const task = {
   name: 'Anya',
@@ -130,31 +130,26 @@ describe('mail templates', () => {
   });
 });
 
-describe('parseTemplateData', () => {
-  it('accepts valid data', () => {
-    expect(parseTemplateData('taskAssigned', task)).toEqual({
-      data: { ...task, timezone: 'Europe/Kyiv' },
-    });
+describe('template data', () => {
+  it('rejects non-http links, missing fields and unknown time zones', async () => {
+    await expect(
+      renderTemplate('verifyEmail', { name: 'Anya', url: 'javascript:alert(1)' }),
+    ).rejects.toThrow('must be an http(s) URL');
+    await expect(renderTemplate('invite', {} as never)).rejects.toThrow('inviterName');
+    await expect(
+      renderTemplate('taskAssigned', { ...task, timezone: 'Mars/Base' }),
+    ).rejects.toThrow('must be an IANA time zone');
   });
 
-  it('rejects non-http links, missing fields and unknown time zones', () => {
-    expect(parseTemplateData('verifyEmail', { name: 'Anya', url: 'javascript:alert(1)' })).toEqual({
-      errors: ['url: must be an http(s) URL'],
-    });
-    expect(parseTemplateData('invite', {})).toMatchObject({ errors: { length: 3 } });
-    expect(parseTemplateData('taskAssigned', { ...task, timezone: 'Mars/Base' })).toEqual({
-      errors: ['timezone: must be an IANA time zone'],
-    });
-  });
-
-  it('takes only the email reminder times the settings offer', () => {
-    expect(parseTemplateData('taskDueSoon', { ...task, reminderMinutes: 45 })).toHaveProperty(
-      'errors',
-    );
+  it('takes only the email reminder times the settings offer', async () => {
+    await expect(
+      renderTemplate('taskDueSoon', { ...task, reminderMinutes: 45 } as never),
+    ).rejects.toThrow('reminderMinutes');
     for (const minutes of REMINDER_MINUTES) {
-      expect(
-        parseTemplateData('taskDueSoon', { ...task, reminderMinutes: minutes }),
-      ).toHaveProperty('data');
+      // oxlint-disable-next-line no-await-in-loop -- one template render per allowed value
+      await expect(
+        renderTemplate('taskDueSoon', { ...task, reminderMinutes: minutes }),
+      ).resolves.toHaveProperty('subject');
     }
   });
 });

@@ -48,16 +48,3 @@ export function renderSample(
   const template = templates[name];
   return template.render(template.sample, locale);
 }
-
-export type ParsedTemplateData = { data: MailData<TemplateName> } | { errors: string[] };
-
-/** Checks untyped data (the dev endpoint): the data, or one message per invalid field */
-export function parseTemplateData(name: TemplateName, data: unknown): ParsedTemplateData {
-  const result = templates[name].schema.safeParse(data);
-  if (result.success) return { data: result.data };
-  return {
-    errors: result.error.issues.map(
-      (issue) => `${issue.path.map(String).join('.')}: ${issue.message}`,
-    ),
-  };
-}

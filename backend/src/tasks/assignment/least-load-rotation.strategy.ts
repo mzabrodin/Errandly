@@ -14,7 +14,6 @@ interface Scored {
   lastDid: number;
 }
 
-/** FR-27–29; the same algorithm as frontend/src/mocks/allocation.ts */
 @Injectable()
 export class LeastLoadRotationStrategy extends AssignmentStrategy {
   pick(
