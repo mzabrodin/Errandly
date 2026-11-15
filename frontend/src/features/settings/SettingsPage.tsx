@@ -708,12 +708,17 @@ export function SettingsPage(): JSX.Element {
     nav.scrollTo({ left: link.offsetLeft - 16, behavior: 'smooth' });
   }, [active]);
 
-  // Return from the Google OAuth consent screen
+  // StrictMode runs this effect twice while the parameter is still in the URL.
+  const announced = useRef(false);
   useEffect(() => {
     const result = params.get('calendar');
-    if (result === 'connected') toast(t('settings.connectedToast'));
-    if (result === 'error') toast(t('settings.connectFailed'), 'error');
-    if (result !== null) setParams({}, { replace: true });
+    if (result === null) return;
+    if (!announced.current) {
+      announced.current = true;
+      if (result === 'connected') toast(t('settings.connectedToast'));
+      if (result === 'error') toast(t('settings.connectFailed'), 'error');
+    }
+    setParams({}, { replace: true });
   }, [params, setParams, toast, t]);
 
   if (isPending || !user) return <PageSpinner label={t('common.loading')} />;
