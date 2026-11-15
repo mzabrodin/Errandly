@@ -92,6 +92,9 @@ export class ApiExceptionFilter implements ExceptionFilter {
     }
 
     errorCodes.set(response, body.code);
+    if (body.retryAfterSeconds !== undefined) {
+      response.setHeader('Retry-After', String(body.retryAfterSeconds));
+    }
     response.status(status).json(body);
   }
 }

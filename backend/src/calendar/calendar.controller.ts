@@ -13,6 +13,7 @@ import { ApiTags } from '@nestjs/swagger';
 
 import { ApiSession } from '../common/http/api-docs.js';
 import { CurrentUser, type RequestUser } from '../common/http/auth.js';
+import { StrictRateLimit } from '../common/http/rate-limit.js';
 import type { EnvironmentVariables } from '../config/env.validation.js';
 import { appLink } from '../config/urls.js';
 import { CalendarService } from './calendar.service.js';
@@ -34,6 +35,7 @@ export class CalendarController {
 
   /** Starts the calendar OAuth flow. Errors: 503 SERVICE_UNAVAILABLE (no Google OAuth client). */
   @Post('connect')
+  @StrictRateLimit()
   @HttpCode(HttpStatus.OK)
   connect(@CurrentUser() user: RequestUser): CalendarConnectDto {
     return { url: this.calendar.connectUrl(user.id) };
@@ -41,6 +43,7 @@ export class CalendarController {
 
   /** Google's redirect after consent; redirects to /settings?calendar=connected or =error. */
   @Get('callback')
+  @StrictRateLimit()
   @Redirect()
   async callback(
     @CurrentUser() user: RequestUser,
@@ -60,6 +63,7 @@ export class CalendarController {
 
   /** Syncs now and resumes a paused sync. Errors: 409 CALENDAR_NOT_CONNECTED. */
   @Post('sync')
+  @StrictRateLimit()
   @HttpCode(HttpStatus.OK)
   sync(@CurrentUser() user: RequestUser): Promise<CalendarStatusDto> {
     return this.calendar.syncNow(user.id);

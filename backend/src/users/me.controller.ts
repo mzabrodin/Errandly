@@ -5,6 +5,7 @@ import type { Response } from 'express';
 
 import { ApiSession } from '../common/http/api-docs.js';
 import { CurrentUser, type RequestUser } from '../common/http/auth.js';
+import { StrictRateLimit } from '../common/http/rate-limit.js';
 import { clearSessionCookie, secureCookies } from '../common/http/session-cookie.js';
 import type { EnvironmentVariables } from '../config/env.validation.js';
 import { UpdateProfileDto } from './dto/profile.dto.js';
@@ -39,6 +40,7 @@ export class MeController {
    * Errors: 409 LAST_ADMIN (+groups: names of groups where the user is the only admin).
    */
   @Delete()
+  @StrictRateLimit()
   @HttpCode(HttpStatus.NO_CONTENT)
   async deleteAccount(
     @CurrentUser() user: RequestUser,

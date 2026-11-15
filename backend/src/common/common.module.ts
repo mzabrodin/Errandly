@@ -1,7 +1,7 @@
 import { Global, Module } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { APP_FILTER, APP_GUARD } from '@nestjs/core';
-import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
+import { APP_FILTER } from '@nestjs/core';
+import { ThrottlerModule } from '@nestjs/throttler';
 
 import type { EnvironmentVariables } from '../config/env.validation.js';
 import { Clock, SystemClock } from './clock.js';
@@ -32,8 +32,6 @@ import { S3ObjectStorage } from './storage/s3-object-storage.js';
     { provide: Clock, useClass: SystemClock },
     { provide: ObjectStorage, useClass: S3ObjectStorage },
     { provide: APP_FILTER, useClass: ApiExceptionFilter },
-    // Registered before the auth module's SessionGuard, so floods are cut off first
-    { provide: APP_GUARD, useClass: ThrottlerGuard },
     EventPublicationStore,
     EventBus,
     EventDispatcher,
