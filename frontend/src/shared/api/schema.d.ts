@@ -11,7 +11,25 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
+        /** Readiness: 200 when up or degraded, 503 when the database is down. */
         get: operations["HealthController_check"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/health/live": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Liveness: the process answers; no dependency is asked. */
+        get: operations["HealthController_live"];
         put?: never;
         post?: never;
         delete?: never;
@@ -757,11 +775,31 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /**
+         * @description `degraded`: something besides the database is down; the app still serves requests
+         * @enum {string}
+         */
+        HealthStatus: "up" | "degraded" | "down";
+        /** @enum {string} */
+        ComponentStatus: "up" | "down";
+        HealthComponentsDto: {
+            database: components["schemas"]["ComponentStatus"];
+            /** @description Object storage (avatars) */
+            storage: components["schemas"]["ComponentStatus"];
+            /** @description SMTP server */
+            mail: components["schemas"]["ComponentStatus"];
+            /** @description After-commit deliveries (emails, calendar sync) are not stuck */
+            events: components["schemas"]["ComponentStatus"];
+        };
         HealthResponseDto: {
-            /** @enum {string} */
-            status: "ok" | "error";
-            /** @enum {string} */
-            database: "up" | "down";
+            /** @description `degraded`: something besides the database is down; the app still serves requests */
+            status: components["schemas"]["HealthStatus"];
+            components: components["schemas"]["HealthComponentsDto"];
+        };
+        /** @enum {string} */
+        LivenessStatus: "up";
+        LivenessDto: {
+            status: components["schemas"]["LivenessStatus"];
         };
         /** @enum {string} */
         ErrorCode: "VALIDATION" | "TOKEN_INVALID" | "WRONG_PASSWORD" | "UNAUTHENTICATED" | "INVALID_CREDENTIALS" | "FORBIDDEN" | "ADMIN_ONLY" | "NOT_ASSIGNEE" | "EMAIL_NOT_VERIFIED" | "NOT_FOUND" | "EMAIL_TAKEN" | "LAST_ADMIN" | "TASK_DONE" | "UNDO_EXPIRED" | "SWAP_STALE" | "MEMBER_ABSENT" | "CANNOT_REMOVE_SELF" | "CALENDAR_NOT_CONNECTED" | "CONFLICT" | "INVITE_INVALID" | "FILE_TOO_LARGE" | "ACCOUNT_LOCKED" | "TOO_MANY_REQUESTS" | "INTERNAL" | "SERVICE_UNAVAILABLE";
@@ -1140,7 +1178,7 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description The server and the database are up */
+            /** @description Up, or degraded but serving */
             200: {
                 headers: {
                     [name: string]: unknown;
@@ -1149,13 +1187,32 @@ export interface operations {
                     "application/json": components["schemas"]["HealthResponseDto"];
                 };
             };
-            /** @description The database is down */
+            /** @description Not ready */
             503: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
                     "application/json": components["schemas"]["HealthResponseDto"];
+                };
+            };
+        };
+    };
+    HealthController_live: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LivenessDto"];
                 };
             };
         };

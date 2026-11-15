@@ -7,7 +7,7 @@
         "parameters": [],
         "responses": {
           "200": {
-            "description": "The server and the database are up",
+            "description": "Up, or degraded but serving",
             "content": {
               "application/json": {
                 "schema": {
@@ -17,7 +17,7 @@
             }
           },
           "503": {
-            "description": "The database is down",
+            "description": "Not ready",
             "content": {
               "application/json": {
                 "schema": {
@@ -27,6 +27,29 @@
             }
           }
         },
+        "summary": "Readiness: 200 when up or degraded, 503 when the database is down.",
+        "tags": [
+          "health"
+        ]
+      }
+    },
+    "/api/health/live": {
+      "get": {
+        "operationId": "HealthController_live",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LivenessDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Liveness: the process answers; no dependency is asked.",
         "tags": [
           "health"
         ]
@@ -2217,27 +2240,103 @@
       }
     },
     "schemas": {
+      "HealthStatus": {
+        "type": "string",
+        "enum": [
+          "up",
+          "degraded",
+          "down"
+        ],
+        "description": "`degraded`: something besides the database is down; the app still serves requests"
+      },
+      "ComponentStatus": {
+        "type": "string",
+        "enum": [
+          "up",
+          "down"
+        ]
+      },
+      "HealthComponentsDto": {
+        "type": "object",
+        "properties": {
+          "database": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ComponentStatus"
+              }
+            ]
+          },
+          "storage": {
+            "description": "Object storage (avatars)",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ComponentStatus"
+              }
+            ]
+          },
+          "mail": {
+            "description": "SMTP server",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ComponentStatus"
+              }
+            ]
+          },
+          "events": {
+            "description": "After-commit deliveries (emails, calendar sync) are not stuck",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ComponentStatus"
+              }
+            ]
+          }
+        },
+        "required": [
+          "database",
+          "storage",
+          "mail",
+          "events"
+        ]
+      },
       "HealthResponseDto": {
         "type": "object",
         "properties": {
           "status": {
-            "enum": [
-              "ok",
-              "error"
-            ],
-            "type": "string"
+            "description": "`degraded`: something besides the database is down; the app still serves requests",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/HealthStatus"
+              }
+            ]
           },
-          "database": {
-            "enum": [
-              "up",
-              "down"
-            ],
-            "type": "string"
+          "components": {
+            "$ref": "#/components/schemas/HealthComponentsDto"
           }
         },
         "required": [
           "status",
-          "database"
+          "components"
+        ]
+      },
+      "LivenessStatus": {
+        "type": "string",
+        "enum": [
+          "up"
+        ]
+      },
+      "LivenessDto": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/LivenessStatus"
+              }
+            ]
+          }
+        },
+        "required": [
+          "status"
         ]
       },
       "ErrorCode": {

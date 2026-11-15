@@ -12,6 +12,10 @@ class FakeTransport extends MailTransport {
     this.sent.push(mail);
     return Promise.resolve('<id@test>');
   }
+
+  verify(): Promise<void> {
+    return Promise.resolve();
+  }
 }
 
 const invite = {

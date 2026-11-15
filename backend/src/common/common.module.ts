@@ -38,6 +38,6 @@ import { S3ObjectStorage } from './storage/s3-object-storage.js';
     TokenCipher,
     GoogleClients,
   ],
-  exports: [Clock, EventBus, GoogleClients, ObjectStorage, TokenCipher],
+  exports: [Clock, EventBus, EventPublicationStore, GoogleClients, ObjectStorage, TokenCipher],
 })
 export class CommonModule {}

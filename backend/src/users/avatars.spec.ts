@@ -56,6 +56,10 @@ class MemoryStorage extends ObjectStorage {
     });
   }
 
+  ping(): Promise<void> {
+    return Promise.resolve();
+  }
+
   delete(key: string): Promise<void> {
     this.objects.delete(key);
     return Promise.resolve();

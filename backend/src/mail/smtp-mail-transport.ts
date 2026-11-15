@@ -30,6 +30,10 @@ export class SmtpMailTransport extends MailTransport {
     this.from = config.get('SMTP_FROM', { infer: true });
   }
 
+  async verify(): Promise<void> {
+    await this.transporter.verify();
+  }
+
   async send(mail: OutgoingMail): Promise<string> {
     const info = (await this.transporter.sendMail({ from: this.from, ...mail })) as {
       messageId: string;

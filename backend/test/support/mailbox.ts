@@ -19,6 +19,11 @@ export class RecordingMailTransport extends MailTransport {
     return Promise.resolve(`<test-${this.sent.length}@errandly.test>`);
   }
 
+  /** Down while failNext() is in effect, without using it up */
+  verify(): Promise<void> {
+    return this.failures > 0 ? Promise.reject(new Error('SMTP is down')) : Promise.resolve();
+  }
+
   clear(): void {
     this.sent.length = 0;
     this.failures = 0;
