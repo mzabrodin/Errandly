@@ -16,3 +16,7 @@ export function errorMessage(error: unknown, t: TFunction): string {
 export function isApiError(error: unknown, code: string): error is ApiError {
   return error instanceof ApiError && error.code === code;
 }
+
+export function hasStatus(error: unknown, ...statuses: number[]): error is ApiError {
+  return error instanceof ApiError && statuses.includes(error.status);
+}

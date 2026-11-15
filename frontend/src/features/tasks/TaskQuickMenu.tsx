@@ -24,9 +24,10 @@ import { useLocation, useNavigate } from 'react-router';
 import type { Member, Task } from '../../shared/api/types';
 import { formatDate, formatTime } from '../../shared/lib/dates';
 import { handleMenuKeys } from '../../shared/lib/menuKeys';
-import { Avatar } from '../../shared/ui/Avatar';
+import { taskPath } from '../../shared/lib/routes';
 import { Pill } from '../../shared/ui/Pill';
 import { useCurrentGroup } from '../groups/useCurrentGroup';
+import { AssigneeLabel } from './AssigneeLabel';
 import { canProposeSwap } from './swaps';
 import { useTaskActions } from './taskActionsContext';
 import styles from './TaskQuickMenu.module.css';
@@ -96,13 +97,7 @@ function QuickMenuHead({
         </span>
         {assignee ? (
           <span>
-            <Avatar
-              name={assignee.name}
-              src={assignee.avatarUrl}
-              color={assignee.color}
-              size={18}
-            />
-            {isMine ? t('common.you') : assignee.name.split(' ')[0]}
+            <AssigneeLabel member={assignee} size={18} isMine={isMine} />
           </span>
         ) : (
           <span>{t('tasks.nobody')}</span>
@@ -110,6 +105,30 @@ function QuickMenuHead({
         <Pill tone={task.status}>{t(`tasks.status.${task.status}`)}</Pill>
       </div>
     </div>
+  );
+}
+
+function QuickItem({
+  icon,
+  label,
+  onClick,
+  className,
+}: {
+  icon: ReactNode;
+  label: string;
+  onClick: () => void;
+  className?: string | false | undefined;
+}): JSX.Element {
+  return (
+    <button
+      type="button"
+      role="menuitem"
+      className={clsx(styles.item, className)}
+      onClick={onClick}
+    >
+      {icon}
+      {label}
+    </button>
   );
 }
 
@@ -142,72 +161,51 @@ function QuickMenuItems({
   return (
     <div className={styles.items}>
       {canToggle && (
-        <button
-          type="button"
-          role="menuitem"
-          className={clsx(styles.item, !done && styles.primary)}
+        <QuickItem
+          icon={done ? <Undo2 size={17} /> : <Check size={17} />}
+          label={done ? t('taskPage.undo') : t('taskPage.markDone')}
           onClick={run(() => toggle(task))}
-        >
-          {done ? <Undo2 size={17} /> : <Check size={17} />}
-          {done ? t('taskPage.undo') : t('taskPage.markDone')}
-        </button>
+          className={!done && styles.primary}
+        />
       )}
       {canSwap && (
-        <button
-          type="button"
-          role="menuitem"
-          className={styles.item}
+        <QuickItem
+          icon={<ArrowLeftRight size={17} />}
+          label={t('swaps.propose')}
           onClick={run(() => actions.proposeSwap(task))}
-        >
-          <ArrowLeftRight size={17} />
-          {t('swaps.propose')}
-        </button>
+        />
       )}
       {isAdmin && !done && (
-        <button
-          type="button"
-          role="menuitem"
-          className={styles.item}
+        <QuickItem
+          icon={<UserRoundCog size={17} />}
+          label={t('tasks.reassign')}
           onClick={run(() => actions.reassign(task))}
-        >
-          <UserRoundCog size={17} />
-          {t('tasks.reassign')}
-        </button>
+        />
       )}
       {isAdmin && (
-        <button
-          type="button"
-          role="menuitem"
-          className={styles.item}
+        <QuickItem
+          icon={<Pencil size={17} />}
+          label={t('tasks.edit')}
           onClick={run(() => actions.edit(task))}
-        >
-          <Pencil size={17} />
-          {t('tasks.edit')}
-        </button>
+        />
       )}
-      <button
-        type="button"
-        role="menuitem"
-        className={clsx(styles.item, styles.details)}
+      <QuickItem
+        icon={<ArrowRight size={17} />}
+        label={t('tasks.details')}
         onClick={run(() => {
-          void navigate(`/g/${group.id}/tasks/${task.id}`, {
+          void navigate(taskPath(group.id, task.id), {
             state: { from: location.pathname + location.search },
           });
         })}
-      >
-        <ArrowRight size={17} />
-        {t('tasks.details')}
-      </button>
+        className={styles.details}
+      />
       {isAdmin && (
-        <button
-          type="button"
-          role="menuitem"
-          className={clsx(styles.item, styles.danger)}
+        <QuickItem
+          icon={<Trash2 size={17} />}
+          label={t('common.delete')}
           onClick={run(() => actions.remove(task))}
-        >
-          <Trash2 size={17} />
-          {t('common.delete')}
-        </button>
+          className={styles.danger}
+        />
       )}
     </div>
   );
@@ -220,7 +218,7 @@ function QuickMenuItems({
  */
 export function TaskQuickMenu({ task, children }: TaskQuickMenuProps): JSX.Element {
   const navigate = useNavigate();
-  const { group, me, isAdmin, membersById } = useCurrentGroup();
+  const { group, me, isAdmin, memberOf } = useCurrentGroup();
   const { toggle } = useToggleTask(group.id);
   const id = useId();
   const menuRef = useRef<HTMLDivElement>(null);
@@ -229,7 +227,7 @@ export function TaskQuickMenu({ task, children }: TaskQuickMenuProps): JSX.Eleme
   const clickPoint = useRef<{ x: number; y: number } | null>(null);
   const [open, setOpen] = useState(false);
 
-  const assignee = task.assigneeId === null ? undefined : membersById.get(task.assigneeId);
+  const assignee = memberOf(task.assigneeId);
   const isMine = task.assigneeId === me.id;
   const canToggle = canToggleTask(task, { isMine, isAdmin });
 
@@ -241,7 +239,7 @@ export function TaskQuickMenu({ task, children }: TaskQuickMenuProps): JSX.Eleme
   const onTriggerClick = (event: React.MouseEvent<HTMLElement>): void => {
     const menu = menuRef.current;
     if (!menu || typeof menu.showPopover !== 'function') {
-      void navigate(`/g/${group.id}/tasks/${task.id}`);
+      void navigate(taskPath(group.id, task.id));
       return;
     }
     // Click on the trigger of an open menu: light dismiss already closed it on pointerdown

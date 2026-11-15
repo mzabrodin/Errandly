@@ -1,7 +1,9 @@
 import { bypass } from 'msw';
 
 import type { Locale } from '../shared/i18n';
-import { computeStatus, DAY_MS, db, defaultSettingsFor, isCompleted } from './db';
+import { firstName } from '../shared/lib/names';
+import { DAY_MS } from '../shared/lib/time';
+import { computeStatus, db, defaultSettingsFor, isCompleted } from './db';
 
 // The mock API cannot speak SMTP, so the backend renders and sends emails through a dev endpoint
 // (backend/src/mail/dev-mail.controller.ts) to Mailpit: http://localhost:8025
@@ -51,7 +53,7 @@ function taskMailData(task: TaskLike, userId: string): MailData | null {
   const group = db.groups.find((candidate) => candidate.id === task.groupId);
   if (!user || !group) return null;
   return {
-    name: user.name.split(' ')[0] ?? '',
+    name: firstName(user.name),
     groupName: group.name,
     taskTitle: task.title,
     dueAt: task.dueAt,
@@ -115,7 +117,7 @@ export function sendDigest(): string {
     });
   if (groups.length === 0) return 'No groups';
   sendMail('weeklyDigest', user.email, {
-    name: user.name.split(' ')[0] ?? '',
+    name: firstName(user.name),
     url: location.origin,
     settingsUrl: `${location.origin}/settings`,
     timezone: user.timezone,

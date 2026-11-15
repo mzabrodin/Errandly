@@ -39,9 +39,3 @@ export function useMarkNotificationsRead(): UseMutationResult<void, Error, strin
     onSettled: () => queryClient.invalidateQueries({ queryKey: notificationsKey }),
   });
 }
-
-/** After actions that create notifications (new task, new group), refresh the list */
-export function useRefreshNotifications(): () => Promise<void> {
-  const queryClient = useQueryClient();
-  return () => queryClient.invalidateQueries({ queryKey: notificationsKey });
-}

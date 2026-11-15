@@ -1,9 +1,10 @@
 import { http, HttpResponse } from 'msw';
 
 import type { TaskInput } from '../../shared/api/types';
+import { LIMITS } from '../../shared/lib/limits';
+import { UNDO_WINDOW_MS } from '../../shared/lib/time';
 import {
   createSeries,
-  DAY_MS,
   db,
   isCompleted,
   persist,
@@ -30,7 +31,7 @@ type DbTaskRecord = Db['tasks'][number];
 function validateTask(input: TaskInput, previousDueAt?: string): Record<string, string> | null {
   const fields: Record<string, string> = {};
   if (input.title.trim() === '') fields['title'] = 'required';
-  else if (input.title.length > 100) fields['title'] = 'tooLong';
+  else if (input.title.length > LIMITS.taskTitle) fields['title'] = 'tooLong';
   if (input.dueAt === '') fields['dueAt'] = 'required';
   else if (
     new Date(input.dueAt).getTime() < Date.now() &&
@@ -40,7 +41,8 @@ function validateTask(input: TaskInput, previousDueAt?: string): Record<string, 
   ) {
     fields['dueAt'] = 'inPast';
   }
-  if (!(input.difficulty >= 1 && input.difficulty <= 5)) fields['difficulty'] = 'range';
+  if (!(input.difficulty >= LIMITS.difficultyMin && input.difficulty <= LIMITS.difficultyMax))
+    fields['difficulty'] = 'range';
   if (input.recurrence.type === 'weekly' && input.recurrence.weekdays.length === 0) {
     fields['recurrence'] = 'noWeekdays';
   }
@@ -260,7 +262,7 @@ const taskStateHandlers = [
       if (
         task.completedAt !== null &&
         task.completedAt !== '' &&
-        Date.now() - new Date(task.completedAt).getTime() > DAY_MS
+        Date.now() - new Date(task.completedAt).getTime() > UNDO_WINDOW_MS
       ) {
         return error(409, 'UNDO_EXPIRED');
       }

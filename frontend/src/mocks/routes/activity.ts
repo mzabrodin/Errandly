@@ -1,6 +1,7 @@
 import { http, HttpResponse } from 'msw';
 
-import { computeStatus, DAY_MS, db, isCompleted, persist } from '../db';
+import { DAY_MS } from '../../shared/lib/time';
+import { computeStatus, db, isCompleted, persist } from '../db';
 import { syncOverdueNotifications } from '../notifications';
 import { API, authorize, currentUser, emptyResponse, error, type GroupParams } from './common';
 

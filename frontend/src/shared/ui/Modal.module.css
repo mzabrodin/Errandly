@@ -37,14 +37,9 @@
 }
 
 .close {
-  display: grid;
-  place-items: center;
+  composes: roundButton from './patterns.module.css';
   width: 38px;
   height: 38px;
-  border: var(--border);
-  border-radius: 50%;
-  background: var(--paper);
-  cursor: pointer;
 }
 
 .body {

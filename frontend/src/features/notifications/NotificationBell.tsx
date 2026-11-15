@@ -23,6 +23,7 @@ import { useMarkNotificationsRead, useNotifications } from '../../shared/api/not
 import type { AppNotification, NotificationType } from '../../shared/api/types';
 import { formatRelative } from '../../shared/lib/dates';
 import { handleMenuKeys } from '../../shared/lib/menuKeys';
+import { groupPath, taskPath } from '../../shared/lib/routes';
 import { FlowerFace } from '../../shared/ui/Decor';
 import styles from './NotificationBell.module.css';
 
@@ -48,9 +49,9 @@ function isPresent(value: string | null): value is string {
 
 function linkFor(item: AppNotification): string {
   if (isPresent(item.groupId) && isPresent(item.taskId)) {
-    return `/g/${item.groupId}/tasks/${item.taskId}`;
+    return taskPath(item.groupId, item.taskId);
   }
-  if (isPresent(item.groupId)) return `/g/${item.groupId}/tasks`;
+  if (isPresent(item.groupId)) return groupPath(item.groupId);
   return '/home';
 }
 

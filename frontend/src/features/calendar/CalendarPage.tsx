@@ -24,6 +24,8 @@ import {
   toIso,
   weekRange,
 } from '../../shared/lib/dates';
+import { firstName } from '../../shared/lib/names';
+import { toStringList } from '../../shared/lib/translationList';
 import { Avatar } from '../../shared/ui/Avatar';
 import { Button } from '../../shared/ui/Button';
 import { EmptyState } from '../../shared/ui/EmptyState';
@@ -33,7 +35,6 @@ import { Spinner } from '../../shared/ui/Spinner';
 import { useCurrentGroup } from '../groups/useCurrentGroup';
 import { useTaskActions } from '../tasks/taskActionsContext';
 import { TaskQuickMenu } from '../tasks/TaskQuickMenu';
-import { toStringList } from '../tasks/translationList';
 import styles from './CalendarPage.module.css';
 
 type View = 'week' | 'month';
@@ -57,8 +58,8 @@ function TaskChip({
   compact?: boolean;
 }): JSX.Element {
   const { t } = useTranslation();
-  const { membersById } = useCurrentGroup();
-  const assignee = task.assigneeId === null ? undefined : membersById.get(task.assigneeId);
+  const { memberOf } = useCurrentGroup();
+  const assignee = memberOf(task.assigneeId);
   const label = `${formatTime(task.dueAt)} ${task.title} — ${assignee?.name ?? t('tasks.nobody')} (${t(`tasks.status.${task.status}`)})`;
 
   return (
@@ -140,7 +141,7 @@ function AwayList({
               color={member.color}
               size={compact ? 18 : 20}
             />
-            {!compact && <span aria-hidden>{member.name.split(' ')[0]}</span>}
+            {!compact && <span aria-hidden>{firstName(member.name)}</span>}
             <Plane aria-hidden size={13} />
           </li>
         );
@@ -177,9 +178,9 @@ function AddDayButton({
 
 /** Task colour is the assignee's colour; neutral when unassigned */
 function useTaskColor(): (task: Task) => string {
-  const { membersById } = useCurrentGroup();
+  const { memberOf } = useCurrentGroup();
   return (task) => {
-    const color = task.assigneeId === null ? undefined : membersById.get(task.assigneeId)?.color;
+    const color = memberOf(task.assigneeId)?.color;
     return color === undefined || color === '' ? 'var(--cream-deep)' : color;
   };
 }
@@ -363,7 +364,7 @@ function CalendarLegend({ members }: { members: Member[] }): JSX.Element {
       {members.map((member) => (
         <li key={member.userId} className={styles.legendItem}>
           <Avatar name={member.name} src={member.avatarUrl} color={member.color} size={22} />
-          {member.name.split(' ')[0]}
+          {firstName(member.name)}
         </li>
       ))}
       <li className={clsx(styles.legendItem, styles.legendAway)}>

@@ -4,6 +4,7 @@ import { RouterProvider } from 'react-router';
 
 import { sessionKey } from '../shared/api/auth';
 import { ApiError } from '../shared/api/client';
+import { hasStatus } from '../shared/api/errors';
 import { useDisplayTimeZone } from '../shared/lib/dates';
 import { ToastProvider } from '../shared/ui/Toast';
 import { LocaleSync } from './LocaleSync';
@@ -12,7 +13,7 @@ import { TimezoneSync } from './TimezoneSync';
 
 function handleUnauthenticated(error: unknown) {
   // Session expired (NFR-SEC-03): send the user back to sign-in
-  if (error instanceof ApiError && error.status === 401) {
+  if (hasStatus(error, 401)) {
     queryClient.setQueryData(sessionKey, null);
   }
 }

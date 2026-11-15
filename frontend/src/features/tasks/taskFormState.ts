@@ -13,6 +13,7 @@ import {
   toIso,
   toLocalInputValue,
 } from '../../shared/lib/dates';
+import { LIMITS } from '../../shared/lib/limits';
 
 export type RecurrenceType = Recurrence['type'];
 
@@ -95,7 +96,7 @@ export function validateForm(state: FormState, dueChanged: boolean, t: TFunction
   const next: Errors = {};
   const title = state.title.trim();
   if (title === '') next.title = t('taskForm.errors.titleRequired');
-  else if (title.length > 100) next.title = t('taskForm.errors.titleTooLong');
+  else if (title.length > LIMITS.taskTitle) next.title = t('taskForm.errors.titleTooLong');
   if (state.dueAt === '') next.dueAt = t('taskForm.errors.dueRequired');
   else if (dueChanged && fromLocalInputValue(state.dueAt).getTime() < Date.now()) {
     next.dueAt = t('taskForm.errors.dueInPast');

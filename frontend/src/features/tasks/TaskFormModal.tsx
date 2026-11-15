@@ -6,7 +6,15 @@ import { useTranslation } from 'react-i18next';
 import { errorMessage } from '../../shared/api/errors';
 import { useCreateTask, useUpdateTask } from '../../shared/api/tasks';
 import type { EditScope, Task } from '../../shared/api/types';
-import { deviceTimeZone, displayTimeZone, now, toLocalInputValue } from '../../shared/lib/dates';
+import {
+  deviceTimeZone,
+  displayTimeZone,
+  now,
+  toLocalInputValue,
+  zoneLabel,
+} from '../../shared/lib/dates';
+import { LIMITS } from '../../shared/lib/limits';
+import { toStringList } from '../../shared/lib/translationList';
 import { Button } from '../../shared/ui/Button';
 import { Field, FormError, Input, Select, Textarea } from '../../shared/ui/Field';
 import { Modal } from '../../shared/ui/Modal';
@@ -26,7 +34,6 @@ import {
   type FormState,
   type SetField,
 } from './taskFormState';
-import { toStringList } from './translationList';
 
 interface TaskFormModalProps {
   open: boolean;
@@ -61,7 +68,7 @@ function useSaveTask(
 } {
   const { t } = useTranslation();
   const toast = useToast();
-  const { group, membersById } = useCurrentGroup();
+  const { group, memberOf } = useCurrentGroup();
   const create = useCreateTask(group.id);
   const update = useUpdateTask(group.id);
 
@@ -81,8 +88,7 @@ function useSaveTask(
     }
     create.mutate(input, {
       onSuccess: (created) => {
-        const assignee =
-          created.assigneeId === null ? undefined : membersById.get(created.assigneeId);
+        const assignee = memberOf(created.assigneeId);
         toast(
           assignee
             ? t('taskForm.created', { name: assignee.name })
@@ -250,7 +256,7 @@ function TitleDescriptionFields({
         {(props) => (
           <Input
             {...props}
-            maxLength={100}
+            maxLength={LIMITS.taskTitle}
             placeholder={t('taskForm.namePlaceholder')}
             value={state.title}
             onChange={(event) => set('title', event.target.value)}
@@ -300,9 +306,7 @@ function DueInput({
 /** Someone with a manual zone away from it sees which clock the time is on */
 function zoneHint(t: TFunction): string | undefined {
   const zone = displayTimeZone();
-  return zone === deviceTimeZone()
-    ? undefined
-    : t('taskForm.zoneHint', { zone: zone.replace('_', ' ') });
+  return zone === deviceTimeZone() ? undefined : t('taskForm.zoneHint', { zone: zoneLabel(zone) });
 }
 
 function RepeatField({

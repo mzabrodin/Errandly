@@ -1,12 +1,8 @@
-import {
-  useMutation,
-  useQuery,
-  useQueryClient,
-  type UseMutationResult,
-  type UseQueryResult,
-} from '@tanstack/react-query';
+import { useQuery, type UseMutationResult, type UseQueryResult } from '@tanstack/react-query';
 
 import { api, unwrap } from './client';
+import { useInvalidatingMutation } from './mutation';
+import { statsKeys } from './stats';
 import { taskKeys } from './tasks';
 import type { Swap } from './types';
 
@@ -26,16 +22,12 @@ function useSwapMutation<TInput, TResult = unknown>(
   groupId: string,
   request: (input: TInput) => Promise<TResult>,
 ): UseMutationResult<TResult, Error, TInput> {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: request,
-    // A failed answer means the swap went stale, so the list is refreshed either way
-    onSettled: () => {
-      void queryClient.invalidateQueries({ queryKey: swapKeys.group(groupId) });
-      void queryClient.invalidateQueries({ queryKey: taskKeys.group(groupId) });
-      void queryClient.invalidateQueries({ queryKey: ['stats', groupId] });
-    },
-  });
+  // A failed answer means the swap went stale, so the list is refreshed either way
+  return useInvalidatingMutation(
+    request,
+    [swapKeys.group(groupId), taskKeys.group(groupId), statsKeys.group(groupId)],
+    'settled',
+  );
 }
 
 export function useProposeSwap(

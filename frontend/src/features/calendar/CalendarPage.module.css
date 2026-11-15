@@ -13,14 +13,9 @@
 }
 
 .navButton {
-  display: grid;
-  place-items: center;
+  composes: roundButton from '../../shared/ui/patterns.module.css';
   width: 36px;
   height: 36px;
-  border: var(--border);
-  border-radius: 50%;
-  background: var(--paper);
-  cursor: pointer;
 }
 
 .navButton:hover {

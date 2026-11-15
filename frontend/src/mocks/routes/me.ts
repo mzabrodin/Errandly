@@ -2,6 +2,7 @@ import { http, HttpResponse } from 'msw';
 
 import type { Settings } from '../../shared/api/types';
 import { isLocale } from '../../shared/i18n';
+import { LIMITS } from '../../shared/lib/limits';
 import { isValidPassword } from '../../shared/lib/validation';
 import { db, defaultSettingsFor, persist, publicUser } from '../db';
 import {
@@ -99,7 +100,7 @@ const profileHandlers = [
       const { name, timezone, timezoneAuto, locale } = await request.json();
       if (name !== undefined) {
         if (name.trim() === '') return error(400, 'VALIDATION', { fields: { name: 'required' } });
-        if (name.trim().length > 60)
+        if (name.trim().length > LIMITS.userName)
           return error(400, 'VALIDATION', { fields: { name: 'tooLong' } });
         user.name = name.trim();
       }

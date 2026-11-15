@@ -37,6 +37,11 @@ export function deviceTimeZone(): string {
 let displayZone = deviceTimeZone();
 const listeners = new Set<() => void>();
 
+/** `America/Argentina/Buenos_Aires` → `America/Argentina/Buenos Aires` */
+export function zoneLabel(zone: string): string {
+  return zone.replaceAll('_', ' ');
+}
+
 export function displayTimeZone(): string {
   return displayZone;
 }

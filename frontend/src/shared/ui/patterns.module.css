@@ -1,0 +1,10 @@
+/* Shared looks, used with `composes:` from feature modules */
+
+.roundButton {
+  display: grid;
+  place-items: center;
+  border: var(--border);
+  border-radius: 50%;
+  background: var(--paper);
+  cursor: pointer;
+}

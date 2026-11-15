@@ -5,6 +5,7 @@ import { Link } from 'react-router';
 
 import { useSession } from '../shared/api/auth';
 import type { User } from '../shared/api/types';
+import { toStringList } from '../shared/lib/translationList';
 import { ButtonLink } from '../shared/ui/Button';
 import { Asterisk, Clouds, Flower, FlowerFace, Hills, Marquee } from '../shared/ui/Decor';
 import { LanguageSwitch } from '../shared/ui/LanguageSwitch';
@@ -46,10 +47,7 @@ const FEATURES = [
 /** Marquee lines from the translations (an array via returnObjects) */
 function useMarqueeItems(): string[] {
   const { t } = useTranslation();
-  const items: unknown = t('landing.marquee', { returnObjects: true });
-  return Array.isArray(items)
-    ? items.filter((item): item is string => typeof item === 'string')
-    : [];
+  return toStringList(t('landing.marquee', { returnObjects: true }));
 }
 
 function Hero({ user }: { user: User | null | undefined }): JSX.Element {

@@ -6,9 +6,7 @@ declare const styles: {
   readonly "formError": string;
   readonly "label": string;
   readonly "message": string;
-  readonly "org": string;
   readonly "select": string;
   readonly "textarea": string;
-  readonly "w3": string;
 };
 export default styles;

@@ -19,6 +19,8 @@ import {
   startOfDay,
   toIso,
 } from '../../shared/lib/dates';
+import { firstName } from '../../shared/lib/names';
+import { groupPath, taskPath } from '../../shared/lib/routes';
 import { useDocumentTitle } from '../../shared/lib/useDocumentTitle';
 import { Avatar } from '../../shared/ui/Avatar';
 import { ButtonLink } from '../../shared/ui/Button';
@@ -65,7 +67,7 @@ function NextTask({
       </h2>
       {next ? (
         <Link
-          to={`/g/${next.groupId}/tasks/${next.id}`}
+          to={taskPath(next.groupId, next.id)}
           state={{ from: '/home' }}
           className={`${styles.nextCard} ${next.status === 'overdue' ? styles.nextOverdue : ''}`}
         >
@@ -100,7 +102,7 @@ function GroupCard({
 
   return (
     <li>
-      <Link to={`/g/${summary.id}/tasks`} className={styles.groupCard}>
+      <Link to={groupPath(summary.id)} className={styles.groupCard}>
         <span className={styles.groupBrand}>errandly*</span>
         <span className={styles.groupName}>{summary.name}</span>
         <FlowerFace className={styles.groupFlower} size={120} color={color} />
@@ -172,7 +174,7 @@ export function HomePage(): JSX.Element {
         <div className={styles.heroText}>
           <span className={styles.date}>{formatDate(now, 'EEEE, d MMMM')}</span>
           <h1 className={styles.greeting}>
-            {t(greetingKey(now.getHours()), { name: user.name.split(' ')[0] })}
+            {t(greetingKey(now.getHours()), { name: firstName(user.name) })}
           </h1>
         </div>
         <FlowerFace className={styles.heroFlower} size={110} color="var(--lime)" />

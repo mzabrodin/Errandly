@@ -11,6 +11,7 @@ import type {
   User,
 } from '../shared/api/types';
 import { toDateInputValue } from '../shared/lib/dates';
+import { DAY_MS } from '../shared/lib/time';
 import { pickAssignee, type AllocationMember } from './allocation';
 
 // In-memory "backend" for development without a server. State is kept in localStorage.
@@ -73,7 +74,6 @@ export interface Db {
 
 const STORAGE_KEY = 'errandly-mock-db';
 const DB_VERSION = 7;
-const DAY_MS = 24 * 60 * 60 * 1000;
 export const HORIZON_DAYS = 28;
 
 export const MEMBER_COLORS = [
@@ -428,7 +428,7 @@ function seedSwaps(target: Db): void {
         (task) =>
           task.groupId === 'g-room12' &&
           task.assigneeId === userId &&
-          new Date(task.dueAt).getTime() > Date.now() + 24 * 60 * 60 * 1000,
+          new Date(task.dueAt).getTime() > Date.now() + DAY_MS,
       )
       .toSorted((a, b) => a.dueAt.localeCompare(b.dueAt))[0];
   const offered = next('u-bohdan');
@@ -578,5 +578,3 @@ export function defaultSettingsFor(userId: string): Settings {
   db.settings[userId] = current;
   return current;
 }
-
-export { DAY_MS };
