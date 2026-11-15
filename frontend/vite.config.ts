@@ -13,6 +13,7 @@ export default defineConfig({
     globals: true,
     environment: 'jsdom',
     setupFiles: './src/test/setup.ts',
+    include: ['src/**/*.test.{ts,tsx}'],
     // Node's Request needs an absolute URL
     env: { VITE_API_URL: 'http://localhost' },
     coverage: {

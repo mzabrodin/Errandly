@@ -97,6 +97,7 @@
         "**/*.test.ts",
         "**/*.test.tsx",
         "**/test/**",
+        "**/e2e/**",
         "**/src/testing/**"
       ],
       "rules": {
