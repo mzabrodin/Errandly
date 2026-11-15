@@ -14,6 +14,7 @@ export default defineConfig({
       include: ['src/**/*.{ts,tsx}'],
       exclude: [
         'src/**/*.spec.ts',
+        'src/testing/**',
         'src/main.ts',
         'src/openapi.ts',
         'src/app.setup.ts',
@@ -21,9 +22,10 @@ export default defineConfig({
         // CLI scripts, exercised by the CI migrate and seed steps
         'src/db/migrate.ts',
         'src/db/seed.ts',
-        // Drizzle queries only; the integration tests run them against PostgreSQL (test/**)
+        // Drizzle queries and HTTP wiring; the integration tests run them (test/**)
         'src/**/*.repository.ts',
         'src/**/*.store.ts',
+        'src/**/*.controller.ts',
         'src/db/tables.ts',
         // The S3 adapter; the integration tests run it against SeaweedFS
         'src/common/storage/s3-object-storage.ts',

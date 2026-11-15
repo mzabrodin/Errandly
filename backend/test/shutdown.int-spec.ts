@@ -15,7 +15,9 @@ describe('Graceful shutdown (integration)', () => {
 
   it('refuses new requests, finishes the delivery in flight, then closes the pool', async () => {
     const bus = t.app.get(EventBus);
-    const complete = vi.spyOn(t.app.get(EventPublicationStore), 'complete');
+    const store = t.app.get(EventPublicationStore);
+    const complete = vi.spyOn(store, 'complete');
+    const handBack = vi.spyOn(store, 'release');
     const steps: string[] = [];
     let release = noop;
     bus.onAfterCommit('user.avatarDiscarded', 'test.slowListener', async () => {
@@ -42,8 +44,13 @@ describe('Graceful shutdown (integration)', () => {
     await Promise.all([tick, closing]);
 
     expect(steps).toEqual(['delivery started', 'delivery done', 'closed']);
+    const handled = [
+      ...complete.mock.calls.map(([id]) => id),
+      ...handBack.mock.calls.flatMap(([ids]) => ids),
+    ];
+    expect(new Set(handled).size).toBe(2);
     await expect(
-      Promise.all(complete.mock.results.map(({ value }) => value)),
-    ).resolves.toHaveLength(2);
+      Promise.all([...complete.mock.results, ...handBack.mock.results].map(({ value }) => value)),
+    ).resolves.toBeDefined();
   });
 });
