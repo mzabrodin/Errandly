@@ -4,7 +4,6 @@ import { useMemo, useState, type JSX } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useSearchParams } from 'react-router';
 
-import { errorMessage } from '../../shared/api/errors';
 import { useTasks } from '../../shared/api/tasks';
 import type { Task, TaskStatus } from '../../shared/api/types';
 import {
@@ -18,6 +17,7 @@ import {
 import { usePrefs } from '../../shared/lib/prefs';
 import { Button } from '../../shared/ui/Button';
 import { EmptyState } from '../../shared/ui/EmptyState';
+import { LoadError } from '../../shared/ui/LoadError';
 import { PageHeader } from '../../shared/ui/PageHeader';
 import { Segmented } from '../../shared/ui/Segmented';
 import { PageSpinner } from '../../shared/ui/Spinner';
@@ -359,12 +359,7 @@ export function TasksPage(): JSX.Element {
 
           {isPending && <PageSpinner label={t('common.loading')} />}
 
-          {error && (
-            <EmptyState
-              title={errorMessage(error, t)}
-              action={<Button onClick={() => void refetch()}>{t('common.retry')}</Button>}
-            />
-          )}
+          {error && <LoadError error={error} onRetry={() => void refetch()} />}
 
           {isEmpty && (
             <TasksEmpty scope={scope} status={status} onShowAll={() => setFilter('scope', 'all')} />

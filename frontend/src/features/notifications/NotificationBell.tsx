@@ -19,11 +19,13 @@ import { useEffect, useId, useRef, useState, type JSX, type RefObject } from 're
 import { Trans, useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router';
 
+import { errorMessage } from '../../shared/api/errors';
 import { useMarkNotificationsRead, useNotifications } from '../../shared/api/notifications';
 import type { AppNotification, NotificationType } from '../../shared/api/types';
 import { formatRelative } from '../../shared/lib/dates';
 import { handleMenuKeys } from '../../shared/lib/menuKeys';
 import { groupPath, taskPath } from '../../shared/lib/routes';
+import { Button } from '../../shared/ui/Button';
 import { FlowerFace } from '../../shared/ui/Decor';
 import styles from './NotificationBell.module.css';
 
@@ -129,7 +131,7 @@ function NotificationItem({
 export function NotificationBell(): JSX.Element {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { data } = useNotifications();
+  const { data, error, refetch } = useNotifications();
   const markRead = useMarkNotificationsRead();
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -188,6 +190,14 @@ export function NotificationBell(): JSX.Element {
             )}
           </div>
 
+          {error && !data && (
+            <div className={styles.empty}>
+              <p>{errorMessage(error, t)}</p>
+              <Button size="sm" variant="secondary" onClick={() => void refetch()}>
+                {t('common.retry')}
+              </Button>
+            </div>
+          )}
           {data && data.items.length === 0 ? (
             <div className={styles.empty}>
               <FlowerFace size={56} color="var(--lime)" />

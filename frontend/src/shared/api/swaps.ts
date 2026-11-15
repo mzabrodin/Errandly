@@ -3,12 +3,9 @@ import { useQuery, type UseMutationResult, type UseQueryResult } from '@tanstack
 import { api, unwrap } from './client';
 import { useInvalidatingMutation } from './mutation';
 import { statsKeys } from './stats';
+import { swapKeys } from './swapKeys';
 import { taskKeys } from './tasks';
 import type { Swap } from './types';
-
-export const swapKeys = {
-  group: (groupId: string) => ['swaps', groupId] as const,
-};
 
 export function useSwaps(groupId: string): UseQueryResult<Swap[]> {
   return useQuery({

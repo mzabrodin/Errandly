@@ -6,6 +6,7 @@ import { Link } from 'react-router';
 
 import { useSession } from '../../shared/api/auth';
 import { api, unwrap } from '../../shared/api/client';
+import { errorMessage } from '../../shared/api/errors';
 import { groupKeys, useGroups } from '../../shared/api/groups';
 import { taskKeys } from '../../shared/api/tasks';
 import type { Group, GroupSummary, Task } from '../../shared/api/types';
@@ -23,8 +24,10 @@ import { firstName } from '../../shared/lib/names';
 import { groupPath, taskPath } from '../../shared/lib/routes';
 import { useDocumentTitle } from '../../shared/lib/useDocumentTitle';
 import { Avatar } from '../../shared/ui/Avatar';
-import { ButtonLink } from '../../shared/ui/Button';
+import { Button, ButtonLink } from '../../shared/ui/Button';
 import { Cloud, FlowerFace, Hills } from '../../shared/ui/Decor';
+import { FormError } from '../../shared/ui/Field';
+import { LoadError } from '../../shared/ui/LoadError';
 import { PageSpinner } from '../../shared/ui/Spinner';
 import styles from './HomePage.module.css';
 
@@ -131,7 +134,7 @@ export function HomePage(): JSX.Element {
   const { t } = useTranslation();
   useDocumentTitle(t('titles.home'));
   const { data: user } = useSession();
-  const { data: groups, isPending } = useGroups();
+  const { data: groups, isPending, error, refetch } = useGroups();
   const [now] = useState(currentTime);
   const [range] = useState(() => ({
     from: toIso(startOfDay(addDays(now, -14))),
@@ -157,11 +160,13 @@ export function HomePage(): JSX.Element {
     })),
   });
 
+  if (error) return <LoadError error={error} onRetry={() => void refetch()} />;
   if (isPending || !user) return <PageSpinner label={t('common.loading')} />;
+  const failed = [...details, ...taskLists].filter((query) => query.isError);
 
   const allTasks = taskLists.flatMap((query) => query.data ?? []);
   const next = pickNext(allTasks, user.id);
-  const nextGroup = next && groups?.find((group) => group.id === next.groupId);
+  const nextGroup = next && groups.find((group) => group.id === next.groupId);
   const weekEnd = endOfWeek(now).getTime();
 
   return (
@@ -181,11 +186,23 @@ export function HomePage(): JSX.Element {
       </section>
 
       <NextTask next={next} nextGroup={nextGroup} />
+      {failed.length > 0 && (
+        <FormError>
+          {errorMessage(failed[0]?.error, t)}{' '}
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={() => failed.forEach((query) => void query.refetch())}
+          >
+            {t('common.retry')}
+          </Button>
+        </FormError>
+      )}
 
       <section>
         <h2 className={styles.label}>{t('home.groupsTitle')}</h2>
         <ul className={styles.groups}>
-          {groups?.map((summary, index) => {
+          {groups.map((summary, index) => {
             const weekCount = (taskLists[index]?.data ?? []).filter((task) => {
               const due = new Date(task.dueAt).getTime();
               return task.assigneeId === user.id && task.status !== 'done' && due <= weekEnd;

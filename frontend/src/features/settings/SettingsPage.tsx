@@ -362,7 +362,13 @@ function NotificationsSection({ settings, user }: { settings: Settings; user: Us
         value={settings.emailReminderMinutes}
         disabled={!settings.notifications.dueSoon || update.isPending}
         onSelect={(emailReminderMinutes) =>
-          update.mutate({ emailReminderMinutes }, { onSuccess: () => toast(t('settings.saved')) })
+          update.mutate(
+            { emailReminderMinutes },
+            {
+              onSuccess: () => toast(t('settings.saved')),
+              onError: (mutationError) => toast(errorMessage(mutationError, t), 'error'),
+            },
+          )
         }
       />
       <p className={styles.note}>
@@ -436,19 +442,23 @@ function CalendarSection({ settings }: { settings: Settings }): JSX.Element {
     >
       <CalendarStatus calendar={calendar} />
 
+      <ReminderSelect
+        label={t('settings.reminder')}
+        hint={t('settings.reminderHint')}
+        value={settings.calendarReminderMinutes}
+        onSelect={(calendarReminderMinutes) =>
+          update.mutate(
+            { calendarReminderMinutes },
+            {
+              onSuccess: () => toast(t('settings.saved')),
+              onError: (mutationError) => toast(errorMessage(mutationError, t), 'error'),
+            },
+          )
+        }
+      />
+
       {calendar.connected ? (
         <>
-          <ReminderSelect
-            label={t('settings.reminder')}
-            hint={t('settings.reminderHint')}
-            value={settings.calendarReminderMinutes}
-            onSelect={(calendarReminderMinutes) =>
-              update.mutate(
-                { calendarReminderMinutes },
-                { onSuccess: () => toast(t('settings.saved')) },
-              )
-            }
-          />
           <div className={styles.actions}>
             <Button
               variant="danger"

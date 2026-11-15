@@ -1,18 +1,20 @@
 import { useState, type JSX } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { errorMessage } from '../../shared/api/errors';
 import { useProposeSwap } from '../../shared/api/swaps';
 import { useTasks } from '../../shared/api/tasks';
 import type { Task } from '../../shared/api/types';
 import { addDays, formatDate, formatTime, now, startOfDay, toIso } from '../../shared/lib/dates';
 import { Avatar } from '../../shared/ui/Avatar';
 import { FormError } from '../../shared/ui/Field';
+import { LoadError } from '../../shared/ui/LoadError';
 import { Modal } from '../../shared/ui/Modal';
 import { Spinner } from '../../shared/ui/Spinner';
 import { useToast } from '../../shared/ui/Toast';
 import { useCurrentGroup } from '../groups/useCurrentGroup';
 import styles from './ProposeSwapModal.module.css';
-import { swapCandidates, useSwapError } from './swaps';
+import { swapCandidates } from './swaps';
 import { DifficultyDots } from './TaskCard';
 
 const HORIZON_DAYS = 29;
@@ -31,9 +33,8 @@ export function ProposeSwapModal({
     from: toIso(now()),
     to: toIso(addDays(startOfDay(now()), HORIZON_DAYS)),
   }));
-  const { data: tasks, isPending } = useTasks(group.id, range.from, range.to);
+  const { data: tasks, isPending, error, refetch } = useTasks(group.id, range.from, range.to);
   const propose = useProposeSwap(group.id);
-  const swapError = useSwapError();
   const candidates = tasks ? swapCandidates(tasks, me.id) : new Map<string, Task[]>();
 
   const choose = (requested: Task): void => {
@@ -56,7 +57,8 @@ export function ProposeSwapModal({
         <>
           <p className={styles.hint}>{t('swaps.proposeHint', { task: task.title })}</p>
           {isPending && <Spinner size={24} />}
-          {!isPending && candidates.size === 0 && <p className={styles.empty}>{t('swaps.none')}</p>}
+          {error && <LoadError error={error} onRetry={() => void refetch()} />}
+          {tasks && candidates.size === 0 && <p className={styles.empty}>{t('swaps.none')}</p>}
           {[...candidates].map(([assigneeId, options]) => {
             const member = membersById.get(assigneeId);
             if (!member) return null;
@@ -92,7 +94,7 @@ export function ProposeSwapModal({
               </section>
             );
           })}
-          {propose.error && <FormError>{swapError(propose.error)}</FormError>}
+          {propose.error && <FormError>{errorMessage(propose.error, t)}</FormError>}
         </>
       )}
     </Modal>

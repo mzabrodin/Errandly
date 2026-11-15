@@ -28,6 +28,7 @@ import {
   initialState,
   isRecurrenceType,
   RECURRENCE_TYPES,
+  SERVER_ERROR_FIELDS,
   serverFieldError,
   toTaskInput,
   validateForm,
@@ -153,21 +154,11 @@ function TaskForm({
       open
       onClose={onClose}
       title={isEdit ? t('taskForm.editTitle') : t('taskForm.createTitle')}
-      footer={
-        <>
-          <Button variant="secondary" onClick={onClose}>
-            {t('common.cancel')}
-          </Button>
-          <Button type="submit" form="task-form" loading={mutation.isPending}>
-            {isEdit ? t('common.save') : t('taskForm.submitCreate')}
-          </Button>
-        </>
-      }
+      footer={<FormFooter isEdit={isEdit} pending={mutation.isPending} onClose={onClose} />}
     >
       <form id="task-form" className={styles.form} onSubmit={submit} noValidate>
         {mutation.error &&
-          fieldError('title') === undefined &&
-          fieldError('dueAt') === undefined && (
+          SERVER_ERROR_FIELDS.every((field) => fieldError(field) === undefined) && (
             <FormError>{errorMessage(mutation.error, t)}</FormError>
           )}
 
@@ -177,6 +168,7 @@ function TaskForm({
           state={state}
           set={set}
           titleError={errors.title ?? fieldError('title')}
+          descriptionError={fieldError('description')}
         />
 
         <div className={styles.row}>
@@ -196,7 +188,12 @@ function TaskForm({
               />
             )}
           </Field>
-          <RepeatField state={state} set={set} disabled={recurrenceLocked} />
+          <RepeatField
+            state={state}
+            set={set}
+            disabled={recurrenceLocked}
+            error={fieldError('recurrence')}
+          />
         </div>
 
         {state.recurrenceType === 'weekly' && (
@@ -216,9 +213,35 @@ function TaskForm({
           onChange={(value) => set('difficulty', value)}
         />
 
-        <AssigneeField value={state.assigneeId} onChange={(value) => set('assigneeId', value)} />
+        <AssigneeField
+          value={state.assigneeId}
+          error={fieldError('assigneeId')}
+          onChange={(value) => set('assigneeId', value)}
+        />
       </form>
     </Modal>
+  );
+}
+
+function FormFooter({
+  isEdit,
+  pending,
+  onClose,
+}: {
+  isEdit: boolean;
+  pending: boolean;
+  onClose: () => void;
+}): JSX.Element {
+  const { t } = useTranslation();
+  return (
+    <>
+      <Button variant="secondary" onClick={onClose}>
+        {t('common.cancel')}
+      </Button>
+      <Button type="submit" form="task-form" loading={pending}>
+        {isEdit ? t('common.save') : t('taskForm.submitCreate')}
+      </Button>
+    </>
   );
 }
 
@@ -253,10 +276,12 @@ function TitleDescriptionFields({
   state,
   set,
   titleError,
+  descriptionError,
 }: {
   state: FormState;
   set: SetField;
   titleError: string | undefined;
+  descriptionError: string | undefined;
 }): JSX.Element {
   const { t } = useTranslation();
   return (
@@ -275,11 +300,12 @@ function TitleDescriptionFields({
         )}
       </Field>
 
-      <Field label={t('taskForm.description')}>
+      <Field label={t('taskForm.description')} error={descriptionError}>
         {(props) => (
           <Textarea
             {...props}
             rows={2}
+            maxLength={LIMITS.taskDescription}
             placeholder={t('taskForm.descriptionPlaceholder')}
             value={state.description}
             onChange={(event) => set('description', event.target.value)}
@@ -322,14 +348,16 @@ function RepeatField({
   state,
   set,
   disabled,
+  error,
 }: {
   state: FormState;
   set: SetField;
   disabled: boolean;
+  error: string | undefined;
 }): JSX.Element {
   const { t } = useTranslation();
   return (
-    <Field label={t('taskForm.repeat')}>
+    <Field label={t('taskForm.repeat')} error={error}>
       {(props) => (
         <Select
           {...props}
@@ -419,15 +447,21 @@ function DifficultyFieldset({
 
 function AssigneeField({
   value,
+  error,
   onChange,
 }: {
   value: string;
+  error: string | undefined;
   onChange: (value: string) => void;
 }): JSX.Element {
   const { t } = useTranslation();
   const { group } = useCurrentGroup();
   return (
-    <Field label={t('taskForm.assignee')} hint={value === '' ? t('taskForm.autoHint') : undefined}>
+    <Field
+      label={t('taskForm.assignee')}
+      hint={value === '' ? t('taskForm.autoHint') : undefined}
+      error={error}
+    >
       {(props) => (
         <Select {...props} value={value} onChange={(event) => onChange(event.target.value)}>
           <option value="">{t('taskForm.auto')}</option>
