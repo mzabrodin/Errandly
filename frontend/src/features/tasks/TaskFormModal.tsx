@@ -2,6 +2,7 @@ import { clsx } from 'clsx';
 import type { TFunction } from 'i18next';
 import { useState, type FormEvent, type JSX } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useLocation, useNavigate } from 'react-router';
 
 import { errorMessage } from '../../shared/api/errors';
 import { useCreateTask, useUpdateTask } from '../../shared/api/tasks';
@@ -14,6 +15,7 @@ import {
   zoneLabel,
 } from '../../shared/lib/dates';
 import { LIMITS } from '../../shared/lib/limits';
+import { taskPath } from '../../shared/lib/routes';
 import { toStringList } from '../../shared/lib/translationList';
 import { Button } from '../../shared/ui/Button';
 import { Field, FormError, Input, Select, Textarea } from '../../shared/ui/Field';
@@ -71,6 +73,9 @@ function useSaveTask(
   const { group, memberOf } = useCurrentGroup();
   const create = useCreateTask(group.id);
   const update = useUpdateTask(group.id);
+  const location = useLocation();
+  const backLink: unknown = location.state;
+  const navigate = useNavigate();
 
   const save = (state: FormState, scope: EditScope): void => {
     const input = toTaskInput(state);
@@ -78,9 +83,13 @@ function useSaveTask(
       update.mutate(
         { ...input, id: task.id, scope: task.recurrence.type !== 'once' ? scope : 'one' },
         {
-          onSuccess: () => {
+          onSuccess: (saved) => {
             toast(t('taskForm.saved'));
             onClose();
+            // A rebuilt series has new ids: follow the task page to the first new instance
+            if (saved.id !== task.id && location.pathname === taskPath(group.id, task.id)) {
+              void navigate(taskPath(group.id, saved.id), { replace: true, state: backLink });
+            }
           },
         },
       );
@@ -119,8 +128,8 @@ function TaskForm({
   const [minDue] = useState(() => toLocalInputValue(now()));
   const isEdit = task !== null;
   const recurring = task !== null && task.recurrence.type !== 'once';
-  // Recurrence can only be changed for the whole series
-  const recurrenceLocked = isEdit && (!recurring || scope === 'one');
+  // A series changes its recurrence only as a whole; a one-off task can become a series
+  const recurrenceLocked = recurring && scope === 'one';
 
   const set: SetField = (key, value) => setState((current) => ({ ...current, [key]: value }));
   const [weekdaysTouched, setWeekdaysTouched] = useState(false);
