@@ -6,3 +6,7 @@ export function appLink(appUrl: string, path: string, ...segments: string[]): st
   const tail = segments.map((segment) => `/${encodeURIComponent(segment)}`).join('');
   return `${base}${path}${tail}`;
 }
+
+export function taskLink(appUrl: string, task: { groupId: string; id: string }): string {
+  return appLink(appUrl, '/g', task.groupId, 'tasks', task.id);
+}

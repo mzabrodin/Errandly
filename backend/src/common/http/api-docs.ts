@@ -1,5 +1,5 @@
 import { applyDecorators } from '@nestjs/common';
-import { ApiCookieAuth, ApiDefaultResponse } from '@nestjs/swagger';
+import { ApiCookieAuth, ApiDefaultResponse, ApiProperty } from '@nestjs/swagger';
 
 import { ApiErrorDto } from '../errors/api-error.dto.js';
 
@@ -10,4 +10,13 @@ export function ApiErrorResponses(): ClassDecorator & MethodDecorator {
 
 export function ApiSession(): ClassDecorator & MethodDecorator {
   return applyDecorators(ApiCookieAuth(), ApiErrorResponses());
+}
+
+/** A named enum schema, so the frontend gets one shared type (e.g. `GroupRole`) */
+export function ApiEnum(
+  values: readonly string[],
+  name: string,
+  options: { required?: boolean } = {},
+): PropertyDecorator {
+  return ApiProperty({ enum: values, enumName: name, ...options });
 }

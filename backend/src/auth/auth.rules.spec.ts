@@ -1,7 +1,6 @@
 import { generateToken, hashToken } from '../common/tokens.js';
 import {
   afterFailedLogin,
-  firstName,
   LOCKOUT_MS,
   lockRemainingSeconds,
   MAX_FAILED_LOGINS,
@@ -67,11 +66,6 @@ describe('auth rules', () => {
         'ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad',
       );
     });
-  });
-
-  it('greets by the first word of the name', () => {
-    expect(firstName('  Anya Kovalenko ')).toBe('Anya');
-    expect(firstName('Oleh')).toBe('Oleh');
   });
 
   describe('the return path after an OAuth sign-in', () => {

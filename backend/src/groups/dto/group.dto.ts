@@ -1,4 +1,3 @@
-import { ApiProperty } from '@nestjs/swagger';
 import {
   IsEmail,
   IsIn,
@@ -10,6 +9,7 @@ import {
 } from 'class-validator';
 
 import { GROUP_ROLES, LIMITS, type GroupRole } from '../../common/domain.js';
+import { ApiEnum } from '../../common/http/api-docs.js';
 import { NormalizeEmail, Trim } from '../../common/validation/transforms.js';
 import { code } from '../../common/validation/validation.js';
 import { IsOnOrAfter } from '../../common/validation/validators.js';
@@ -20,7 +20,7 @@ export class GroupSummaryDto {
   id!: string;
   name!: string;
   /** The caller's role in the group */
-  @ApiProperty({ enum: GROUP_ROLES, enumName: 'GroupRole' })
+  @ApiEnum(GROUP_ROLES, 'GroupRole')
   role!: GroupRole;
   memberCount!: number;
 }
@@ -37,7 +37,7 @@ export class MemberDto {
   userId!: string;
   name!: string;
   email!: string;
-  @ApiProperty({ enum: GROUP_ROLES, enumName: 'GroupRole' })
+  @ApiEnum(GROUP_ROLES, 'GroupRole')
   role!: GroupRole;
   /** Hex colour of the member in the calendar */
   color!: string;
@@ -49,7 +49,7 @@ export class GroupDto {
   id!: string;
   name!: string;
   /** The caller's role in the group */
-  @ApiProperty({ enum: GROUP_ROLES, enumName: 'GroupRole' })
+  @ApiEnum(GROUP_ROLES, 'GroupRole')
   role!: GroupRole;
   members!: MemberDto[];
 }
@@ -63,7 +63,7 @@ export class CreateGroupDto {
 }
 
 export class UpdateMemberDto {
-  @ApiProperty({ enum: GROUP_ROLES, enumName: 'GroupRole' })
+  @ApiEnum(GROUP_ROLES, 'GroupRole')
   @IsIn(GROUP_ROLES, code('invalid'))
   role!: GroupRole;
 }

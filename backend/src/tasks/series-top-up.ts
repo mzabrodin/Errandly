@@ -3,6 +3,8 @@ import { ConfigService } from '@nestjs/config';
 import { Cron, CronExpression } from '@nestjs/schedule';
 
 import { Clock } from '../common/clock.js';
+import { ExclusiveRunner } from '../common/exclusive-runner.js';
+import { addMs } from '../common/time.js';
 import type { EnvironmentVariables } from '../config/env.validation.js';
 import { DATABASE, type Database } from '../db/database.js';
 import { TaskPlanner } from './task-planner.js';
@@ -13,8 +15,8 @@ import { HORIZON_MS } from './tasks.rules.js';
 @Injectable()
 export class SeriesTopUp implements OnApplicationBootstrap {
   private readonly logger = new Logger(SeriesTopUp.name);
+  private readonly runner = new ExclusiveRunner(this.logger, 'Series top-up');
   private readonly enabled: boolean;
-  private running = false;
 
   constructor(
     @Inject(DATABASE) private readonly db: Database,
@@ -31,22 +33,12 @@ export class SeriesTopUp implements OnApplicationBootstrap {
   }
 
   @Cron(CronExpression.EVERY_HOUR)
-  async tick(): Promise<void> {
-    if (!this.enabled || this.running) return;
-    this.running = true;
-    try {
-      await this.topUp();
-    } catch (error: unknown) {
-      this.logger.warn(
-        `Series top-up failed: ${error instanceof Error ? error.message : 'unknown error'}`,
-      );
-    } finally {
-      this.running = false;
-    }
+  tick(): Promise<void> {
+    return this.enabled ? this.runner.run(() => this.topUp()) : Promise.resolve();
   }
 
   async topUp(): Promise<number> {
-    const until = new Date(this.clock.now().getTime() + HORIZON_MS);
+    const until = addMs(this.clock.now(), HORIZON_MS);
     let created = 0;
     for (const series of await this.repository.seriesToTopUp(until)) {
       // oxlint-disable-next-line no-await-in-loop -- one series at a time keeps the transactions short

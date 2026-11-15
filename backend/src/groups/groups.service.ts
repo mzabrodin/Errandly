@@ -2,6 +2,7 @@ import { Inject, Injectable, type OnModuleInit } from '@nestjs/common';
 
 import type { GroupRole } from '../common/domain.js';
 import { DomainError } from '../common/errors/domain-error.js';
+import { requireFound } from '../common/errors/require-found.js';
 import { EventBus } from '../common/events/event-bus.js';
 import { DATABASE, type Database, type DbExecutor } from '../db/database.js';
 import { UsersApi } from '../users/index.js';
@@ -78,8 +79,7 @@ export class GroupsService implements OnModuleInit {
     await this.db.transaction(async (tx) => {
       await this.access.requireAdmin(groupId, actorId, tx);
       const members = await this.repository.membersOf(groupId, tx, { lock: true });
-      const target = members.find((member) => member.userId === userId);
-      if (!target) throw new DomainError('NOT_FOUND');
+      const target = requireFound(members.find((member) => member.userId === userId));
       assertCanChangeRole(members, target, role);
       if (target.role === role) return;
       await this.repository.updateRole(groupId, userId, role, tx);

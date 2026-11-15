@@ -5,7 +5,7 @@ import type { DbExecutor } from './database.js';
 import * as schema from './schema.js';
 
 /** Found in the schema, so a new table is never forgotten */
-export function allTables(): PgTable[] {
+function allTables(): PgTable[] {
   const tables: PgTable[] = [];
   for (const value of Object.values(schema)) {
     if (is(value, PgTable)) tables.push(value);

@@ -3,7 +3,7 @@ import { randomUUID } from 'node:crypto';
 import { API_PREFIX } from '../config/urls.js';
 
 export const AVATAR_CONTENT_TYPE = 'image/webp';
-export const AVATARS_PATH = `/${API_PREFIX}/avatars`;
+const AVATARS_PATH = `/${API_PREFIX}/avatars`;
 
 const AVATAR_KEY = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\.webp$/;
 

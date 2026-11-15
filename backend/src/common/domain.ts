@@ -115,3 +115,5 @@ export const LIMITS = {
 
 /** Recurring series materialise instances this many days ahead (FR-21) */
 export const HORIZON_DAYS = 28;
+/** FR-27: load is the difficulty done or due over the last 4 weeks */
+export const LOAD_WINDOW_DAYS = 28;

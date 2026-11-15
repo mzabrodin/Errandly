@@ -4,6 +4,7 @@ import {
   isAbsentOn,
   localDay,
   occurrences,
+  SWAP_TRANSITIONS,
   swapProblem,
   taskStatus,
   toRecurrence,
@@ -119,6 +120,16 @@ describe('isAbsentOn', () => {
 function swapTask(assigneeId: string, dueAt: string, completedAt: Date | null = null): SwapTask {
   return { assigneeId, completedAt, dueAt: new Date(dueAt), series: { timezone: KYIV } };
 }
+
+describe('SWAP_TRANSITIONS', () => {
+  it('decides a pending swap once; a repeat is harmless and a change of mind is stale', () => {
+    expect(SWAP_TRANSITIONS.decide('pending', 'accepted')).toBe('apply');
+    expect(SWAP_TRANSITIONS.decide('pending', 'cancelled')).toBe('apply');
+    expect(SWAP_TRANSITIONS.decide('accepted', 'accepted')).toBe('same');
+    expect(SWAP_TRANSITIONS.decide('declined', 'accepted')).toBe('invalid');
+    expect(SWAP_TRANSITIONS.decide('accepted', 'pending')).toBe('invalid');
+  });
+});
 
 describe('swapProblem', () => {
   const now = new Date('2026-11-14T10:00:00Z');

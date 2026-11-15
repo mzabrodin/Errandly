@@ -1,7 +1,7 @@
-import { ApiProperty } from '@nestjs/swagger';
 import { IsEmail, IsIn, IsNotEmpty, IsOptional, IsString, MaxLength } from 'class-validator';
 
 import { LIMITS, LOCALES, type Locale } from '../../common/domain.js';
+import { ApiEnum } from '../../common/http/api-docs.js';
 import { NormalizeEmail, Trim } from '../../common/validation/transforms.js';
 import { code } from '../../common/validation/validation.js';
 import { IsPassword, IsTimeZone } from '../../common/validation/validators.js';
@@ -23,7 +23,7 @@ export class RegisterDto {
   password!: string;
 
   /** Current UI language; becomes the account language */
-  @ApiProperty({ enum: LOCALES, enumName: 'Locale', required: false })
+  @ApiEnum(LOCALES, 'Locale', { required: false })
   @IsOptional()
   @IsIn(LOCALES, code('invalid'))
   locale?: Locale;
@@ -75,7 +75,7 @@ export class OAuthQueryDto {
   next?: string;
 
   /** Current UI language; the language of an account created now */
-  @ApiProperty({ enum: LOCALES, enumName: 'Locale', required: false })
+  @ApiEnum(LOCALES, 'Locale', { required: false })
   @IsOptional()
   @IsIn(LOCALES, code('invalid'))
   locale?: Locale;

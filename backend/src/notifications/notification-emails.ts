@@ -5,14 +5,15 @@ import { Clock } from '../common/clock.js';
 import { DEFAULT_NOTIFICATION_PREFERENCES, type NotificationEvent } from '../common/domain.js';
 import type { DomainEventMap } from '../common/events/domain-events.js';
 import { EventBus } from '../common/events/event-bus.js';
+import { firstName } from '../common/names.js';
 import type { EnvironmentVariables } from '../config/env.validation.js';
-import { appLink } from '../config/urls.js';
+import { appLink, taskLink } from '../config/urls.js';
 import { GroupsApi } from '../groups/index.js';
 import { MailService, type MailData } from '../mail/index.js';
-import { TasksApi, type TaskView } from '../tasks/index.js';
+import { TasksApi } from '../tasks/index.js';
 import { UsersApi, type UserDto } from '../users/index.js';
 import { NotificationsRepository } from './notifications.repository.js';
-import { firstName, reminderMinutesOption, summarizeWeek } from './notifications.rules.js';
+import { reminderMinutesOption, summarizeWeek } from './notifications.rules.js';
 
 const MAX_DIGEST_TASKS = 50;
 
@@ -113,7 +114,7 @@ export class NotificationEmails implements OnModuleInit {
         title: task.title,
         dueAt: task.dueAt.toISOString(),
         difficulty: task.difficulty,
-        url: this.taskUrl(task),
+        url: taskLink(this.appUrl, task),
       }));
       return [{ name, done: group.done, overdue: group.overdue, tasks: upcoming }];
     });
@@ -155,7 +156,7 @@ export class NotificationEmails implements OnModuleInit {
         taskTitle: task.title,
         dueAt: task.dueAt.toISOString(),
         difficulty: task.difficulty,
-        url: this.taskUrl(task),
+        url: taskLink(this.appUrl, task),
         settingsUrl: appLink(this.appUrl, '/settings'),
         timezone: user.timezone,
       },
@@ -166,9 +167,5 @@ export class NotificationEmails implements OnModuleInit {
     return (
       (await this.repository.emailEnabled(userId, event)) ?? DEFAULT_NOTIFICATION_PREFERENCES[event]
     );
-  }
-
-  private taskUrl(task: TaskView): string {
-    return appLink(this.appUrl, `/g/${task.groupId}/tasks/${task.id}`);
   }
 }

@@ -2,6 +2,7 @@ import { ApiProperty } from '@nestjs/swagger';
 import { IsBoolean, IsIn, IsNotEmpty, IsOptional, IsString, MaxLength } from 'class-validator';
 
 import { LIMITS, LOCALES, type Locale } from '../../common/domain.js';
+import { ApiEnum } from '../../common/http/api-docs.js';
 import { Trim } from '../../common/validation/transforms.js';
 import { code } from '../../common/validation/validation.js';
 import { IsTimeZone } from '../../common/validation/validators.js';
@@ -24,7 +25,7 @@ export class UpdateProfileDto {
   @IsBoolean(code('type'))
   timezoneAuto?: boolean;
 
-  @ApiProperty({ enum: LOCALES, enumName: 'Locale', required: false })
+  @ApiEnum(LOCALES, 'Locale', { required: false })
   @IsOptional()
   @IsIn(LOCALES, code('invalid'))
   locale?: Locale;

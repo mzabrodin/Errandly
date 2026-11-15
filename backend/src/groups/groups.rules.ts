@@ -1,8 +1,9 @@
 import { MEMBER_COLORS, memberColor, type GroupRole } from '../common/domain.js';
 import { DomainError } from '../common/errors/domain-error.js';
+import { DAY_MS } from '../common/time.js';
 
 /** NFR-SEC-08, SYS-24: an invite link works for 7 days (any number of times) */
-export const INVITE_TTL_MS = 7 * 24 * 60 * 60 * 1000;
+export const INVITE_TTL_MS = 7 * DAY_MS;
 
 export interface Member {
   userId: string;

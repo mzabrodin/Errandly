@@ -2,8 +2,9 @@ import { SetMetadata, type ExecutionContext } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import type { ThrottlerModuleOptions } from '@nestjs/throttler';
 
+import { MINUTE_MS } from '../time.js';
+
 const STRICT_RATE_LIMIT_KEY = 'errandly:strictRateLimit';
-const MINUTE_MS = 60 * 1000;
 const reflector = new Reflector();
 
 /** For routes that guess at secrets or send emails (NFR-SEC-07) */

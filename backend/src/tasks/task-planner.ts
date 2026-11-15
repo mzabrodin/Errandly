@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 
 import { EventBus } from '../common/events/event-bus.js';
+import { addMs } from '../common/time.js';
 import type { DbExecutor } from '../db/database.js';
 import { GroupsApi } from '../groups/index.js';
 import { UsersApi } from '../users/index.js';
@@ -83,15 +84,38 @@ export class TaskPlanner {
       await this.repository.updateTask(task.id, { assigneeId, manuallyAssigned: false }, tx);
       if (assigneeId === task.assigneeId) continue;
       // oxlint-disable-next-line no-await-in-loop -- see above
-      await this.bus.publish(tx, 'task.assigned', {
-        taskId: task.id,
-        groupId,
-        assigneeId,
-        previousAssigneeId: task.assigneeId,
-        actorId: null,
-        bulk: false,
-      });
+      await this.announce(task, assigneeId, null, tx);
     }
+  }
+
+  /** FR-30: a hand-picked assignee is never overwritten by the automatic rotation */
+  async assignManually(
+    task: Pick<TaskRow, 'id' | 'groupId' | 'assigneeId'>,
+    assigneeId: string,
+    actorId: string,
+    tx: DbExecutor,
+  ): Promise<void> {
+    const { assigneeId: previous } = task;
+    await this.repository.updateTask(task.id, { assigneeId, manuallyAssigned: true }, tx);
+    if (assigneeId !== previous) {
+      await this.announce({ ...task, assigneeId: previous }, assigneeId, actorId, tx);
+    }
+  }
+
+  private announce(
+    task: Pick<TaskRow, 'id' | 'groupId' | 'assigneeId'>,
+    assigneeId: string | null,
+    actorId: string | null,
+    tx: DbExecutor,
+  ): Promise<void> {
+    return this.bus.publish(tx, 'task.assigned', {
+      taskId: task.id,
+      groupId: task.groupId,
+      assigneeId,
+      previousAssigneeId: task.assigneeId,
+      actorId,
+      bulk: false,
+    });
   }
 
   async isMember(groupId: string, userId: string, tx: DbExecutor): Promise<boolean> {
@@ -109,7 +133,7 @@ export class TaskPlanner {
     const candidates = await this.candidates(groupId, tx);
     const history = await this.repository.assignmentHistory(
       groupId,
-      new Date(from.getTime() - LOAD_WINDOW_MS),
+      addMs(from, -LOAD_WINDOW_MS),
       to,
       tx,
     );

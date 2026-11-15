@@ -3,6 +3,7 @@ import { Inject, Injectable } from '@nestjs/common';
 import { Clock } from '../common/clock.js';
 import { DEFAULT_LOCALE } from '../common/domain.js';
 import { DomainError } from '../common/errors/domain-error.js';
+import { requireFound } from '../common/errors/require-found.js';
 import { EventBus } from '../common/events/event-bus.js';
 import type { RequestUser } from '../common/http/auth.js';
 import { hashToken } from '../common/tokens.js';
@@ -37,9 +38,7 @@ export class AuthService {
   ) {}
 
   async me(userId: string): Promise<UserDto> {
-    const user = await this.users.findById(userId);
-    if (!user) throw new DomainError('UNAUTHENTICATED');
-    return user;
+    return requireFound(await this.users.findById(userId), 'UNAUTHENTICATED');
   }
 
   /** Creates the account and signs it in; the verification email follows after commit */

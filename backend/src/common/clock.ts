@@ -1,5 +1,7 @@
 import { Injectable } from '@nestjs/common';
 
+import { addMs } from './time.js';
+
 export abstract class Clock {
   abstract now(): Date;
 }
@@ -28,6 +30,6 @@ export class FixedClock extends Clock {
   }
 
   advance(milliseconds: number): void {
-    this.current = new Date(this.current.getTime() + milliseconds);
+    this.current = addMs(this.current, milliseconds);
   }
 }

@@ -3,6 +3,7 @@ import { ConfigService } from '@nestjs/config';
 
 import { Clock } from '../common/clock.js';
 import { TokenCipher } from '../common/crypto/token-cipher.js';
+import { errorMessage } from '../common/errors/error-message.js';
 import { EventBus } from '../common/events/event-bus.js';
 import type { EnvironmentVariables } from '../config/env.validation.js';
 import { DATABASE, type Database, type DbExecutor } from '../db/database.js';
@@ -14,12 +15,19 @@ import type { CalendarConnectionRow } from './calendar.schema.js';
 import { CalendarAccessRevoked, type CalendarAccess } from './gateways/calendar-gateway.js';
 import { CalendarGateways } from './gateways/calendar-gateways.js';
 
+/** A paused or closed connection is left alone until the user resumes it */
+function isActive(
+  connection: CalendarConnectionRow | undefined,
+): connection is CalendarConnectionRow {
+  return connection !== undefined && connection.syncStatus !== 'paused';
+}
+
 class ConnectionFailure extends Error {
   constructor(
     readonly connection: CalendarConnectionRow,
     override readonly cause: unknown,
   ) {
-    super(cause instanceof Error ? cause.message : String(cause));
+    super(errorMessage(cause));
   }
 }
 
@@ -99,7 +107,7 @@ export class CalendarSync implements OnModuleInit {
   async deleteEvent(connectionId: string, externalEventId: string): Promise<void> {
     const connection = await this.repository.findById(connectionId);
     // A closed connection took its whole calendar with it
-    if (!connection || connection.syncStatus === 'paused') return;
+    if (!isActive(connection)) return;
     await this.guard(async () => {
       await this.call(connection, (access, gateway) =>
         gateway.deleteEvent(access, externalEventId),
@@ -110,7 +118,7 @@ export class CalendarSync implements OnModuleInit {
 
   async resync(userId: string): Promise<void> {
     const connection = await this.repository.findByUser(userId);
-    if (!connection || connection.syncStatus === 'paused') return;
+    if (!isActive(connection)) return;
     const upcoming = await this.tasks.assignedTo(userId, this.clock.now());
     const linked = await this.repository.linksOfConnection(connection.id);
     const taskIds = new Set([...upcoming.map((task) => task.id), ...linked.map((l) => l.taskId)]);
@@ -119,7 +127,7 @@ export class CalendarSync implements OnModuleInit {
       await this.syncTask(taskId);
     }
     const current = await this.repository.findById(connection.id);
-    if (!current || current.syncStatus === 'paused') return;
+    if (!isActive(current)) return;
     await this.guard(async () => {
       const remote = await this.call(current, (access, gateway) => gateway.listEventIds(access));
       // Every event in this calendar is Errandly's, so unlinked ones are leftovers (FR-36)
@@ -141,7 +149,7 @@ export class CalendarSync implements OnModuleInit {
     tx: DbExecutor,
   ): Promise<void> {
     const connection = await this.repository.findById(connectionId, tx);
-    if (!connection || connection.syncStatus === 'paused') return;
+    if (!isActive(connection)) return;
     await this.call(connection, (access, gateway) => gateway.deleteEvent(access, externalEventId));
     await this.repository.deleteLink(connectionId, taskId, tx);
     await this.repository.markSynced(connectionId, this.clock.now(), tx);

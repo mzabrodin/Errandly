@@ -2,7 +2,13 @@
 // the same people, groups and chores, so switching VITE_USE_MOCKS off shows a familiar picture
 import { createHash, randomUUID } from 'node:crypto';
 
-import { HORIZON_DAYS, memberColor, type RecurrenceType } from '../common/domain.js';
+import {
+  HORIZON_DAYS,
+  LOAD_WINDOW_DAYS,
+  memberColor,
+  type RecurrenceType,
+} from '../common/domain.js';
+import { addMs, DAY_MS, HOUR_MS } from '../common/time.js';
 import type {
   absences,
   groups,
@@ -17,7 +23,6 @@ import type {
 
 export const DEMO_PASSWORD = 'Pass1234';
 
-const DAY_MS = 24 * 60 * 60 * 1000;
 const HISTORY_DAYS = 14;
 
 export interface SeedData {
@@ -78,7 +83,7 @@ export function occurrences(spec: SeriesSpec, first: Date, until: Date): Date[] 
               first.getUTCHours(),
             ),
           )
-        : new Date(first.getTime() + step * DAY_MS);
+        : addMs(first, step * DAY_MS);
     if (due > until) break;
     if (spec.recurrence !== 'weekly' || spec.weekdays.includes(isoWeekday(due))) result.push(due);
   }
@@ -173,7 +178,7 @@ function pickAssignee(
   assigned: SeedTask[],
   dueAt: Date,
 ): string | null {
-  const windowStart = dueAt.getTime() - HORIZON_DAYS * DAY_MS;
+  const windowStart = dueAt.getTime() - LOAD_WINDOW_DAYS * DAY_MS;
   const load = (userId: string): number =>
     assigned
       .filter(
@@ -195,7 +200,7 @@ function buildTasks(
   members: Member[],
   absent: (userId: string, day: string) => boolean,
 ): { series: NewTaskSeriesRow[]; tasks: SeedTask[] } {
-  const until = new Date(now.getTime() + HORIZON_DAYS * DAY_MS);
+  const until = addMs(now, HORIZON_DAYS * DAY_MS);
   const series: NewTaskSeriesRow[] = [];
   const pending: SeedTask[] = [];
 
@@ -240,7 +245,7 @@ function buildTasks(
     tasks.push({
       ...row,
       assigneeId,
-      completedAt: completed ? new Date(row.dueAt.getTime() - 60 * 60 * 1000) : null,
+      completedAt: completed ? addMs(row.dueAt, -HOUR_MS) : null,
       completedBy: completed ? assigneeId : null,
     });
   }
@@ -253,7 +258,7 @@ function buildNotifications(
   group: { id: string; name: string },
   tasks: SeedTask[],
 ): NewNotificationRow[] {
-  const hoursAgo = (hours: number): Date => new Date(now.getTime() - hours * 60 * 60 * 1000);
+  const hoursAgo = (hours: number): Date => addMs(now, -hours * HOUR_MS);
   const nextTask = tasks.find((task) => task.assigneeId === userId && task.dueAt > now);
   const base = { userId, groupId: group.id };
   return [

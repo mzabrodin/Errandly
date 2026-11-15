@@ -14,6 +14,7 @@ import { Injectable, Logger, type OnModuleDestroy, type OnModuleInit } from '@ne
 import { ConfigService } from '@nestjs/config';
 
 import type { EnvironmentVariables } from '../../config/env.validation.js';
+import { errorMessage } from '../errors/error-message.js';
 import { ObjectStorage, type StoredObject } from './object-storage.js';
 
 @Injectable()
@@ -44,8 +45,9 @@ export class S3ObjectStorage extends ObjectStorage implements OnModuleInit, OnMo
     try {
       await this.ensureBucket();
     } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : String(error);
-      this.logger.error(`Object storage is not reachable (bucket ${this.bucket}): ${message}`);
+      this.logger.error(
+        `Object storage is not reachable (bucket ${this.bucket}): ${errorMessage(error)}`,
+      );
     }
   }
 

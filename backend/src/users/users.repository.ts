@@ -4,6 +4,7 @@ import { eq, inArray } from 'drizzle-orm';
 import { isUniqueViolation } from '../common/errors/api-exception.filter.js';
 import { DomainError } from '../common/errors/domain-error.js';
 import { DATABASE, type Database, type DbExecutor } from '../db/database.js';
+import { insertedRow } from '../db/inserted-row.js';
 import { users, type NewUserRow, type UserRow } from './users.schema.js';
 
 export type UserChanges = Partial<
@@ -50,9 +51,7 @@ export class UsersRepository {
   /** EMAIL_TAKEN also when a concurrent sign-up won the race */
   async insert(values: NewUserRow, db: DbExecutor = this.db): Promise<UserRow> {
     try {
-      const [row] = await db.insert(users).values(values).returning();
-      if (!row) throw new Error('INSERT … RETURNING returned no row');
-      return row;
+      return insertedRow(await db.insert(users).values(values).returning());
     } catch (error: unknown) {
       if (isUniqueViolation(error, 'users_email_key')) throw new DomainError('EMAIL_TAKEN');
       throw error;

@@ -1,6 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
 
-import { DomainError } from '../common/errors/domain-error.js';
+import { requireFound } from '../common/errors/require-found.js';
 import { EventBus } from '../common/events/event-bus.js';
 import { DATABASE, type Database } from '../db/database.js';
 import type { UpdateProfileDto } from './dto/profile.dto.js';
@@ -28,8 +28,7 @@ export class UsersService {
       Object.keys(patch).length > 0
         ? await this.users.update(userId, patch)
         : await this.users.findById(userId);
-    if (!row) throw new DomainError('UNAUTHENTICATED');
-    return toUserDto(row);
+    return toUserDto(requireFound(row, 'UNAUTHENTICATED'));
   }
 
   /** `user.deleted` listeners run in this transaction and can veto it (groups: LAST_ADMIN) */

@@ -1,6 +1,7 @@
 import type { TokenCipher } from '../../common/crypto/token-cipher.js';
+import { MINUTE_MS } from '../../common/time.js';
 
-export const STATE_TTL_MS = 10 * 60 * 1000;
+export const STATE_TTL_MS = 10 * MINUTE_MS;
 
 interface StatePayload {
   userId: string;

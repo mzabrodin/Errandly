@@ -4,6 +4,7 @@ import { ConfigService } from '@nestjs/config';
 import { Clock } from '../common/clock.js';
 import { DomainError } from '../common/errors/domain-error.js';
 import { EventBus } from '../common/events/event-bus.js';
+import { addMs } from '../common/time.js';
 import { generateToken, hashToken } from '../common/tokens.js';
 import type { EnvironmentVariables } from '../config/env.validation.js';
 import { appLink } from '../config/urls.js';
@@ -36,7 +37,7 @@ export class InvitesService {
   /** An admin creates a link; with `email` the recipient also gets their own link by email */
   async create(groupId: string, actorId: string, email?: string): Promise<InviteDto> {
     const token = generateToken();
-    const expiresAt = new Date(this.clock.now().getTime() + INVITE_TTL_MS);
+    const expiresAt = addMs(this.clock.now(), INVITE_TTL_MS);
     await this.db.transaction(async (tx) => {
       await this.access.requireAdmin(groupId, actorId, tx);
       await this.repository.insertInvite(
