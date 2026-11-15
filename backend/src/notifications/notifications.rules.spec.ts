@@ -4,6 +4,7 @@ import {
   assignmentRecipients,
   digestWeek,
   isDueSoon,
+  purgeCutoffs,
   reminderMinutesOption,
   summarizeWeek,
 } from './notifications.rules.js';
@@ -36,6 +37,17 @@ function task(overrides: Partial<TaskView>): TaskView {
     ...overrides,
   };
 }
+
+describe('purgeCutoffs', () => {
+  it('keeps read notifications 30 days, any 90, reminder records 7 and digest records 4 weeks', () => {
+    expect(purgeCutoffs(new Date('2026-11-15T03:00:00Z'))).toEqual({
+      readBefore: new Date('2026-10-16T03:00:00Z'),
+      before: new Date('2026-08-17T03:00:00Z'),
+      remindersBefore: new Date('2026-11-08T03:00:00Z'),
+      digestsBefore: '2026-10-18',
+    });
+  });
+});
 
 describe('assignmentRecipients', () => {
   it('tells the new and the previous assignee, but not whoever did it', () => {

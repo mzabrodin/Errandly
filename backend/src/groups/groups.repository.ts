@@ -1,9 +1,10 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { and, asc, count, eq, inArray, isNull, type SQL } from 'drizzle-orm';
+import { and, asc, count, eq, inArray, isNull, lt, or, type SQL } from 'drizzle-orm';
 
 import type { GroupRole } from '../common/domain.js';
 import { DATABASE, type Database, type DbExecutor } from '../db/database.js';
 import { insertedRow } from '../db/inserted-row.js';
+import type { PurgeCutoffs } from './groups.rules.js';
 import {
   absences,
   groups,
@@ -183,6 +184,15 @@ export class GroupsRepository {
       .from(absences)
       .where(eq(absences.groupId, groupId))
       .orderBy(asc(absences.startsOn), asc(absences.id));
+  }
+
+  async purge(cutoffs: PurgeCutoffs, db: DbExecutor = this.db): Promise<Record<string, number>> {
+    const { invitesBefore, absencesEndedBefore } = cutoffs;
+    const deadInvites = await db
+      .delete(invites)
+      .where(or(lt(invites.expiresAt, invitesBefore), lt(invites.revokedAt, invitesBefore)));
+    const pastAbsences = await db.delete(absences).where(lt(absences.endsOn, absencesEndedBefore));
+    return { invites: deadInvites.rowCount ?? 0, absences: pastAbsences.rowCount ?? 0 };
   }
 
   async insertAbsence(

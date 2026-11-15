@@ -1,5 +1,6 @@
-import { Module } from '@nestjs/common';
+import { Module, type OnModuleInit } from '@nestjs/common';
 
+import { DataRetention } from '../common/retention.js';
 import { MailModule } from '../mail/index.js';
 import { UsersModule } from '../users/index.js';
 import { AbsencesController } from './absences.controller.js';
@@ -7,6 +8,7 @@ import { AbsencesService } from './absences.service.js';
 import { GroupsApi } from './groups.api.js';
 import { GroupsController } from './groups.controller.js';
 import { GroupsRepository } from './groups.repository.js';
+import { purgeCutoffs } from './groups.rules.js';
 import { GroupsService } from './groups.service.js';
 import { InviteEmails } from './invite-emails.js';
 import { InvitesController } from './invites.controller.js';
@@ -25,4 +27,13 @@ import { InvitesService } from './invites.service.js';
   ],
   exports: [GroupsApi],
 })
-export class GroupsModule {}
+export class GroupsModule implements OnModuleInit {
+  constructor(
+    private readonly retention: DataRetention,
+    private readonly repository: GroupsRepository,
+  ) {}
+
+  onModuleInit(): void {
+    this.retention.register('groups', (now) => this.repository.purge(purgeCutoffs(now)));
+  }
+}

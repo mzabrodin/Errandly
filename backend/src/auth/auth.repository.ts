@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { and, eq, gt, isNull, ne, sql } from 'drizzle-orm';
+import { and, eq, gt, isNotNull, isNull, lt, ne, or, sql } from 'drizzle-orm';
 
 import type { AuthProvider, EmailTokenPurpose } from '../common/domain.js';
 import { DATABASE, type Database, type DbExecutor } from '../db/database.js';
@@ -60,6 +60,15 @@ export class AuthRepository {
       .update(passwordCredentials)
       .set(attempts)
       .where(eq(passwordCredentials.userId, userId));
+  }
+
+  /** Expired sessions, and email links that were used or expired: none of them works any more */
+  async purge(now: Date, db: DbExecutor = this.db): Promise<Record<string, number>> {
+    const expiredSessions = await db.delete(sessions).where(lt(sessions.expiresAt, now));
+    const deadLinks = await db
+      .delete(emailTokens)
+      .where(or(isNotNull(emailTokens.usedAt), lt(emailTokens.expiresAt, now)));
+    return { sessions: expiredSessions.rowCount ?? 0, email_tokens: deadLinks.rowCount ?? 0 };
   }
 
   /** Atomic, so parallel wrong passwords all count (FR-06) */

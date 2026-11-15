@@ -23,6 +23,12 @@ package "Спільне ядро" {
     +complete(id, at)
     +fail(id, …)
     +countOverdue(before)
+    +release(ids, at)
+    +purge(now)
+  }
+  class DataRetention {
+    +register(owner, purge)
+    +purge()
   }
   abstract class Clock {
     +now()
@@ -74,6 +80,7 @@ class MailService {
 EventBus ..> EventPublicationStore
 EventDispatcher ..> EventPublicationStore
 EventDispatcher ..> EventBus
+DataRetention ..> Clock
 ApiExceptionFilter ..> DomainError
 MailService ..> MailTransport
 SystemClock -up-|> Clock

@@ -1,9 +1,21 @@
 import { MEMBER_COLORS, memberColor, type GroupRole } from '../common/domain.js';
 import { DomainError } from '../common/errors/domain-error.js';
-import { DAY_MS } from '../common/time.js';
+import { addMs, DAY_MS } from '../common/time.js';
 
 /** NFR-SEC-08, SYS-24: an invite link works for 7 days (any number of times) */
 export const INVITE_TTL_MS = 7 * DAY_MS;
+export interface PurgeCutoffs {
+  /** Invites expired or revoked before it: until then they still answer "invalid" (FR-13) */
+  invitesBefore: Date;
+  /** Absences that ended before this day (yyyy-mm-dd): they no longer affect any assignment */
+  absencesEndedBefore: string;
+}
+
+/** NFR-LEG-01: both are deleted 30 days after they stop mattering */
+export function purgeCutoffs(now: Date): PurgeCutoffs {
+  const cutoff = addMs(now, -30 * DAY_MS);
+  return { invitesBefore: cutoff, absencesEndedBefore: cutoff.toISOString().slice(0, 10) };
+}
 
 export interface Member {
   userId: string;

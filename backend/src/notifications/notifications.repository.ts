@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { and, desc, eq, inArray, isNull, sql, type SQL } from 'drizzle-orm';
+import { and, desc, eq, inArray, isNotNull, isNull, lt, or, sql, type SQL } from 'drizzle-orm';
 
 import {
   DEFAULT_EMAIL_REMINDER_MINUTES,
@@ -9,6 +9,7 @@ import {
   type ReminderKind,
 } from '../common/domain.js';
 import { DATABASE, type Database, type DbExecutor } from '../db/database.js';
+import type { PurgeCutoffs } from './notifications.rules.js';
 import {
   notificationPreferences,
   notifications,
@@ -225,5 +226,27 @@ export class NotificationsRepository {
       .onConflictDoNothing()
       .returning({ userId: weeklyDigests.userId });
     return rows.length > 0;
+  }
+
+  async purge(cutoffs: PurgeCutoffs, db: DbExecutor = this.db): Promise<Record<string, number>> {
+    const feed = await db
+      .delete(notifications)
+      .where(
+        or(
+          lt(notifications.createdAt, cutoffs.before),
+          and(isNotNull(notifications.readAt), lt(notifications.createdAt, cutoffs.readBefore)),
+        ),
+      );
+    const reminders = await db
+      .delete(taskReminders)
+      .where(lt(taskReminders.dueAt, cutoffs.remindersBefore));
+    const digests = await db
+      .delete(weeklyDigests)
+      .where(lt(weeklyDigests.weekStart, cutoffs.digestsBefore));
+    return {
+      notifications: feed.rowCount ?? 0,
+      task_reminders: reminders.rowCount ?? 0,
+      weekly_digests: digests.rowCount ?? 0,
+    };
   }
 }
