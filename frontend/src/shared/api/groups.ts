@@ -7,6 +7,9 @@ import {
 } from '@tanstack/react-query';
 
 import { api, unwrap } from './client';
+import { useInvalidatingMutation } from './mutation';
+import { statsKeys } from './stats';
+import { taskKeys } from './tasks';
 import type { Group, GroupRole, GroupSummary, Invite, InviteInfo } from './types';
 
 export const groupKeys = {
@@ -72,15 +75,11 @@ function useGroupMutation<TInput>(
   groupId: string,
   request: (input: TInput) => Promise<unknown>,
 ): UseMutationResult<unknown, Error, TInput> {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: request,
-    onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: groupKeys.all });
-      void queryClient.invalidateQueries({ queryKey: ['tasks', groupId] });
-      void queryClient.invalidateQueries({ queryKey: ['stats', groupId] });
-    },
-  });
+  return useInvalidatingMutation(request, [
+    groupKeys.all,
+    taskKeys.group(groupId),
+    statsKeys.group(groupId),
+  ]);
 }
 
 export function useRemoveMember(groupId: string): UseMutationResult<unknown, Error, string> {

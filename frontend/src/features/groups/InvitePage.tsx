@@ -6,6 +6,7 @@ import { useResendVerification, useSession } from '../../shared/api/auth';
 import { errorMessage, isApiError } from '../../shared/api/errors';
 import { useAcceptInvite, useInviteInfo } from '../../shared/api/groups';
 import { forgetInvite, rememberInvite } from '../../shared/lib/pendingInvite';
+import { groupPath } from '../../shared/lib/routes';
 import { useDocumentTitle } from '../../shared/lib/useDocumentTitle';
 import { Button, ButtonLink } from '../../shared/ui/Button';
 import { FormError } from '../../shared/ui/Field';
@@ -52,7 +53,7 @@ export function InvitePage(): JSX.Element {
   }
 
   // Already a member: just open the group, no duplicate (FR-14)
-  if (info.data.alreadyMember) return <Navigate to={`/g/${info.data.groupId}/tasks`} replace />;
+  if (info.data.alreadyMember) return <Navigate to={groupPath(info.data.groupId)} replace />;
 
   return (
     <div className={styles.card}>
@@ -99,7 +100,7 @@ export function InvitePage(): JSX.Element {
                 onSuccess: ({ groupId }) => {
                   forgetInvite();
                   toast(t('invite.joined', { group: info.data.groupName }));
-                  void navigate(`/g/${groupId}/tasks`, { replace: true });
+                  void navigate(groupPath(groupId), { replace: true });
                 },
               })
             }

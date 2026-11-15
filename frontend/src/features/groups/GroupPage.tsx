@@ -24,10 +24,10 @@ import { formatShortDate, toDateInputValue } from '../../shared/lib/dates';
 import { Avatar } from '../../shared/ui/Avatar';
 import { Button } from '../../shared/ui/Button';
 import { Card } from '../../shared/ui/Card';
+import { ConfirmModal } from '../../shared/ui/ConfirmModal';
 import { Cloud } from '../../shared/ui/Decor';
 import { Field, FormError, Input } from '../../shared/ui/Field';
 import { Menu, MenuItem, MenuSeparator } from '../../shared/ui/Menu';
-import { Modal } from '../../shared/ui/Modal';
 import { PageHeader } from '../../shared/ui/PageHeader';
 import { Pill } from '../../shared/ui/Pill';
 import { useToast } from '../../shared/ui/Toast';
@@ -227,6 +227,18 @@ export function GroupPage(): JSX.Element {
       { replace: true },
     );
 
+  const toggleAdmin = (member: Member): void => {
+    const revoking = member.role === 'admin';
+    setRole.mutate(
+      { userId: member.userId, role: revoking ? 'member' : 'admin' },
+      {
+        onSuccess: () =>
+          toast(t(revoking ? 'groups.adminRevoked' : 'groups.adminGranted', { name: member.name })),
+        onError: (roleError) => toast(errorMessage(roleError, t), 'error'),
+      },
+    );
+  };
+
   return (
     <>
       <PageHeader
@@ -250,30 +262,7 @@ export function GroupPage(): JSX.Element {
                 key={member.userId}
                 member={member}
                 onRemove={isAdmin ? () => setRemoving(member) : undefined}
-                onToggleAdmin={
-                  isAdmin
-                    ? () =>
-                        setRole.mutate(
-                          {
-                            userId: member.userId,
-                            role: member.role === 'admin' ? 'member' : 'admin',
-                          },
-                          {
-                            onSuccess: () =>
-                              toast(
-                                member.role === 'admin'
-                                  ? t('groups.adminRevoked', {
-                                      name: member.name,
-                                    })
-                                  : t('groups.adminGranted', {
-                                      name: member.name,
-                                    }),
-                              ),
-                            onError: (roleError) => toast(errorMessage(roleError, t), 'error'),
-                          },
-                        )
-                    : undefined
-                }
+                onToggleAdmin={isAdmin ? () => toggleAdmin(member) : undefined}
               />
             ))}
           </ul>
@@ -310,37 +299,25 @@ function RemoveMemberModal({
   const removeMember = useRemoveMember(group.id);
 
   return (
-    <Modal
-      size="sm"
+    <ConfirmModal
       open={removing !== null}
       onClose={onClose}
       title={t('groups.removeTitle', { name: removing?.name })}
-      footer={
-        <>
-          <Button variant="secondary" onClick={onClose}>
-            {t('common.cancel')}
-          </Button>
-          <Button
-            variant="danger"
-            loading={removeMember.isPending}
-            onClick={() =>
-              removing &&
-              removeMember.mutate(removing.userId, {
-                onSuccess: () => {
-                  toast(t('groups.removed', { name: removing.name }));
-                  onClose();
-                },
-              })
-            }
-          >
-            {t('common.delete')}
-          </Button>
-        </>
+      confirmLabel={t('common.delete')}
+      pending={removeMember.isPending}
+      error={removeMember.error ? errorMessage(removeMember.error, t) : null}
+      onConfirm={() =>
+        removing &&
+        removeMember.mutate(removing.userId, {
+          onSuccess: () => {
+            toast(t('groups.removed', { name: removing.name }));
+            onClose();
+          },
+        })
       }
     >
       <p>{t('groups.removeText')}</p>
-      {removeMember.error && <FormError>{errorMessage(removeMember.error, t)}</FormError>}
-    </Modal>
+    </ConfirmModal>
   );
 }
 
@@ -350,42 +327,29 @@ function LeaveGroupModal({ open, onClose }: { open: boolean; onClose: () => void
   const { group } = useCurrentGroup();
   const leave = useLeaveGroup(group.id);
 
+  const errorText = (() => {
+    if (!leave.error) return null;
+    return isApiError(leave.error, 'LAST_ADMIN')
+      ? t('groups.lastAdmin')
+      : errorMessage(leave.error, t);
+  })();
+
   return (
-    <Modal
-      size="sm"
+    <ConfirmModal
       open={open}
       onClose={() => {
         onClose();
         leave.reset();
       }}
       title={t('groups.leaveTitle')}
-      footer={
-        <>
-          <Button variant="secondary" onClick={onClose}>
-            {t('common.cancel')}
-          </Button>
-          <Button
-            variant="danger"
-            loading={leave.isPending}
-            onClick={() =>
-              leave.mutate(undefined, {
-                onSuccess: () => void navigate('/app', { replace: true }),
-              })
-            }
-          >
-            {t('groups.leave')}
-          </Button>
-        </>
+      confirmLabel={t('groups.leave')}
+      pending={leave.isPending}
+      error={errorText}
+      onConfirm={() =>
+        leave.mutate(undefined, { onSuccess: () => void navigate('/app', { replace: true }) })
       }
     >
       <p>{t('groups.leaveText')}</p>
-      {leave.error && (
-        <FormError>
-          {isApiError(leave.error, 'LAST_ADMIN')
-            ? t('groups.lastAdmin')
-            : errorMessage(leave.error, t)}
-        </FormError>
-      )}
-    </Modal>
+    </ConfirmModal>
   );
 }

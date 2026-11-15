@@ -3,8 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Outlet, useParams } from 'react-router';
 
 import { ForbiddenView } from '../../pages/ForbiddenView';
-import { ApiError } from '../../shared/api/client';
-import { errorMessage } from '../../shared/api/errors';
+import { errorMessage, hasStatus } from '../../shared/api/errors';
 import { useGroup } from '../../shared/api/groups';
 import { setLastGroupId } from '../../shared/lib/lastGroup';
 import { Button } from '../../shared/ui/Button';
@@ -23,7 +22,7 @@ export function GroupLayout(): JSX.Element {
   }, [group]);
 
   if (isPending) return <PageSpinner label={t('common.loading')} />;
-  if (error instanceof ApiError && (error.status === 403 || error.status === 404)) {
+  if (hasStatus(error, 403, 404)) {
     return <ForbiddenView />;
   }
   if (error) {

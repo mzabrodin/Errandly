@@ -1,6 +1,7 @@
 import { http, HttpResponse } from 'msw';
 
 import { isLocale } from '../../shared/i18n';
+import { firstName } from '../../shared/lib/names';
 import { isValidPassword } from '../../shared/lib/validation';
 import { db, id, persist, publicUser } from '../db';
 import { sendMail } from '../mailer';
@@ -110,7 +111,7 @@ export const authHandlers = [
     const user = db.users.find((candidate) => candidate.email === email?.trim().toLowerCase());
     if (user) {
       sendMail('resetPassword', user.email, {
-        name: user.name.split(' ')[0] ?? '',
+        name: firstName(user.name),
         url: `${location.origin}/reset-password/${user.id}`,
       });
     }

@@ -21,6 +21,7 @@ import { useLogout, useResendVerification, useSession } from '../shared/api/auth
 import { useGroups } from '../shared/api/groups';
 import { useConnectCalendar, useSettings } from '../shared/api/settings';
 import { getLastGroupId } from '../shared/lib/lastGroup';
+import { groupPath } from '../shared/lib/routes';
 import { Avatar } from '../shared/ui/Avatar';
 import { Banner } from '../shared/ui/Banner';
 import { Button } from '../shared/ui/Button';
@@ -98,7 +99,7 @@ function GroupSwitcher({ activeId }: { activeId: string | null }) {
               }
               onSelect={() => {
                 close();
-                void navigate(`/g/${group.id}/tasks`);
+                void navigate(groupPath(group.id));
               }}
             >
               {group.name}
@@ -239,7 +240,7 @@ export function AppLayout(): JSX.Element {
               {sections.map(({ path, icon: Icon, label }) => (
                 <NavLink
                   key={path}
-                  to={`/g/${groupId}/${path}`}
+                  to={groupPath(groupId, path)}
                   className={({ isActive }) => clsx(styles.navLink, isActive && styles.navActive)}
                 >
                   <Icon size={16} />
@@ -267,7 +268,7 @@ export function AppLayout(): JSX.Element {
           {sections.map(({ path, icon: Icon, label }) => (
             <NavLink
               key={path}
-              to={`/g/${groupId}/${path}`}
+              to={groupPath(groupId, path)}
               className={({ isActive }) => clsx(styles.bottomLink, isActive && styles.bottomActive)}
             >
               <span className={styles.bottomIcon}>

@@ -16,17 +16,12 @@
 }
 
 .close {
+  composes: roundButton from '../../shared/ui/patterns.module.css';
   position: absolute;
   top: 14px;
   right: 14px;
-  display: grid;
-  place-items: center;
   width: 34px;
   height: 34px;
-  border: var(--border);
-  border-radius: 50%;
-  background: var(--paper);
-  cursor: pointer;
 }
 
 .title {

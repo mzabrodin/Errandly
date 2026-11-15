@@ -2,18 +2,11 @@ import { useMutation, useQueryClient, type UseMutationResult } from '@tanstack/r
 
 import { sessionKey } from './auth';
 import { api, http, unwrap } from './client';
+import { groupKeys } from './groups';
 import type { ProfilePatch, User } from './types';
 
 export function useUpdateProfile(): UseMutationResult<User, Error, ProfilePatch> {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: (patch: ProfilePatch) => unwrap(api.PATCH('/api/me', { body: patch })),
-    onSuccess: (user) => {
-      queryClient.setQueryData(sessionKey, user);
-      // The name is shown in group member lists
-      void queryClient.invalidateQueries({ queryKey: ['groups'] });
-    },
-  });
+  return useUserMutation((patch: ProfilePatch) => unwrap(api.PATCH('/api/me', { body: patch })));
 }
 
 export function useChangePassword(): UseMutationResult<
@@ -38,7 +31,7 @@ export function useDeleteAccount(): UseMutationResult<void, Error, void> {
   });
 }
 
-function useAvatarMutation<TInput>(
+function useUserMutation<TInput>(
   request: (input: TInput) => Promise<User>,
 ): UseMutationResult<User, Error, TInput> {
   const queryClient = useQueryClient();
@@ -46,14 +39,14 @@ function useAvatarMutation<TInput>(
     mutationFn: request,
     onSuccess: (user) => {
       queryClient.setQueryData(sessionKey, user);
-      // The avatar is shown to group members
-      void queryClient.invalidateQueries({ queryKey: ['groups'] });
+      // Group member lists show the name and the avatar
+      void queryClient.invalidateQueries({ queryKey: groupKeys.all });
     },
   });
 }
 
 export function useUploadAvatar(): UseMutationResult<User, Error, Blob> {
-  return useAvatarMutation((image: Blob) => {
+  return useUserMutation((image: Blob) => {
     const form = new FormData();
     form.append('file', image, 'avatar');
     return http.upload<User>('/me/avatar', form);
@@ -61,5 +54,5 @@ export function useUploadAvatar(): UseMutationResult<User, Error, Blob> {
 }
 
 export function useRemoveAvatar(): UseMutationResult<User, Error, void> {
-  return useAvatarMutation(() => unwrap(api.DELETE('/api/me/avatar')));
+  return useUserMutation(() => unwrap(api.DELETE('/api/me/avatar')));
 }

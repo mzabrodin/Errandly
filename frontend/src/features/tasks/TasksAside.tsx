@@ -4,9 +4,10 @@ import { useTranslation } from 'react-i18next';
 
 import type { Group, Task } from '../../shared/api/types';
 import { isSameDay, toDateInputValue } from '../../shared/lib/dates';
+import { firstName } from '../../shared/lib/names';
+import { toStringList } from '../../shared/lib/translationList';
 import { Avatar } from '../../shared/ui/Avatar';
 import styles from './TasksAside.module.css';
-import { toStringList } from './translationList';
 
 interface TasksAsideProps {
   group: Group;
@@ -49,7 +50,7 @@ export function TasksAside({ group, tasks, today, userId }: TasksAsideProps): JS
               <li key={member.userId} className={styles.person}>
                 <Avatar name={member.name} src={member.avatarUrl} color={member.color} size={32} />
                 <span className={styles.name}>
-                  {member.name.split(' ')[0]}
+                  {firstName(member.name)}
                   {member.userId === userId && (
                     <span className={styles.you}> ({t('common.you')})</span>
                   )}

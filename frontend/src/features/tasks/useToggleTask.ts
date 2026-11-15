@@ -3,9 +3,8 @@ import { useTranslation } from 'react-i18next';
 import { errorMessage, isApiError } from '../../shared/api/errors';
 import { useCompleteTask } from '../../shared/api/tasks';
 import type { Task } from '../../shared/api/types';
+import { UNDO_WINDOW_MS } from '../../shared/lib/time';
 import { useToast } from '../../shared/ui/Toast';
-
-const UNDO_WINDOW_MS = 24 * 60 * 60 * 1000;
 
 function withinUndoWindow(task: Task): boolean {
   return (

@@ -1,7 +1,9 @@
 import { http, HttpResponse } from 'msw';
 
 import { toDateInputValue } from '../../shared/lib/dates';
-import { autoAssign, DAY_MS, db, freeMemberColor, id, isCompleted, persist } from '../db';
+import { LIMITS } from '../../shared/lib/limits';
+import { DAY_MS } from '../../shared/lib/time';
+import { autoAssign, db, freeMemberColor, id, isCompleted, persist } from '../db';
 import { sendMail } from '../mailer';
 import { pushNotification } from '../notifications';
 import {
@@ -48,7 +50,8 @@ const groupListHandlers = [
     if (!user.emailVerified) return error(403, 'EMAIL_NOT_VERIFIED');
     const { name = '' } = await request.json();
     if (name.trim() === '') return error(400, 'VALIDATION', { fields: { name: 'required' } });
-    if (name.trim().length > 50) return error(400, 'VALIDATION', { fields: { name: 'tooLong' } });
+    if (name.trim().length > LIMITS.groupName)
+      return error(400, 'VALIDATION', { fields: { name: 'tooLong' } });
     const groupId = id('g');
     db.groups.push({ id: groupId, name: name.trim() });
     db.memberships.push({

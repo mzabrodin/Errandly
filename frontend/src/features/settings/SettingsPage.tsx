@@ -29,13 +29,15 @@ import {
 } from '../../shared/api/settings';
 import type { Settings, SettingsPatch, User } from '../../shared/api/types';
 import { changeLocale, currentLocale, isLocale, type Locale } from '../../shared/i18n';
-import { deviceTimeZone, formatRelative } from '../../shared/lib/dates';
+import { deviceTimeZone, formatRelative, zoneLabel } from '../../shared/lib/dates';
+import { LIMITS } from '../../shared/lib/limits';
 import { setPrefs, usePrefs } from '../../shared/lib/prefs';
+import { groupPath } from '../../shared/lib/routes';
 import { isValidPassword } from '../../shared/lib/validation';
 import { Button, ButtonLink } from '../../shared/ui/Button';
 import { Card } from '../../shared/ui/Card';
+import { ConfirmModal } from '../../shared/ui/ConfirmModal';
 import { Field, FormError, Input, Select } from '../../shared/ui/Field';
-import { Modal } from '../../shared/ui/Modal';
 import { PageHeader } from '../../shared/ui/PageHeader';
 import { Pill } from '../../shared/ui/Pill';
 import { Segmented } from '../../shared/ui/Segmented';
@@ -65,6 +67,45 @@ const REMINDER_OPTIONS: readonly ReminderMinutes[] = [15, 30, 60, 180, 1440];
 
 function toReminderMinutes(value: string): ReminderMinutes | undefined {
   return REMINDER_OPTIONS.find((minutes) => String(minutes) === value);
+}
+
+function ReminderSelect({
+  label,
+  hint,
+  value,
+  disabled = false,
+  onSelect,
+}: {
+  label: string;
+  hint: string;
+  value: number;
+  disabled?: boolean;
+  onSelect: (minutes: ReminderMinutes) => void;
+}): JSX.Element {
+  const { t } = useTranslation();
+  return (
+    <div className={styles.row}>
+      <Field label={label} hint={hint}>
+        {(props) => (
+          <Select
+            {...props}
+            value={value}
+            disabled={disabled}
+            onChange={(event) => {
+              const minutes = toReminderMinutes(event.target.value);
+              if (minutes !== undefined) onSelect(minutes);
+            }}
+          >
+            {REMINDER_OPTIONS.map((minutes) => (
+              <option key={minutes} value={minutes}>
+                {t(`settings.reminderOptions.${minutes}`)}
+              </option>
+            ))}
+          </Select>
+        )}
+      </Field>
+    </div>
+  );
 }
 const TIMEZONES = [
   'Europe/Kyiv',
@@ -155,7 +196,7 @@ function ProfileSection({ user }: { user: User }): JSX.Element {
             {(props) => (
               <Input
                 {...props}
-                maxLength={60}
+                maxLength={LIMITS.userName}
                 autoComplete="name"
                 value={name}
                 onChange={(event) => setName(event.target.value)}
@@ -170,11 +211,11 @@ function ProfileSection({ user }: { user: User }): JSX.Element {
                 onChange={(event) => setZoneChoice(event.target.value)}
               >
                 <option value={AUTOMATIC}>
-                  {t('settings.timezoneAuto', { zone: device.replace('_', ' ') })}
+                  {t('settings.timezoneAuto', { zone: zoneLabel(device) })}
                 </option>
                 {zones.map((zone) => (
                   <option key={zone} value={zone}>
-                    {zone.replace('_', ' ')}
+                    {zoneLabel(zone)}
                   </option>
                 ))}
               </Select>
@@ -315,31 +356,15 @@ function NotificationsSection({ settings, user }: { settings: Settings; user: Us
           />
         ))}
       </div>
-      <div className={styles.row}>
-        <Field label={t('settings.emailReminder')} hint={t('settings.emailReminderHint')}>
-          {(props) => (
-            <Select
-              {...props}
-              value={settings.emailReminderMinutes}
-              disabled={!settings.notifications.dueSoon || update.isPending}
-              onChange={(event) => {
-                const emailReminderMinutes = toReminderMinutes(event.target.value);
-                if (emailReminderMinutes === undefined) return;
-                update.mutate(
-                  { emailReminderMinutes },
-                  { onSuccess: () => toast(t('settings.saved')) },
-                );
-              }}
-            >
-              {REMINDER_OPTIONS.map((minutes) => (
-                <option key={minutes} value={minutes}>
-                  {t(`settings.reminderOptions.${minutes}`)}
-                </option>
-              ))}
-            </Select>
-          )}
-        </Field>
-      </div>
+      <ReminderSelect
+        label={t('settings.emailReminder')}
+        hint={t('settings.emailReminderHint')}
+        value={settings.emailReminderMinutes}
+        disabled={!settings.notifications.dueSoon || update.isPending}
+        onSelect={(emailReminderMinutes) =>
+          update.mutate({ emailReminderMinutes }, { onSuccess: () => toast(t('settings.saved')) })
+        }
+      />
       <p className={styles.note}>
         <Bell size={15} />
         {t('settings.inAppNote')}
@@ -413,30 +438,17 @@ function CalendarSection({ settings }: { settings: Settings }): JSX.Element {
 
       {calendar.connected ? (
         <>
-          <div className={styles.row}>
-            <Field label={t('settings.reminder')} hint={t('settings.reminderHint')}>
-              {(props) => (
-                <Select
-                  {...props}
-                  value={settings.calendarReminderMinutes}
-                  onChange={(event) => {
-                    const calendarReminderMinutes = toReminderMinutes(event.target.value);
-                    if (calendarReminderMinutes === undefined) return;
-                    update.mutate(
-                      { calendarReminderMinutes },
-                      { onSuccess: () => toast(t('settings.saved')) },
-                    );
-                  }}
-                >
-                  {REMINDER_OPTIONS.map((minutes) => (
-                    <option key={minutes} value={minutes}>
-                      {t(`settings.reminderOptions.${minutes}`)}
-                    </option>
-                  ))}
-                </Select>
-              )}
-            </Field>
-          </div>
+          <ReminderSelect
+            label={t('settings.reminder')}
+            hint={t('settings.reminderHint')}
+            value={settings.calendarReminderMinutes}
+            onSelect={(calendarReminderMinutes) =>
+              update.mutate(
+                { calendarReminderMinutes },
+                { onSuccess: () => toast(t('settings.saved')) },
+              )
+            }
+          />
           <div className={styles.actions}>
             <Button
               variant="danger"
@@ -579,7 +591,7 @@ function GroupsSection(): JSX.Element {
             <Pill tone={group.role === 'admin' ? 'lime' : 'cream'}>
               {t(group.role === 'admin' ? 'common.admin' : 'common.member')}
             </Pill>
-            <Link to={`/g/${group.id}/members`} className={styles.groupLink}>
+            <Link to={groupPath(group.id, 'members')} className={styles.groupLink}>
               {t('settings.manageGroup')}
             </Link>
           </li>
@@ -596,10 +608,7 @@ function GroupsSection(): JSX.Element {
 
 /** Groups where the user is the last admin (from the LAST_ADMIN error body) */
 function lastAdminGroups(error: unknown): string[] {
-  if (!isApiError(error, 'LAST_ADMIN')) return [];
-  const details: object = error.details;
-  if (!('groups' in details) || !Array.isArray(details.groups)) return [];
-  return details.groups.filter((group: unknown): group is string => typeof group === 'string');
+  return isApiError(error, 'LAST_ADMIN') ? (error.details.groups ?? []) : [];
 }
 
 function PrivacySection(): JSX.Element {
@@ -609,6 +618,12 @@ function PrivacySection(): JSX.Element {
   const [confirming, setConfirming] = useState(false);
   const [agreed, setAgreed] = useState(false);
   const blockingGroups = lastAdminGroups(remove.error);
+  const deleteError = (() => {
+    if (!remove.error) return null;
+    return blockingGroups.length > 0
+      ? t('settings.deleteLastAdmin', { groups: blockingGroups.join(', ') })
+      : errorMessage(remove.error, t);
+  })();
 
   return (
     <Section id="privacy" title={t('settings.sections.privacy')}>
@@ -628,8 +643,7 @@ function PrivacySection(): JSX.Element {
         </Button>
       </div>
 
-      <Modal
-        size="sm"
+      <ConfirmModal
         open={confirming}
         onClose={() => {
           setConfirming(false);
@@ -637,24 +651,12 @@ function PrivacySection(): JSX.Element {
           remove.reset();
         }}
         title={t('settings.deleteTitle')}
-        footer={
-          <>
-            <Button variant="secondary" onClick={() => setConfirming(false)}>
-              {t('common.cancel')}
-            </Button>
-            <Button
-              variant="danger"
-              disabled={!agreed}
-              loading={remove.isPending}
-              onClick={() =>
-                remove.mutate(undefined, {
-                  onSuccess: () => void navigate('/', { replace: true }),
-                })
-              }
-            >
-              {t('settings.deleteForever')}
-            </Button>
-          </>
+        confirmLabel={t('settings.deleteForever')}
+        confirmDisabled={!agreed}
+        pending={remove.isPending}
+        error={deleteError}
+        onConfirm={() =>
+          remove.mutate(undefined, { onSuccess: () => void navigate('/', { replace: true }) })
         }
       >
         <p>{t('settings.deleteModalText')}</p>
@@ -666,30 +668,39 @@ function PrivacySection(): JSX.Element {
           />
           {t('settings.deleteAgree')}
         </label>
-        {remove.error && (
-          <FormError>
-            {blockingGroups.length > 0
-              ? t('settings.deleteLastAdmin', {
-                  groups: blockingGroups.join(', '),
-                })
-              : errorMessage(remove.error, t)}
-          </FormError>
-        )}
-      </Modal>
+      </ConfirmModal>
     </Section>
   );
 }
 
-export function SettingsPage(): JSX.Element {
+/** The toast after the return from Google's consent screen (`?calendar=connected|error`) */
+function useCalendarConnectResult(): void {
   const { t } = useTranslation();
   const toast = useToast();
   const [params, setParams] = useSearchParams();
+  // StrictMode runs this effect twice while the parameter is still in the URL
+  const announced = useRef(false);
+  useEffect(() => {
+    const result = params.get('calendar');
+    if (result === null) return;
+    if (!announced.current) {
+      announced.current = true;
+      if (result === 'connected') toast(t('settings.connectedToast'));
+      if (result === 'error') toast(t('settings.connectFailed'), 'error');
+    }
+    setParams({}, { replace: true });
+  }, [params, setParams, toast, t]);
+}
+
+export function SettingsPage(): JSX.Element {
+  const { t } = useTranslation();
   const { data: user } = useSession();
   const { data: settings, isPending, error } = useSettings();
-  const active = useActiveSection(SECTION_IDS, Boolean(settings && user));
-  const navRef = useRef<HTMLElement>(null);
-
   const ready = Boolean(settings && user);
+  const active = useActiveSection(SECTION_IDS, ready);
+  const navRef = useRef<HTMLElement>(null);
+  useCalendarConnectResult();
+
   const { hash } = useLocation();
 
   // On a direct link (/settings#calendar) the browser looks for the anchor while
@@ -707,19 +718,6 @@ export function SettingsPage(): JSX.Element {
     if (!nav || !link || nav.scrollWidth <= nav.clientWidth) return;
     nav.scrollTo({ left: link.offsetLeft - 16, behavior: 'smooth' });
   }, [active]);
-
-  // StrictMode runs this effect twice while the parameter is still in the URL.
-  const announced = useRef(false);
-  useEffect(() => {
-    const result = params.get('calendar');
-    if (result === null) return;
-    if (!announced.current) {
-      announced.current = true;
-      if (result === 'connected') toast(t('settings.connectedToast'));
-      if (result === 'error') toast(t('settings.connectFailed'), 'error');
-    }
-    setParams({}, { replace: true });
-  }, [params, setParams, toast, t]);
 
   if (isPending || !user) return <PageSpinner label={t('common.loading')} />;
   if (error) return <FormError>{errorMessage(error, t)}</FormError>;

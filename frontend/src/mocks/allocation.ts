@@ -1,4 +1,5 @@
 import { toDateInputValue } from '../shared/lib/dates';
+import { DAY_MS } from '../shared/lib/time';
 
 // Automatic assignment algorithm (FR-27, FR-28, FR-17); mirrors the server logic for the mocks
 
@@ -15,7 +16,6 @@ export interface AllocationTask {
   assigneeId: string | null;
 }
 
-const DAY_MS = 24 * 60 * 60 * 1000;
 export const LOAD_WINDOW_DAYS = 28;
 
 // Due date in the local time zone, as the user sees it (NFR-COMP-03)

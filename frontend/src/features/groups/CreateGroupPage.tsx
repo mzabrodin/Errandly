@@ -5,6 +5,8 @@ import { useNavigate } from 'react-router';
 import { useSession } from '../../shared/api/auth';
 import { errorMessage } from '../../shared/api/errors';
 import { useCreateGroup, useGroups } from '../../shared/api/groups';
+import { LIMITS } from '../../shared/lib/limits';
+import { groupPath } from '../../shared/lib/routes';
 import { useDocumentTitle } from '../../shared/lib/useDocumentTitle';
 import { Button } from '../../shared/ui/Button';
 import { Asterisk } from '../../shared/ui/Decor';
@@ -27,13 +29,13 @@ export function CreateGroupPage(): JSX.Element {
   const submit = (event: FormEvent) => {
     event.preventDefault();
     if (name.trim() === '') return setError(t('groups.nameRequired'));
-    if (name.trim().length > 50) return setError(t('groups.nameTooLong'));
+    if (name.trim().length > LIMITS.groupName) return setError(t('groups.nameTooLong'));
     setError(undefined);
     create.mutate(name.trim(), {
       onSuccess: (group) => {
         toast(t('groups.created'));
         // Go straight to inviting flatmates (NFR-USE-01)
-        void navigate(`/g/${group.id}/members?invite=1`);
+        void navigate(`${groupPath(group.id, 'members')}?invite=1`);
       },
     });
   };
@@ -55,7 +57,7 @@ export function CreateGroupPage(): JSX.Element {
             {(props) => (
               <Input
                 {...props}
-                maxLength={50}
+                maxLength={LIMITS.groupName}
                 placeholder={t('groups.namePlaceholder')}
                 value={name}
                 onChange={(event) => setName(event.target.value)}

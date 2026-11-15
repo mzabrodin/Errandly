@@ -26,7 +26,7 @@ export function ProposeSwapModal({
 }): JSX.Element {
   const { t } = useTranslation();
   const toast = useToast();
-  const { group, me, membersById } = useCurrentGroup();
+  const { group, me, membersById, memberOf } = useCurrentGroup();
   const [range] = useState(() => ({
     from: toIso(now()),
     to: toIso(addDays(startOfDay(now()), HORIZON_DAYS)),
@@ -42,7 +42,7 @@ export function ProposeSwapModal({
       { taskId: task.id, requestedTaskId: requested.id },
       {
         onSuccess: () => {
-          const name = membersById.get(requested.assigneeId ?? '')?.name ?? '';
+          const name = memberOf(requested.assigneeId)?.name ?? '';
           toast(t('swaps.sent', { name }));
           onClose();
         },

@@ -5,9 +5,9 @@ import { useTranslation } from 'react-i18next';
 
 import type { Member, Task, TaskStatus } from '../../shared/api/types';
 import { formatTime } from '../../shared/lib/dates';
-import { Avatar } from '../../shared/ui/Avatar';
 import { Asterisk } from '../../shared/ui/Decor';
 import { Pill } from '../../shared/ui/Pill';
+import { AssigneeLabel } from './AssigneeLabel';
 import styles from './TaskCard.module.css';
 import { TaskQuickMenu } from './TaskQuickMenu';
 import { canToggleTask } from './useToggleTask';
@@ -111,13 +111,7 @@ export function TaskCard({
               <span className={styles.assignee}>
                 {assignee ? (
                   <>
-                    <Avatar
-                      name={assignee.name}
-                      src={assignee.avatarUrl}
-                      color={assignee.color}
-                      size={24}
-                    />
-                    <span>{isMine ? t('common.you') : assignee.name.split(' ')[0]}</span>
+                    <AssigneeLabel member={assignee} size={24} isMine={isMine} />
                     {task.manuallyAssigned && (
                       <span className="visually-hidden">({t('tasks.manual')})</span>
                     )}

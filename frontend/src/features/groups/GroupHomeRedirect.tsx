@@ -4,6 +4,7 @@ import { Navigate } from 'react-router';
 
 import { useGroups } from '../../shared/api/groups';
 import { getLastGroupId } from '../../shared/lib/lastGroup';
+import { groupPath } from '../../shared/lib/routes';
 import { PageSpinner } from '../../shared/ui/Spinner';
 
 export function GroupHomeRedirect(): JSX.Element {
@@ -16,5 +17,5 @@ export function GroupHomeRedirect(): JSX.Element {
 
   const lastId = getLastGroupId();
   const target = groups.find((group) => group.id === lastId) ?? first;
-  return <Navigate to={`/g/${target.id}/tasks`} replace />;
+  return <Navigate to={groupPath(target.id)} replace />;
 }

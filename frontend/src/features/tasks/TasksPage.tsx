@@ -110,14 +110,14 @@ interface TaskListProps {
 }
 
 function TaskList({ items, toggle, isToggling }: TaskListProps): JSX.Element {
-  const { me, isAdmin, membersById } = useCurrentGroup();
+  const { me, isAdmin, memberOf } = useCurrentGroup();
   return (
     <ul className={styles.list}>
       {items.map((task) => (
         <TaskCard
           key={task.id}
           task={task}
-          assignee={task.assigneeId === null ? undefined : membersById.get(task.assigneeId)}
+          assignee={memberOf(task.assigneeId)}
           isMine={task.assigneeId === me.id}
           isAdmin={isAdmin}
           pending={isToggling(task.id)}

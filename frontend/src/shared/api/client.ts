@@ -1,13 +1,8 @@
 import createClient from 'openapi-fetch';
 
-import type { paths } from './schema';
+import type { components, paths } from './schema';
 
-export interface ApiErrorBody {
-  code?: string;
-  message?: string;
-  fields?: Record<string, string>;
-  retryAfterSeconds?: number;
-}
+export type ApiErrorBody = Partial<components['schemas']['ApiErrorDto']>;
 
 export class ApiError extends Error {
   readonly status: number;

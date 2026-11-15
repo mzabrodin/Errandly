@@ -26,7 +26,6 @@ declare const styles: {
   readonly "navLinks": string;
   readonly "navPill": string;
   readonly "navPillDark": string;
-  readonly "org": string;
   readonly "packet": string;
   readonly "packetBrand": string;
   readonly "packetCard": string;
@@ -46,6 +45,5 @@ declare const styles: {
   readonly "stepPill": string;
   readonly "stepText": string;
   readonly "steps": string;
-  readonly "w3": string;
 };
 export default styles;

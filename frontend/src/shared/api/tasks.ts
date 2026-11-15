@@ -1,12 +1,8 @@
-import {
-  useMutation,
-  useQuery,
-  useQueryClient,
-  type UseMutationResult,
-  type UseQueryResult,
-} from '@tanstack/react-query';
+import { useQuery, type UseMutationResult, type UseQueryResult } from '@tanstack/react-query';
 
 import { api, unwrap } from './client';
+import { useInvalidatingMutation } from './mutation';
+import { statsKeys } from './stats';
 import type { EditScope, Task, TaskInput } from './types';
 
 export const taskKeys = {
@@ -53,14 +49,7 @@ function useTaskMutation<TInput, TResult = unknown>(
   groupId: string,
   request: (input: TInput) => Promise<TResult>,
 ): UseMutationResult<TResult, Error, TInput> {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: request,
-    onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: taskKeys.group(groupId) });
-      void queryClient.invalidateQueries({ queryKey: ['stats', groupId] });
-    },
-  });
+  return useInvalidatingMutation(request, [taskKeys.group(groupId), statsKeys.group(groupId)]);
 }
 
 export function useCreateTask(groupId: string): UseMutationResult<Task, Error, TaskInput> {

@@ -9,6 +9,8 @@ interface CurrentGroup {
   me: User;
   isAdmin: boolean;
   membersById: Map<string, Member>;
+  /** Undefined for nobody (`null`) and for someone who has left */
+  memberOf: (userId: string | null) => Member | undefined;
 }
 
 /** Current group (loaded by GroupLayout) and handy derived data */
@@ -26,6 +28,7 @@ export function useCurrentGroup(): CurrentGroup {
       me: user,
       isAdmin: group.role === 'admin',
       membersById,
+      memberOf: (userId) => (userId === null ? undefined : membersById.get(userId)),
     };
   }, [group, user]);
 

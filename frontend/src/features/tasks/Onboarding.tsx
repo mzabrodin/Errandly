@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router';
 
 import { useSettings } from '../../shared/api/settings';
+import { groupPath } from '../../shared/lib/routes';
 import { Asterisk } from '../../shared/ui/Decor';
 import { useCurrentGroup } from '../groups/useCurrentGroup';
 import styles from './Onboarding.module.css';
@@ -29,7 +30,7 @@ export function Onboarding({
       key: 'invite',
       done: group.members.length > 1,
       action: (
-        <Link to={`/g/${group.id}/members?invite=1`} className={styles.action}>
+        <Link to={`${groupPath(group.id, 'members')}?invite=1`} className={styles.action}>
           {t('onboarding.inviteAction')}
         </Link>
       ),

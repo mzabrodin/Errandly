@@ -14,11 +14,12 @@ import { useTranslation } from 'react-i18next';
 import { Link, useLocation, useNavigate, useParams } from 'react-router';
 
 import { ForbiddenView } from '../../pages/ForbiddenView';
-import { ApiError } from '../../shared/api/client';
-import { errorMessage } from '../../shared/api/errors';
+import { errorMessage, hasStatus } from '../../shared/api/errors';
 import { useSeries, useTask } from '../../shared/api/tasks';
 import type { Task } from '../../shared/api/types';
 import { formatDate, formatTime } from '../../shared/lib/dates';
+import { groupPath, taskPath } from '../../shared/lib/routes';
+import { toStringList } from '../../shared/lib/translationList';
 import { useDocumentTitle } from '../../shared/lib/useDocumentTitle';
 import { Avatar } from '../../shared/ui/Avatar';
 import { Button, ButtonLink } from '../../shared/ui/Button';
@@ -28,11 +29,11 @@ import { EmptyState } from '../../shared/ui/EmptyState';
 import { Pill } from '../../shared/ui/Pill';
 import { PageSpinner } from '../../shared/ui/Spinner';
 import { useCurrentGroup } from '../groups/useCurrentGroup';
+import { AssigneeLabel } from './AssigneeLabel';
 import { canProposeSwap } from './swaps';
 import { useTaskActions } from './taskActionsContext';
 import { DifficultyDots } from './TaskCard';
 import styles from './TaskPage.module.css';
-import { toStringList } from './translationList';
 import { canToggleTask, useToggleTask } from './useToggleTask';
 
 const HISTORY_BEFORE = 6;
@@ -48,7 +49,7 @@ function useRecurrenceLabel(task: Task): string {
 
 function SeriesHistory({ task }: { task: Task }): JSX.Element | null {
   const { t } = useTranslation();
-  const { group, membersById } = useCurrentGroup();
+  const { group, memberOf } = useCurrentGroup();
   const { data: series, isPending } = useSeries(group.id, task.seriesId);
 
   if (task.recurrence.type === 'once') return null;
@@ -69,31 +70,18 @@ function SeriesHistory({ task }: { task: Task }): JSX.Element | null {
       ) : (
         <ol className={styles.timeline}>
           {visible.map((item) => {
-            const assignee =
-              item.assigneeId === null ? undefined : membersById.get(item.assigneeId);
+            const assignee = memberOf(item.assigneeId);
             const current = item.id === task.id;
             return (
               <li key={item.id} className={clsx(styles.row, current && styles.rowCurrent)}>
                 <Link
-                  to={`/g/${group.id}/tasks/${item.id}`}
+                  to={taskPath(group.id, item.id)}
                   className={styles.rowLink}
                   aria-current={current ? 'page' : undefined}
                 >
                   <span className={styles.rowDate}>{formatDate(item.dueAt, 'd MMM, EEEEEE')}</span>
                   <span className={styles.rowWho}>
-                    {assignee ? (
-                      <>
-                        <Avatar
-                          name={assignee.name}
-                          src={assignee.avatarUrl}
-                          color={assignee.color}
-                          size={22}
-                        />
-                        {assignee.name.split(' ')[0]}
-                      </>
-                    ) : (
-                      t('tasks.nobody')
-                    )}
+                    {assignee ? <AssigneeLabel member={assignee} size={22} /> : t('tasks.nobody')}
                   </span>
                   <Pill tone={item.status} className={styles.rowStatus}>
                     {item.status === 'done' ? <Check size={13} /> : null}
@@ -123,7 +111,7 @@ function useBackLink(groupId: string): { backTo: string; backLabel: string } {
   const backTo =
     from !== undefined && from.startsWith('/') && !from.startsWith('//')
       ? from
-      : `/g/${groupId}/tasks`;
+      : groupPath(groupId);
   let backLabel = t('taskPage.back');
   if (from?.includes('/calendar') === true) backLabel = t('taskPage.backCalendar');
   else if (from?.startsWith('/home') === true) backLabel = t('taskPage.backHome');
@@ -134,7 +122,7 @@ export function TaskPage(): JSX.Element {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { taskId = '' } = useParams();
-  const { group, me, isAdmin, membersById } = useCurrentGroup();
+  const { group, me, isAdmin, memberOf } = useCurrentGroup();
   const { data: task, isPending, error, refetch } = useTask(group.id, taskId);
   const { toggle, isPending: isToggling } = useToggleTask(group.id);
   const actions = useTaskActions();
@@ -142,8 +130,8 @@ export function TaskPage(): JSX.Element {
   useDocumentTitle(task?.title);
 
   if (isPending) return <PageSpinner label={t('common.loading')} />;
-  if (error instanceof ApiError && error.status === 403) return <ForbiddenView />;
-  if (error instanceof ApiError && error.status === 404) {
+  if (hasStatus(error, 403)) return <ForbiddenView />;
+  if (hasStatus(error, 404)) {
     return (
       <EmptyState
         title={t('taskPage.notFound')}
@@ -176,7 +164,7 @@ export function TaskPage(): JSX.Element {
       toggling={isToggling(task.id)}
       isMine={task.assigneeId === me.id}
       isAdmin={isAdmin}
-      assigneeName={task.assigneeId === null ? undefined : membersById.get(task.assigneeId)?.name}
+      assigneeName={memberOf(task.assigneeId)?.name}
       backTo={backTo}
       backLabel={backLabel}
     />
@@ -201,9 +189,9 @@ interface TaskDetailsProps {
 
 function TaskFacts({ task }: { task: Task }): JSX.Element {
   const { t } = useTranslation();
-  const { membersById } = useCurrentGroup();
+  const { memberOf } = useCurrentGroup();
   const recurrence = useRecurrenceLabel(task);
-  const assignee = task.assigneeId === null ? undefined : membersById.get(task.assigneeId);
+  const assignee = memberOf(task.assigneeId);
 
   return (
     <dl className={styles.facts}>

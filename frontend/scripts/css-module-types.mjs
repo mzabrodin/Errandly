@@ -23,7 +23,10 @@ function walk(dir) {
 
 /** @param {string} cssPath */
 function generate(cssPath) {
-  const css = readFileSync(cssPath, 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
+  // Comments and strings out: `composes: x from './other.module.css'` names no class of this file
+  const css = readFileSync(cssPath, 'utf8')
+    .replace(/\/\*[\s\S]*?\*\//g, '')
+    .replace(/'[^']*'|"[^"]*"/g, '');
   /** @type {Set<string>} */
   const names = new Set();
   for (const match of css.matchAll(/\.(-?[_a-zA-Z][\w-]*)/g)) names.add(match[1]);

@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 
 import type { Task } from '../../shared/api/types';
 import { endOfWeek, isSameDay, startOfWeek } from '../../shared/lib/dates';
+import { firstName } from '../../shared/lib/names';
 import { Cloud, FlowerFace, Hills } from '../../shared/ui/Decor';
 import styles from './TodayHero.module.css';
 
@@ -101,7 +102,7 @@ export function TodayHero({
       />
 
       <div className={styles.content}>
-        <h2 className={styles.hello}>{t('today.hello', { name: userName.split(' ')[0] })}</h2>
+        <h2 className={styles.hello}>{t('today.hello', { name: firstName(userName) })}</h2>
         <div className={styles.summaryRow}>
           {todayOpen === 0 && overdue === 0 && unassigned === 0 ? (
             <p className={styles.summary}>{t('today.summaryNone')}</p>
