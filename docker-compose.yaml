@@ -125,7 +125,7 @@ services:
       SMTP_SECURE: ${SMTP_SECURE:-false}
       SMTP_USER: ${SMTP_USER:-}
       SMTP_PASS: ${SMTP_PASS:-}
-      # Dev endpoint for emails from the frontend mock API; ignored unless SMTP is Mailpit
+      # The email template preview; ignored unless SMTP is Mailpit
       MAIL_DEV_API: ${MAIL_DEV_API:-true}
       S3_ENDPOINT: http://storage:8333
       S3_ACCESS_KEY_ID: *s3-access-key-id

@@ -1,5 +1,3 @@
-// Demo data for local development, mirroring the frontend mock (frontend/src/mocks/db.ts):
-// the same people, groups and chores, so switching VITE_USE_MOCKS off shows a familiar picture
 import { createHash, randomUUID } from 'node:crypto';
 
 import {

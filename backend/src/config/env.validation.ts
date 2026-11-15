@@ -67,7 +67,7 @@ const envSchema = z.object({
   SMTP_USER: z.string().optional(),
   SMTP_PASS: z.string().optional(),
   SMTP_FROM: z.string().default('Errandly <no-reply@errandly.local>'),
-  // Dev endpoint /api/dev/mail for the frontend mock API; works only with a local SMTP host
+  // /api/dev/mail/preview renders every template; works only with a local SMTP host
   MAIL_DEV_API: z.stringbool().default(false),
 
   // Dev defaults point at SeaweedFS; in production, unset means AWS S3 and its credential chain
