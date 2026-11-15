@@ -26,6 +26,25 @@ package "Спільне ядро" {
     +release(ids, at)
     +purge(now)
   }
+  class ExclusiveRunner {
+    +run(job)
+    +stop()
+    +isStopping
+  }
+  class ShutdownState {
+    +isClosing
+    +onModuleDestroy()
+  }
+  class CallerThrottlerGuard <<APP_GUARD>> {
+    #getTracker(request)
+  }
+  class TokenCipher {
+    +encrypt(plain)
+    +decrypt(sealed)
+  }
+  class "Transitions<S>" as Transitions {
+    +decide(from, to)
+  }
   class DataRetention {
     +register(owner, purge)
     +purge()
@@ -81,6 +100,8 @@ EventBus ..> EventPublicationStore
 EventDispatcher ..> EventPublicationStore
 EventDispatcher ..> EventBus
 DataRetention ..> Clock
+DataRetention ..> ExclusiveRunner
+EventDispatcher ..> ExclusiveRunner
 ApiExceptionFilter ..> DomainError
 MailService ..> MailTransport
 SystemClock -up-|> Clock

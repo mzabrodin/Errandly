@@ -22,7 +22,8 @@ object "strategy : LeastLoadRotationStrategy" as strategy
 object "tasks : TasksRepository" as tasks
 object "bus : EventBus" as bus
 object "dispatcher : EventDispatcher" as dispatcher
-object "notifications : слухач (буде додано)" as notifications
+object "feed : NotificationFeed" as feed
+object "emails : NotificationEmails" as emails
 object "calendar : CalendarSync" as calendar
 
 admin --> form : 1: submit()
@@ -38,13 +39,14 @@ planner --> tasks : 2.1.4.3: assignmentHistory(…)
 planner --> strategy : 2.1.4.4: pick(candidates, history, task)
 planner --> tasks : 2.1.4.5: insertTasks(tx)
 planner --> bus : 2.1.4.6: publish(tx, 'task.assigned')
+bus --> feed : 2.1.4.6.1: task.assigned (у транзакції)
 bus ..> dispatcher : event_publications (у тій самій транзакції)
-dispatcher --> notifications : 3: task.assigned (після коміту)
+dispatcher --> emails : 3: task.assigned (після коміту)
 dispatcher --> calendar : 4: task.assigned (після коміту)
 
 note right of ts
   Центр кооперації: усе в одній транзакції,
-  а сповіщення й календар — після коміту
+  зі сповіщенням у сервісі; лист і календар — після коміту
   через EventDispatcher, з повторами.
   Відповіді не показано.
 end note

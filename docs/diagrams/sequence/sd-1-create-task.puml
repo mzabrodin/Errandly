@@ -13,7 +13,8 @@ participant "GroupsApi" as Groups
 participant "TaskPlanner" as Planner
 participant "TasksRepository" as Repo
 participant "EventBus" as Bus
-participant "CalendarSync,\nnotifications (буде додано)" as Listeners
+participant "NotificationFeed" as Feed
+participant "CalendarSync,\nNotificationEmails" as Listeners
 
 Admin -> SPA : Назва, складність, термін,\nповторюваність, виконавець (необов'язково)
 SPA -> Ctrl : POST /api/groups/:groupId/tasks
@@ -38,6 +39,8 @@ else Дані коректні
       end note
       Planner -> Repo : insertTasks(екземпляри)
       Planner -> Bus : publish(task.assigned) на кожен екземпляр
+      Bus -> Feed : task.assigned (у транзакції)
+      note right of Feed : сповіщення виконавцю лише про перший\nекземпляр; решта — bulk, без сповіщень
       Ctrl --> SPA : 201 TaskDto (перший екземпляр)
     end
   end
@@ -45,5 +48,5 @@ end
 
 == Після коміту, з повторами (SD-4) ==
 Bus -> Listeners : task.assigned
-note right of Listeners : сповіщення, лист і подія\nв Google Calendar
+note right of Listeners : подія в календарі Errandly;\nлист — лише про перший екземпляр
 @enduml

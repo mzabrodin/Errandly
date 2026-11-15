@@ -20,7 +20,7 @@
 
 Спільне ядро (не модулі, їх може використовувати будь-хто, а вони не залежать від модулів):
 
-- `common/` — доменний словник (`domain.ts`), формат помилок, валідація, `Clock`, шина подій;
+- `common/` — доменний словник (`domain.ts`), формат помилок (`DomainError`, `requireFound`), валідація, `Clock` і `time.ts`, шина подій, HTTP-захист (`http/`: guard-и, ліміти, перевірка Origin), `ExclusiveRunner` для періодичних задач, `ShutdownState`, `DataRetention`, `defineTransitions` для дозволених змін статусу, `TokenCipher`, `ObjectStorage` і клієнт Google;
 - `db/` — підключення, спільні колонки, збірка схеми для Drizzle, міграції та seed;
 - `config/` — змінні середовища; `logger/` — структуровані логи.
 
