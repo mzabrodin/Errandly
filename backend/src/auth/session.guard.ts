@@ -13,7 +13,6 @@ import {
 import type { EnvironmentVariables } from '../config/env.validation.js';
 import { SessionService } from './sessions.service.js';
 
-/** Learns who is calling from the session cookie; AuthenticatedGuard decides whether that is enough */
 @Injectable()
 export class SessionGuard implements CanActivate {
   private readonly secure: boolean;
@@ -39,7 +38,7 @@ export class SessionGuard implements CanActivate {
   }
 }
 
-/** Default-deny (SYS-07): every route without @Public() needs a session */
+/** Default-deny (SYS-07) */
 @Injectable()
 export class AuthenticatedGuard implements CanActivate {
   constructor(private readonly reflector: Reflector) {}

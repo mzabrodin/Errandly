@@ -27,7 +27,6 @@ import { APP_POOL_LIMITS, createDatabase, createPool, DATABASE, PG_POOL } from '
 export class DatabaseModule implements OnApplicationShutdown {
   constructor(@Inject(PG_POOL) private readonly pool: pg.Pool) {}
 
-  /** Last: everything that used the pool has finished in beforeApplicationShutdown */
   async onApplicationShutdown(): Promise<void> {
     await this.pool.end();
     new Logger('Shutdown').log('Database pool closed, shutdown complete');

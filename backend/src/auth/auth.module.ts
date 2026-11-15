@@ -30,8 +30,7 @@ import { SessionService } from './sessions.service.js';
     GoogleOAuthSignIn,
     SignInProviders,
     OAuthSignInService,
-    // Global guards run in registration order: identify the caller, count it, then deny anonymous
-    // ones (default-deny for the whole API: routes opt out with @Public(), SYS-07)
+    // Global guards run in registration order: rate limits need the caller, and must count anonymous requests too
     { provide: APP_GUARD, useClass: SessionGuard },
     { provide: APP_GUARD, useClass: CallerThrottlerGuard },
     { provide: APP_GUARD, useClass: AuthenticatedGuard },

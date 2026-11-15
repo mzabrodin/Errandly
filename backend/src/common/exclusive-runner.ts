@@ -21,12 +21,10 @@ export class ExclusiveRunner {
     return this.current;
   }
 
-  /** A job checks it between its steps, so a shutdown does not wait for a whole batch */
   get isStopping(): boolean {
     return this.stopped;
   }
 
-  /** Graceful shutdown: no new run starts, and the one in flight is awaited */
   stop(): Promise<void> {
     this.stopped = true;
     return this.current ?? Promise.resolve();

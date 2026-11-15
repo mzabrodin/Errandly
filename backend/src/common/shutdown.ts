@@ -3,11 +3,6 @@ import type { RequestHandler } from 'express';
 
 import type { ApiErrorDto } from './errors/api-error.dto.js';
 
-/**
- * Nest closes in this order: onModuleDestroy (here: refuse new requests), beforeApplicationShutdown
- * (jobs and the event dispatcher finish their run), the HTTP server closes once the requests in
- * flight are answered, onApplicationShutdown (SMTP, S3, then the pool).
- */
 @Injectable()
 export class ShutdownState implements OnModuleDestroy {
   private readonly logger = new Logger('Shutdown');
@@ -23,7 +18,6 @@ export class ShutdownState implements OnModuleDestroy {
   }
 }
 
-/** New requests during shutdown: 503, and the connection is not kept for another one */
 export function shutdownGate(state: ShutdownState): RequestHandler {
   const body: ApiErrorDto = { code: 'SERVICE_UNAVAILABLE' };
   return (_request, response, next) => {
@@ -36,7 +30,6 @@ export function shutdownGate(state: ShutdownState): RequestHandler {
   };
 }
 
-/** A hook that hangs must not keep the process past Docker's grace period */
 export function armShutdownDeadline(
   timeoutMs: number,
   logger: Pick<Logger, 'error'>,

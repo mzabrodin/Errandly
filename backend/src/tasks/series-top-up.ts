@@ -38,7 +38,6 @@ export class SeriesTopUp implements OnApplicationBootstrap, BeforeApplicationShu
     if (this.enabled) void this.tick();
   }
 
-  /** Before the pool closes; later cron ticks do nothing */
   beforeApplicationShutdown(): Promise<void> {
     return this.runner.stop();
   }

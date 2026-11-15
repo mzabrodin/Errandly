@@ -51,7 +51,6 @@ export class ReminderJobs implements OnApplicationBootstrap, BeforeApplicationSh
     if (this.enabled) void this.tick();
   }
 
-  /** Before the pool closes; later cron ticks do nothing */
   beforeApplicationShutdown(): Promise<void> {
     return this.runner.stop();
   }

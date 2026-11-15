@@ -12,13 +12,9 @@ import { Clock } from './clock.js';
 import { errorMessage } from './errors/error-message.js';
 import { ExclusiveRunner } from './exclusive-runner.js';
 
-/** Deletes what its module no longer needs; answers how many rows went, per table */
 export type Purge = (now: Date) => Promise<Record<string, number>>;
 
-/**
- * NFR-LEG-01: data is kept only as long as it is used (periods in docs/data-model.md). Each module
- * registers a purge for its own tables in onModuleInit, the way it registers event listeners.
- */
+/** NFR-LEG-01; the periods are in docs/data-model.md */
 @Injectable()
 export class DataRetention implements OnApplicationBootstrap, BeforeApplicationShutdown {
   private readonly logger = new Logger(DataRetention.name);
@@ -52,7 +48,6 @@ export class DataRetention implements OnApplicationBootstrap, BeforeApplicationS
     return this.enabled ? this.runner.run(() => this.purge()) : Promise.resolve();
   }
 
-  /** One module after another; a failing one is logged and the rest still run */
   async purge(): Promise<Record<string, number>> {
     const now = this.clock.now();
     const deleted: Record<string, number> = {};

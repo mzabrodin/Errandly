@@ -20,7 +20,6 @@ async function bootstrap(): Promise<void> {
   }
 
   const server = app.getHttpServer();
-  // A slow or stalled client cannot hold a connection (and a shutdown) for long
   server.requestTimeout = 30 * SECOND_MS;
   server.headersTimeout = 15 * SECOND_MS;
   await app.listen(config.get('PORT', { infer: true }));

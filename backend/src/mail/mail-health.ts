@@ -3,7 +3,6 @@ import { Injectable, Logger } from '@nestjs/common';
 import { errorMessage } from '../common/errors/error-message.js';
 import { MailTransport } from './mail-transport.js';
 
-/** For the readiness check, without handing out the transport itself */
 @Injectable()
 export class MailHealth {
   private readonly logger = new Logger(MailHealth.name);

@@ -14,10 +14,9 @@ export type DbExecutor = Database | Transaction;
 export const DATABASE = Symbol('DATABASE');
 export const PG_POOL = Symbol('PG_POOL');
 
-/** For the app; the CLI scripts (migrations) run without statement limits */
+/** The CLI scripts (migrations) run without these */
 export const APP_POOL_LIMITS: pg.PoolConfig = {
   statement_timeout: 30_000,
-  // A transaction left open (a bug, a hung call inside it) must not hold its locks for long
   idle_in_transaction_session_timeout: 60_000,
   idleTimeoutMillis: 30_000,
 };

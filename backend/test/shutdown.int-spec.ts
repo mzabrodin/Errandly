@@ -42,7 +42,6 @@ describe('Graceful shutdown (integration)', () => {
     await Promise.all([tick, closing]);
 
     expect(steps).toEqual(['delivery started', 'delivery done', 'closed']);
-    // Both deliveries were recorded while the pool was still open
     await expect(
       Promise.all(complete.mock.results.map(({ value }) => value)),
     ).resolves.toHaveLength(2);
