@@ -129,7 +129,16 @@ npm run format:check
 npm run build
 npm test
 npm run test:cov -w backend
+npm run test:cov -w frontend
 npm run test:integration -w backend   # Testcontainers: потрібен запущений Docker (або INTEGRATION_DATABASE_URL)
+```
+
+E2E-тести (Playwright, `frontend/e2e`) проходять сценарії в браузері на зібраному Docker-стеку. Листи для підтвердження пошти вони читають з Mailpit. Демо-даних не потребують: кожен тест реєструє власних користувачів.
+
+```bash
+AUTH_RATE_LIMIT_PER_MINUTE=1000 docker compose up -d --build --wait   # усі тести реєструються з одного IP
+npm exec -w frontend -- playwright install chromium                   # один раз
+npm run e2e -w frontend                                               # E2E_BASE_URL, MAILPIT_URL — інші адреси
 ```
 
 ## Типізований API
@@ -158,7 +167,7 @@ Swagger UI (`/api/docs`) доступний лише в режимі розро�
 | `EVENTS_POLL_INTERVAL_MS`                     | як часто доставляються події після коміту (мс, 0 — вимкнено)                                                                              | ні     | `backend/.env`          |
 | `SCHEDULER_ENABLED`                           | щогодинні задачі, як-от поповнення серій на 4 тижні (`true`)                                                                              | ні     | `backend/.env`          |
 | `RATE_LIMIT_PER_MINUTE`                       | запитів на хвилину з одного акаунта, без сесії — з одного IP (100)                                                                        | ні     | `backend/.env`          |
-| `AUTH_RATE_LIMIT_PER_MINUTE`                  | те саме для входу, паролів, листів, запрошень і викликів Google (10)                                                                      | ні     | `backend/.env`          |
+| `AUTH_RATE_LIMIT_PER_MINUTE`                  | те саме для входу, паролів, листів, запрошень і викликів Google (10)                                                                      | ні     | `backend/.env`, `.env`  |
 | `SHUTDOWN_TIMEOUT_MS`                         | скільки триває плавна зупинка, перш ніж процес вийде з кодом 1 (20000; менше за `stop_grace_period` у compose)                            | ні     | `backend/.env`          |
 | `POSTGRES_USER` / `POSTGRES_PASSWORD` / `_DB` | облікові дані бази в compose                                                                                                              | так    | `.env`                  |
 | `SMTP_HOST` / `SMTP_PORT` / `SMTP_SECURE`     | поштовий сервер (за замовчуванням Mailpit)                                                                                                | ні     | `backend/.env`, `.env`  |
