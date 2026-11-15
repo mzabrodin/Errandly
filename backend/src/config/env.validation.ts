@@ -54,7 +54,9 @@ const envSchema = z.object({
   /** 0 turns after-commit delivery off */
   EVENTS_POLL_INTERVAL_MS: z.coerce.number().int().min(0).default(2000),
   SCHEDULER_ENABLED: z.stringbool().default(true),
-  /** Per IP (NFR-SEC-07) */
+  /** Past it the process exits with 1; below the compose stop_grace_period (30 s) */
+  SHUTDOWN_TIMEOUT_MS: z.coerce.number().int().min(1000).default(20_000),
+  /** Per account, or per IP without a session (NFR-SEC-07) */
   RATE_LIMIT_PER_MINUTE: z.coerce.number().int().min(1).default(100),
   AUTH_RATE_LIMIT_PER_MINUTE: z.coerce.number().int().min(1).default(10),
 

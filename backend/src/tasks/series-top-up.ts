@@ -1,4 +1,10 @@
-import { Inject, Injectable, Logger, type OnApplicationBootstrap } from '@nestjs/common';
+import {
+  Inject,
+  Injectable,
+  Logger,
+  type BeforeApplicationShutdown,
+  type OnApplicationBootstrap,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Cron, CronExpression } from '@nestjs/schedule';
 
@@ -13,7 +19,7 @@ import { HORIZON_MS } from './tasks.rules.js';
 
 /** FR-21; also at start-up, so runs missed while the server was down catch up (SYS-25) */
 @Injectable()
-export class SeriesTopUp implements OnApplicationBootstrap {
+export class SeriesTopUp implements OnApplicationBootstrap, BeforeApplicationShutdown {
   private readonly logger = new Logger(SeriesTopUp.name);
   private readonly runner = new ExclusiveRunner(this.logger, 'Series top-up');
   private readonly enabled: boolean;
@@ -30,6 +36,11 @@ export class SeriesTopUp implements OnApplicationBootstrap {
 
   onApplicationBootstrap(): void {
     if (this.enabled) void this.tick();
+  }
+
+  /** Before the pool closes; later cron ticks do nothing */
+  beforeApplicationShutdown(): Promise<void> {
+    return this.runner.stop();
   }
 
   @Cron(CronExpression.EVERY_HOUR)

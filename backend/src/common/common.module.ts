@@ -12,6 +12,7 @@ import { EventDispatcher } from './events/event-dispatcher.js';
 import { EventPublicationStore } from './events/event-publication.store.js';
 import { GoogleClients } from './google/google-clients.js';
 import { rateLimits } from './http/rate-limit.js';
+import { ShutdownState } from './shutdown.js';
 import { ObjectStorage } from './storage/object-storage.js';
 import { S3ObjectStorage } from './storage/s3-object-storage.js';
 
@@ -37,7 +38,16 @@ import { S3ObjectStorage } from './storage/s3-object-storage.js';
     EventDispatcher,
     TokenCipher,
     GoogleClients,
+    ShutdownState,
   ],
-  exports: [Clock, EventBus, EventPublicationStore, GoogleClients, ObjectStorage, TokenCipher],
+  exports: [
+    Clock,
+    EventBus,
+    EventPublicationStore,
+    GoogleClients,
+    ObjectStorage,
+    ShutdownState,
+    TokenCipher,
+  ],
 })
 export class CommonModule {}

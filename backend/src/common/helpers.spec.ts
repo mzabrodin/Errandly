@@ -13,7 +13,7 @@ function setup() {
 }
 
 describe('ExclusiveRunner', () => {
-  it('skips a tick while the previous run is still going, and waits for it on idle()', async () => {
+  it('skips a tick while the previous run is still going', async () => {
     const { runner } = setup();
     let release = noop;
     let runs = 0;
@@ -26,12 +26,40 @@ describe('ExclusiveRunner', () => {
 
     const first = runner.run(job);
     await runner.run(job);
-    const idle = runner.idle();
     release();
-    await Promise.all([first, idle]);
+    await first;
 
     expect(runs).toBe(1);
-    await runner.run(() => Promise.resolve());
+  });
+
+  it('on stop(), waits for the run in flight and starts no other', async () => {
+    const { runner } = setup();
+    let release = noop;
+    let runs = 0;
+    const first = runner.run(
+      () =>
+        new Promise<void>((resolve) => {
+          runs += 1;
+          release = resolve;
+        }),
+    );
+
+    let stopped = false;
+    const stopping = (async () => {
+      await runner.stop();
+      stopped = true;
+    })();
+    await Promise.resolve();
+    expect(stopped).toBe(false);
+    expect(runner.isStopping).toBe(true);
+    release();
+    await Promise.all([first, stopping]);
+
+    await runner.run(() => {
+      runs += 1;
+      return Promise.resolve();
+    });
+    expect(runs).toBe(1);
   });
 
   it('logs a failure instead of throwing, so the next tick tries again', async () => {
@@ -41,7 +69,7 @@ describe('ExclusiveRunner', () => {
     await runner.run(() => Promise.reject('plain text'));
 
     expect(warnings).toEqual(['Top-up failed: database is down', 'Top-up failed: plain text']);
-    await expect(runner.idle()).resolves.toBeUndefined();
+    await expect(runner.stop()).resolves.toBeUndefined();
   });
 });
 

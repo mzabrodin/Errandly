@@ -10,15 +10,19 @@ import {
   S3Client,
   S3ServiceException,
 } from '@aws-sdk/client-s3';
-import { Injectable, Logger, type OnModuleDestroy, type OnModuleInit } from '@nestjs/common';
+import { Injectable, Logger, type OnApplicationShutdown, type OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 
 import type { EnvironmentVariables } from '../../config/env.validation.js';
 import { errorMessage } from '../errors/error-message.js';
+import { SECOND_MS } from '../time.js';
 import { ObjectStorage, type StoredObject } from './object-storage.js';
 
+const CONNECTION_TIMEOUT_MS = 5 * SECOND_MS;
+const REQUEST_TIMEOUT_MS = 15 * SECOND_MS;
+
 @Injectable()
-export class S3ObjectStorage extends ObjectStorage implements OnModuleInit, OnModuleDestroy {
+export class S3ObjectStorage extends ObjectStorage implements OnModuleInit, OnApplicationShutdown {
   private readonly logger = new Logger(S3ObjectStorage.name);
   private readonly client: S3Client;
   private readonly bucket: string;
@@ -34,6 +38,10 @@ export class S3ObjectStorage extends ObjectStorage implements OnModuleInit, OnMo
       ...(endpoint !== undefined && { endpoint }),
       // Self-hosted services like SeaweedFS don't support bucket subdomains
       forcePathStyle: true,
+      requestHandler: {
+        connectionTimeout: CONNECTION_TIMEOUT_MS,
+        requestTimeout: REQUEST_TIMEOUT_MS,
+      },
       // Without keys the SDK uses its default credential chain
       ...(accessKeyId !== undefined &&
         secretAccessKey !== undefined && { credentials: { accessKeyId, secretAccessKey } }),
@@ -51,7 +59,8 @@ export class S3ObjectStorage extends ObjectStorage implements OnModuleInit, OnMo
     }
   }
 
-  onModuleDestroy(): void {
+  /** After the HTTP server has answered the requests in flight */
+  onApplicationShutdown(): void {
     this.client.destroy();
   }
 
