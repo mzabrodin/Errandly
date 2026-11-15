@@ -5,9 +5,13 @@ import { OAuth2Client } from 'google-auth-library';
 import type { EnvironmentVariables } from '../../config/env.validation.js';
 import { appLink } from '../../config/urls.js';
 
+// A client keeps its access token for the hour Google issues it; a new one would refresh first
+const MAX_API_CLIENTS = 200;
+
 /** One OAuth client for Google sign-in and the calendar; each flow has its own redirect URI */
 @Injectable()
 export class GoogleClients {
+  private readonly apiClients = new Map<string, OAuth2Client>();
   private readonly clientId: string | undefined;
   private readonly clientSecret: string | undefined;
   private readonly appUrl: string;
@@ -32,10 +36,17 @@ export class GoogleClients {
     return this.create(appLink(this.appUrl, callbackPath));
   }
 
-  /** For API calls on the user's behalf */
   client(refreshToken: string): OAuth2Client {
-    const client = this.create(undefined);
-    client.setCredentials({ refresh_token: refreshToken });
+    const cached = this.apiClients.get(refreshToken);
+    // Re-inserted, so the Map's insertion order is the least recently used first
+    this.apiClients.delete(refreshToken);
+    const client = cached ?? this.create(undefined);
+    if (!cached) client.setCredentials({ refresh_token: refreshToken });
+    this.apiClients.set(refreshToken, client);
+    const [oldest] = this.apiClients.keys();
+    if (this.apiClients.size > MAX_API_CLIENTS && oldest !== undefined) {
+      this.apiClients.delete(oldest);
+    }
     return client;
   }
 

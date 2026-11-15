@@ -21,8 +21,15 @@ describe('Rate limits (integration)', () => {
     await t.reset();
   });
 
+  const limits = {
+    general: process.env['RATE_LIMIT_PER_MINUTE'],
+    strict: process.env['AUTH_RATE_LIMIT_PER_MINUTE'],
+  };
+
   afterAll(async () => {
     await t.close();
+    process.env['RATE_LIMIT_PER_MINUTE'] = limits.general;
+    process.env['AUTH_RATE_LIMIT_PER_MINUTE'] = limits.strict;
   });
 
   const login = () =>

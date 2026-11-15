@@ -91,7 +91,14 @@
       }
     },
     {
-      "files": ["**/*.spec.ts", "**/*.int-spec.ts", "**/*.test.ts", "**/*.test.tsx", "**/test/**"],
+      "files": [
+        "**/*.spec.ts",
+        "**/*.int-spec.ts",
+        "**/*.test.ts",
+        "**/*.test.tsx",
+        "**/test/**",
+        "**/src/testing/**"
+      ],
       "rules": {
         "max-lines-per-function": "off",
         "typescript/no-explicit-any": "off",

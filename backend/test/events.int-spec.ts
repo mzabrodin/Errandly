@@ -6,6 +6,7 @@ import { inArray } from 'drizzle-orm';
 import { AppModule } from './../src/app.module.js';
 import { EventBus } from './../src/common/events/event-bus.js';
 import { EventDispatcher } from './../src/common/events/event-dispatcher.js';
+import { EventPublicationStore } from './../src/common/events/event-publication.store.js';
 import { eventPublications } from './../src/common/events/event-publications.schema.js';
 import { DATABASE, type Database } from './../src/db/database.js';
 
@@ -68,5 +69,26 @@ describe('Events (integration)', () => {
     const [retry] = await rowsOf(failing);
     expect(retry).toMatchObject({ attempts: 1, completedAt: null, lastError: 'calendar down' });
     expect(retry?.nextAttemptAt?.getTime()).toBeGreaterThan(Date.now());
+  });
+
+  it('delivers again an event whose instance died after claiming it, once the lease ends', async () => {
+    received.length = 0;
+    await db.transaction((tx) => bus.publish(tx, 'task.changed', { taskId: 't2', groupId: 'g' }));
+    const now = new Date();
+    const claimed = await app
+      .get(EventPublicationStore)
+      .claimDue(now, 100, new Date(now.getTime() + 5 * 60 * 1000));
+    const mine = claimed.filter(({ listener }) => listener === delivered).map(({ id }) => id);
+
+    await dispatcher.dispatchDue();
+    expect(received).toEqual([]);
+
+    await db
+      .update(eventPublications)
+      .set({ nextAttemptAt: new Date(Date.now() - 1000) })
+      .where(inArray(eventPublications.id, mine));
+    await dispatcher.dispatchDue();
+
+    expect(received).toEqual(['t2']);
   });
 });

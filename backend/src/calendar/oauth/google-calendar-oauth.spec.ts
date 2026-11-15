@@ -1,66 +1,87 @@
-import type { GoogleClients } from '../../common/google/google-clients.js';
+import { http, HttpResponse } from 'msw';
+
+import { httpStatus } from '../../common/google/google-clients.js';
+import {
+  APP_URL,
+  CLIENT_ID,
+  googleClients,
+  googleServer,
+  idToken,
+  oauthError,
+  REVOKE_URL,
+  tokenEndpoint,
+} from '../../testing/google-http.js';
 import { CALENDAR_SCOPE, GoogleCalendarOAuth } from './google-calendar-oauth.js';
 
-function setup(tokens: Record<string, unknown>, revokeError?: unknown) {
-  const options: Record<string, unknown>[] = [];
-  const client = {
-    generateAuthUrl: (opts: Record<string, unknown>) => {
-      options.push(opts);
-      return 'https://accounts.google.com/o/oauth2/v2/auth?…';
-    },
-    getToken: () => Promise.resolve({ tokens }),
-    verifyIdToken: () => Promise.resolve({ getPayload: () => ({ email: 'anya@gmail.com' }) }),
-    revokeToken: () =>
-      revokeError === undefined ? Promise.resolve({}) : Promise.reject(revokeError),
-  };
-  const clients = {
-    configured: true,
-    audience: 'client-id',
-    oauthClient: () => client,
-  } as unknown as GoogleClients;
-  return { oauth: new GoogleCalendarOAuth(clients), options };
-}
+const server = googleServer();
 
 const GRANTED = {
+  access_token: 'at',
+  expires_in: 3600,
+  token_type: 'Bearer',
   scope: `openid ${CALENDAR_SCOPE} https://www.googleapis.com/auth/userinfo.email`,
-  refresh_token: 'rt',
-  id_token: 'id',
+  refresh_token: 'rt-anya',
 };
 
-describe('GoogleCalendarOAuth', () => {
+function grant(answer: Record<string, unknown> | Response) {
+  const tokens = tokenEndpoint(() => answer);
+  server.use(tokens.handler);
+  return tokens;
+}
+
+describe('GoogleCalendarOAuth over HTTP', () => {
+  const oauth = new GoogleCalendarOAuth(googleClients());
+
   it('asks offline access to Errandly-made calendars only, every time', () => {
-    const { oauth, options } = setup(GRANTED);
+    const url = new URL(oauth.authUrl('state-1'));
 
-    oauth.authUrl('state');
-
-    expect(options).toEqual([
-      {
-        access_type: 'offline',
-        prompt: 'consent',
-        scope: ['openid', 'email', CALENDAR_SCOPE],
-        state: 'state',
-      },
-    ]);
+    expect(Object.fromEntries(url.searchParams)).toEqual({
+      access_type: 'offline',
+      prompt: 'consent',
+      scope: `openid email ${CALENDAR_SCOPE}`,
+      state: 'state-1',
+      response_type: 'code',
+      client_id: CLIENT_ID,
+      redirect_uri: `${APP_URL}/api/me/calendar/callback`,
+    });
   });
 
   it('trades the code for a refresh token and the account email', async () => {
-    const { oauth } = setup(GRANTED);
+    const tokens = grant({ ...GRANTED, id_token: idToken() });
 
-    expect(await oauth.exchange('code')).toEqual({ refreshToken: 'rt', email: 'anya@gmail.com' });
+    await expect(oauth.exchange('code-1')).resolves.toEqual({
+      refreshToken: 'rt-anya',
+      email: 'anya@gmail.com',
+    });
+    expect(tokens.calls).toEqual([
+      expect.objectContaining({
+        grant_type: 'authorization_code',
+        code: 'code-1',
+        redirect_uri: `${APP_URL}/api/me/calendar/callback`,
+      }),
+    ]);
   });
 
   it('rejects a consent where the calendar box was unticked', async () => {
-    const { oauth } = setup({ ...GRANTED, scope: 'openid email' });
+    grant({ ...GRANTED, scope: 'openid email', id_token: idToken() });
 
-    await expect(oauth.exchange('code')).rejects.toThrow('Calendar access was not granted');
+    await expect(oauth.exchange('code-1')).rejects.toThrow('Calendar access was not granted');
   });
 
-  it('treats an already revoked token as revoked', async () => {
-    const gone = Object.assign(new Error('invalid_token'), { response: { status: 400 } });
+  it('rejects an ID token issued to another app, and a used code', async () => {
+    grant({ ...GRANTED, id_token: idToken({ aud: 'someone-else' }) });
+    await expect(oauth.exchange('code-1')).rejects.toThrow('Wrong recipient');
 
-    await expect(setup(GRANTED, gone).oauth.revoke('rt')).resolves.toBeUndefined();
-    await expect(setup(GRANTED, new Error('offline')).oauth.revoke('rt')).rejects.toThrow(
-      'offline',
-    );
+    grant(oauthError('invalid_grant'));
+    await expect(oauth.exchange('code-1')).rejects.toThrow('invalid_grant');
+  });
+
+  it('treats an already revoked token as revoked, and passes other failures on', async () => {
+    server.use(http.post(REVOKE_URL, () => oauthError('invalid_token')));
+    await expect(oauth.revoke('rt-anya')).resolves.toBeUndefined();
+
+    server.use(http.post(REVOKE_URL, () => new HttpResponse(null, { status: 503 })));
+    const error: unknown = await oauth.revoke('rt-anya').catch((caught: unknown) => caught);
+    expect(httpStatus(error)).toBe(503);
   });
 });
