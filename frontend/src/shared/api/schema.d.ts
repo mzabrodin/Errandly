@@ -224,15 +224,32 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/auth/google": {
+    "/api/auth/oauth/{provider}": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /** Redirects to Google sign-in, then back to `next`. A separate flow from the calendar connection. */
-        get: operations["GoogleAuthController_google"];
+        /** Redirects to the provider, which returns to the callback; on failure to /login?oauthError=. */
+        get: operations["OAuthController_start"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/auth/oauth/{provider}/callback": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The provider's redirect: signs in and returns to `next`, or to /login?oauthError=. */
+        get: operations["OAuthController_callback"];
         put?: never;
         post?: never;
         delete?: never;
@@ -747,7 +764,7 @@ export interface components {
             database: "up" | "down";
         };
         /** @enum {string} */
-        ErrorCode: "VALIDATION" | "TOKEN_INVALID" | "WRONG_PASSWORD" | "UNAUTHENTICATED" | "INVALID_CREDENTIALS" | "FORBIDDEN" | "ADMIN_ONLY" | "NOT_ASSIGNEE" | "EMAIL_NOT_VERIFIED" | "NOT_FOUND" | "EMAIL_TAKEN" | "LAST_ADMIN" | "TASK_DONE" | "UNDO_EXPIRED" | "SWAP_STALE" | "MEMBER_ABSENT" | "CANNOT_REMOVE_SELF" | "CALENDAR_NOT_CONNECTED" | "CONFLICT" | "INVITE_INVALID" | "FILE_TOO_LARGE" | "ACCOUNT_LOCKED" | "TOO_MANY_REQUESTS" | "INTERNAL" | "NOT_IMPLEMENTED" | "SERVICE_UNAVAILABLE";
+        ErrorCode: "VALIDATION" | "TOKEN_INVALID" | "WRONG_PASSWORD" | "UNAUTHENTICATED" | "INVALID_CREDENTIALS" | "FORBIDDEN" | "ADMIN_ONLY" | "NOT_ASSIGNEE" | "EMAIL_NOT_VERIFIED" | "NOT_FOUND" | "EMAIL_TAKEN" | "LAST_ADMIN" | "TASK_DONE" | "UNDO_EXPIRED" | "SWAP_STALE" | "MEMBER_ABSENT" | "CANNOT_REMOVE_SELF" | "CALENDAR_NOT_CONNECTED" | "CONFLICT" | "INVITE_INVALID" | "FILE_TOO_LARGE" | "ACCOUNT_LOCKED" | "TOO_MANY_REQUESTS" | "INTERNAL" | "SERVICE_UNAVAILABLE";
         ApiErrorDto: {
             code: components["schemas"]["ErrorCode"];
             /**
@@ -1527,19 +1544,59 @@ export interface operations {
             };
         };
     };
-    GoogleAuthController_google: {
+    OAuthController_start: {
         parameters: {
             query?: {
-                /** @description Frontend path to return to after signing in */
+                /** @description Current UI language; the language of an account created now */
+                locale?: components["schemas"]["Locale"];
+                /** @description Frontend path to return to after signing in; anything but an app path becomes `/` */
                 next?: string;
+                /** @description The device's IANA time zone; the time zone of an account created now */
+                timezone?: string;
             };
             header?: never;
-            path?: never;
+            path: {
+                provider: "google";
+            };
             cookie?: never;
         };
         requestBody?: never;
         responses: {
-            /** @description Redirect to Google */
+            /** @description Redirect to the provider */
+            302: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Error: { code, fields?, ... } */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorDto"];
+                };
+            };
+        };
+    };
+    OAuthController_callback: {
+        parameters: {
+            query?: {
+                /** @description Set when the user cancels */
+                error?: unknown;
+                state?: unknown;
+                code?: unknown;
+            };
+            header?: never;
+            path: {
+                provider: "google";
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Redirect into the app */
             302: {
                 headers: {
                     [name: string]: unknown;

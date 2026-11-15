@@ -1,11 +1,12 @@
 // Domain names for the API contract. The shapes come from the backend DTOs via
 // backend/openapi.json → schema.d.ts (npm run api:sync); behaviour rules: docs/api.md
-import type { components } from './schema';
+import type { components, operations } from './schema';
 
 type Schemas = components['schemas'];
 
 export type User = Schemas['UserDto'];
 export type Locale = Schemas['Locale'];
+export type AuthProvider = operations['OAuthController_start']['parameters']['path']['provider'];
 
 export type GroupRole = Schemas['GroupRole'];
 export type GroupSummary = Schemas['GroupSummaryDto'];

@@ -1,7 +1,7 @@
 import type { JSX } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import { googleAuthUrl } from '../../shared/api/auth';
+import { oauthSignInUrl } from '../../shared/api/auth';
 import { mocksEnabled } from '../../shared/lib/env';
 import { Button } from '../../shared/ui/Button';
 
@@ -35,11 +35,11 @@ export function GoogleButton({ next }: { next: string }): JSX.Element {
   const start = async () => {
     if (mocksEnabled) {
       // The service worker does not intercept navigation, so with mocks the redirect is simulated by hand
-      await fetch(googleAuthUrl, { redirect: 'manual' });
+      await fetch(oauthSignInUrl('google', next), { redirect: 'manual' });
       window.location.assign(next);
       return;
     }
-    window.location.assign(`${googleAuthUrl}?next=${encodeURIComponent(next)}`);
+    window.location.assign(oauthSignInUrl('google', next));
   };
 
   return (

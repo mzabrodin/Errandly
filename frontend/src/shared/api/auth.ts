@@ -9,7 +9,7 @@ import {
 import { currentLocale } from '../i18n';
 import { deviceTimeZone } from '../lib/dates';
 import { api, ApiError, unwrap } from './client';
-import type { User } from './types';
+import type { AuthProvider, User } from './types';
 
 export const sessionKey = ['session'] as const;
 
@@ -100,4 +100,8 @@ export function useResendVerification(): UseMutationResult<void, Error, void> {
   });
 }
 
-export const googleAuthUrl = `${import.meta.env.VITE_API_URL ?? ''}/api/auth/google`;
+/** A full-page navigation: the backend redirects to the provider and back to `next` (FR-07) */
+export function oauthSignInUrl(provider: AuthProvider, next: string): string {
+  const query = new URLSearchParams({ next, locale: currentLocale(), timezone: deviceTimeZone() });
+  return `${import.meta.env.VITE_API_URL ?? ''}/api/auth/oauth/${provider}?${query.toString()}`;
+}

@@ -1,6 +1,6 @@
 import { useState, type FormEvent, type JSX } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Link, useLocation, useNavigate } from 'react-router';
+import { Link, useLocation, useNavigate, useSearchParams } from 'react-router';
 
 import { useLogin } from '../../shared/api/auth';
 import { errorMessage, isApiError } from '../../shared/api/errors';
@@ -18,6 +18,8 @@ export function LoginPage(): JSX.Element {
   useDocumentTitle(t('titles.login'));
   const navigate = useNavigate();
   const { search } = useLocation();
+  // Set by the backend when a sign-in through Google (or another provider) fails
+  const oauthError = useSearchParams()[0].get('oauthError');
   const next = useNextPath();
   const login = useLogin();
   const [email, setEmail] = useState('');
@@ -39,7 +41,13 @@ export function LoginPage(): JSX.Element {
   };
 
   const serverError = (() => {
-    if (!login.error) return null;
+    if (!login.error) {
+      return oauthError === null
+        ? null
+        : t('auth.errors.oauthFailed', {
+            provider: oauthError === 'google' ? 'Google' : oauthError,
+          });
+    }
     // Generic message that does not reveal which field is wrong (FR-05)
     if (isApiError(login.error, 'INVALID_CREDENTIALS')) return t('auth.errors.invalidCredentials');
     if (isApiError(login.error, 'ACCOUNT_LOCKED')) {
