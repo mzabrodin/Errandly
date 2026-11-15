@@ -42,9 +42,10 @@ end
 == Кожен наступний запит (SYS-06–07) ==
 SPA -> Guard : будь-який /api/... з cookie
 Guard -> Sessions : authenticate(token)
+note right of Guard : далі CallerThrottlerGuard рахує запит\nза акаунтом (без сесії — за IP): понад ліміт — 429
 alt Сесії немає або вона прострочена
   Sessions -> Repo : deleteSession (прострочену)
-  Guard --> SPA : 401 UNAUTHENTICATED
+  Guard --> SPA : 401 UNAUTHENTICATED (AuthenticatedGuard; публічний маршрут іде далі)
 else Чинна сесія
   opt Минула година від останнього продовження
     Sessions -> Repo : touchSession: ще 30 днів

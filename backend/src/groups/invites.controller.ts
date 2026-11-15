@@ -4,6 +4,7 @@ import { ApiCookieAuth, ApiTags } from '@nestjs/swagger';
 import { ApiErrorResponses } from '../common/http/api-docs.js';
 import { CurrentUser, OptionalUser, Public, type RequestUser } from '../common/http/auth.js';
 import { ParseId } from '../common/http/parse-id.js';
+import { StrictRateLimit } from '../common/http/rate-limit.js';
 import { AcceptInviteDto, CreateInviteDto, InviteDto, InviteInfoDto } from './dto/group.dto.js';
 import { InvitesService } from './invites.service.js';
 
@@ -16,6 +17,7 @@ export class InvitesController {
 
   /** Creates a 7-day invite link and optionally emails it (admin). Errors: 403 ADMIN_ONLY. */
   @Post('groups/:groupId/invites')
+  @StrictRateLimit()
   @ApiCookieAuth()
   create(
     @CurrentUser() user: RequestUser,

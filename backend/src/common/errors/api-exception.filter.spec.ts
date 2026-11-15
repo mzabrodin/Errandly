@@ -25,12 +25,14 @@ function hostFor(response: object): ArgumentsHost {
 interface FakeResponse {
   status: Mock<(status: number) => FakeResponse>;
   json: Mock<(body: unknown) => void>;
+  setHeader: Mock<(name: string, value: string) => void>;
 }
 
 function respond(exception: unknown): FakeResponse {
   const response: FakeResponse = {
     status: vi.fn<(status: number) => FakeResponse>(),
     json: vi.fn<(body: unknown) => void>(),
+    setHeader: vi.fn<(name: string, value: string) => void>(),
   };
   response.status.mockReturnValue(response);
   new ApiExceptionFilter().catch(exception, hostFor(response));
@@ -90,6 +92,14 @@ describe('ApiExceptionFilter', () => {
     expect(response.status).toHaveBeenCalledWith(409);
     expect(response.json).toHaveBeenCalledWith({ code: 'LAST_ADMIN', groups: ['Room 12'] });
     expect(errorCodeOf(response)).toBe('LAST_ADMIN');
+  });
+
+  it('sends Retry-After when the body says how long to wait', () => {
+    const response = respond(new DomainError('TOO_MANY_REQUESTS', { retryAfterSeconds: 42 }));
+
+    expect(response.status).toHaveBeenCalledWith(429);
+    expect(response.setHeader).toHaveBeenCalledWith('Retry-After', '42');
+    expect(respond(new DomainError('NOT_FOUND')).setHeader).not.toHaveBeenCalled();
   });
 
   it('logs unexpected errors with their stack', () => {

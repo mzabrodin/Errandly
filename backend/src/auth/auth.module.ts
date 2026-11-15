@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { APP_GUARD } from '@nestjs/core';
 
+import { CallerThrottlerGuard } from '../common/http/rate-limit.js';
 import { MailModule } from '../mail/index.js';
 import { UsersModule } from '../users/index.js';
 import { AccountController } from './account.controller.js';
@@ -13,7 +14,7 @@ import { OAuthController } from './oauth.controller.js';
 import { GoogleOAuthSignIn } from './oauth/google-oauth-sign-in.js';
 import { SignInProviders } from './oauth/sign-in-providers.js';
 import { Argon2PasswordHasher, PasswordHasher } from './password-hasher.js';
-import { SessionGuard } from './session.guard.js';
+import { AuthenticatedGuard, SessionGuard } from './session.guard.js';
 import { SessionService } from './sessions.service.js';
 
 @Module({
@@ -29,7 +30,10 @@ import { SessionService } from './sessions.service.js';
     SignInProviders,
     OAuthSignInService,
     // Default-deny for the whole API: routes opt out with @Public() (SYS-07)
+    // Global guards run in registration order: identify the caller, count it, then deny anonymous ones
     { provide: APP_GUARD, useClass: SessionGuard },
+    { provide: APP_GUARD, useClass: CallerThrottlerGuard },
+    { provide: APP_GUARD, useClass: AuthenticatedGuard },
   ],
   exports: [PasswordHasher],
 })

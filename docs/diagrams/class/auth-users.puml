@@ -41,6 +41,9 @@ package Services {
   class SessionGuard <<APP_GUARD>> {
     +canActivate(context)
   }
+  class AuthenticatedGuard <<APP_GUARD>> {
+    +canActivate(context)
+  }
   class AuthService {
     +register(dto)
     +login(dto)

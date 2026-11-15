@@ -1,11 +1,13 @@
 import type { ExecutionContext } from '@nestjs/common';
 import type { ConfigService } from '@nestjs/config';
+import { Reflector } from '@nestjs/core';
+import type { ThrottlerLimitDetail, ThrottlerStorage } from '@nestjs/throttler';
 import type { Request, Response } from 'express';
 
 import type { EnvironmentVariables } from '../../config/env.validation.js';
 import { DomainError } from '../errors/domain-error.js';
 import { currentUserOf, optionalUserOf, setRequestUser } from './auth.js';
-import { rateLimits, StrictRateLimit } from './rate-limit.js';
+import { CallerThrottlerGuard, rateLimits, StrictRateLimit } from './rate-limit.js';
 import {
   clearSessionCookie,
   readSessionCookie,
@@ -92,5 +94,34 @@ describe('rate limits', () => {
     expect(auth.limit).toBe(10);
     expect(auth.skipIf(contextFor({}, Reflect.get(Routes.prototype, 'login')))).toBe(false);
     expect(auth.skipIf(contextFor({}, Reflect.get(Routes.prototype, 'list')))).toBe(true);
+  });
+});
+
+describe('CallerThrottlerGuard', () => {
+  class Probe extends CallerThrottlerGuard {
+    track(req: Record<string, unknown>): Promise<string> {
+      return this.getTracker(req);
+    }
+
+    reject(timeToBlockExpire: number): Promise<void> {
+      return this.throwThrottlingException(contextFor({}), {
+        timeToBlockExpire,
+      } as ThrottlerLimitDetail);
+    }
+  }
+  const guard = new Probe({ throttlers: [] }, {} as ThrottlerStorage, new Reflector());
+
+  it('counts a signed-in caller by account and anyone else by IP', async () => {
+    const signedIn = { ip: '203.0.113.7' };
+    setRequestUser(signedIn, { id: 'u1', sessionId: 's1' });
+
+    await expect(guard.track(signedIn)).resolves.toBe('user:u1');
+    await expect(guard.track({ ip: '203.0.113.7' })).resolves.toBe('ip:203.0.113.7');
+  });
+
+  it('answers with the contract error and the time to wait', async () => {
+    await expect(guard.reject(42)).rejects.toEqual(
+      new DomainError('TOO_MANY_REQUESTS', { retryAfterSeconds: 42 }),
+    );
   });
 });
