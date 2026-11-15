@@ -161,8 +161,26 @@ describe('Tasks (integration)', () => {
     expect((await list()).map((task) => task.id)).toEqual([first.id]);
   });
 
-  it('moves the open tasks of a member who leaves (FR-15)', async () => {
+  it('turns a one-off task into a series and hands it back to the rotation', async () => {
+    const task = await create({ assigneeId: bohdan.id });
+
+    const { body: edited } = await anya.agent
+      .patch(`/api/tasks/${task.id}?scope=one`)
+      .send(taskInput({ dueAt: task.dueAt }))
+      .expect(200);
+    expect(edited).toMatchObject({ id: task.id, manuallyAssigned: false });
+
+    await anya.agent
+      .patch(`/api/tasks/${task.id}?scope=one`)
+      .send(taskInput({ dueAt: task.dueAt, recurrence: { type: 'daily' } }))
+      .expect(200)
+      .expect(({ body }) => expect(body.recurrence).toEqual({ type: 'daily' }));
+    expect(await list()).toHaveLength(28);
+  });
+
+  it('moves the open tasks of a member who leaves, overdue ones too (FR-15)', async () => {
     await create({ recurrence: { type: 'daily' }, assigneeId: bohdan.id });
+    t.clock.advance(2 * DAY);
 
     await bohdan.agent.post(`/api/groups/${groupId}/leave`).expect(204);
 

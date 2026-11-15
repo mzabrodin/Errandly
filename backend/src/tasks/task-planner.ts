@@ -76,7 +76,7 @@ export class TaskPlanner {
     const [first] = instances;
     const last = instances.at(-1);
     if (first === undefined || last === undefined) return;
-    const assign = await this.assigner(groupId, first.dueAt, last.dueAt, tx);
+    const assign = await this.assigner(groupId, first.dueAt, last.dueAt, tx, instances);
     for (const task of instances) {
       const assigneeId = assign(task, task.series.timezone);
       if (assigneeId === task.assigneeId && !task.manuallyAssigned) continue;
@@ -128,14 +128,23 @@ export class TaskPlanner {
     from: Date,
     to: Date,
     tx: DbExecutor,
+    replacing: readonly Pick<TaskRow, 'seriesId' | 'dueAt'>[] = [],
   ): Promise<(task: Omit<AssignedTask, 'assigneeId'>, timeZone: string) => string | null> {
     // In sequence: queries on one transaction connection must not overlap
     const candidates = await this.candidates(groupId, tx);
-    const history = await this.repository.assignmentHistory(
+    const stored = await this.repository.assignmentHistory(
       groupId,
       addMs(from, -LOAD_WINDOW_MS),
       to,
       tx,
+    );
+    // A task being reassigned must not count as its current assignee's load
+    const history = stored.filter(
+      (past) =>
+        !replacing.some(
+          (task) =>
+            task.seriesId === past.seriesId && task.dueAt.getTime() === past.dueAt.getTime(),
+        ),
     );
     return (task, timeZone) => {
       const assigneeId = this.strategy.pick(candidates, history, {

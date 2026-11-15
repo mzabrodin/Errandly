@@ -190,6 +190,19 @@ describe('Auth (integration)', () => {
       t.clock.advance(10 * MINUTE);
       await attempt(PASSWORD).expect(200);
     });
+
+    it('counts wrong passwords sent in parallel', async () => {
+      const user = await createUser(t.db);
+      const attempt = (password: string) =>
+        t.agent().post('/api/auth/login').send({ email: user.email, password });
+
+      const statuses = await Promise.all(
+        Array.from({ length: 5 }, async () => (await attempt('Wrong1234')).status),
+      );
+
+      expect(statuses).toContain(423);
+      await attempt(PASSWORD).expect(423);
+    });
   });
 
   describe('sessions (SYS-06–07)', () => {

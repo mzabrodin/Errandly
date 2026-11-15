@@ -24,12 +24,11 @@ export function lockRemainingSeconds(lockedUntil: Date | null, now: Date): numbe
   return Math.ceil((lockedUntil.getTime() - now.getTime()) / 1000);
 }
 
-export function afterFailedLogin(failedLogins: number, now: Date): LoginAttempts {
-  const failures = failedLogins + 1;
-  if (failures >= MAX_FAILED_LOGINS) {
-    return { failedLogins: 0, lockedUntil: addMs(now, LOCKOUT_MS) };
-  }
-  return { failedLogins: failures, lockedUntil: null };
+/** `failures` already counts this attempt; a lock also resets the counter */
+export function lockAfter(failures: number, now: Date): LoginAttempts | null {
+  return failures >= MAX_FAILED_LOGINS
+    ? { failedLogins: 0, lockedUntil: addMs(now, LOCKOUT_MS) }
+    : null;
 }
 
 export function sessionExpiry(now: Date): Date {

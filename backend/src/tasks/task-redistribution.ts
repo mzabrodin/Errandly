@@ -26,10 +26,10 @@ export class TaskRedistribution implements OnModuleInit {
     );
   }
 
-  /** FR-15: manual assignments move too */
+  /** FR-15: manual and overdue assignments move too */
   async memberLeft(groupId: string, userId: string, tx: DbExecutor): Promise<void> {
     await this.repository.clearSeriesAssignee(groupId, userId, tx);
-    const open = await this.repository.openTasksOf(groupId, userId, this.clock.now(), tx);
+    const open = await this.repository.openTasksOf(groupId, userId, null, tx);
     await this.planner.reassign(groupId, open, tx);
   }
 

@@ -243,10 +243,11 @@ export class TasksRepository {
       .where(and(eq(tasks.groupId, groupId), gt(tasks.dueAt, from), lte(tasks.dueAt, to)));
   }
 
+  /** `after: null` includes overdue ones */
   async openTasksOf(
     groupId: string,
     userId: string,
-    after: Date,
+    after: Date | null,
     db: DbExecutor = this.db,
   ): Promise<TaskWithSeries[]> {
     return withSeries(
@@ -256,7 +257,7 @@ export class TasksRepository {
             eq(tasks.groupId, groupId),
             eq(tasks.assigneeId, userId),
             isNull(tasks.completedAt),
-            gt(tasks.dueAt, after),
+            after === null ? undefined : gt(tasks.dueAt, after),
           ),
         )
         .orderBy(asc(tasks.dueAt)),

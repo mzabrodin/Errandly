@@ -78,11 +78,17 @@ describe('API contract (integration)', () => {
     await anya.get('/api/nope').expect(404).expect({ code: 'NOT_FOUND' });
   });
 
-  it('checks absence ranges', () => {
-    return anya
-      .post(`/api/groups/${groupId}/absences`)
-      .send({ from: '2026-11-10', to: '2026-11-09' })
+  const absence = (body: object) => anya.post(`/api/groups/${groupId}/absences`).send(body);
+
+  it('checks absence days and ranges', async () => {
+    await absence({ from: '2026-11-10', to: '2026-11-09' })
       .expect(400)
       .expect({ code: 'VALIDATION', fields: { to: 'beforeFrom' } });
+    await absence({ from: '2026-02-30', to: '2026-03-02' })
+      .expect(400)
+      .expect({ code: 'VALIDATION', fields: { from: 'invalid' } });
+    await absence({ from: '2026-11-10' })
+      .expect(400)
+      .expect({ code: 'VALIDATION', fields: { to: 'required' } });
   });
 });

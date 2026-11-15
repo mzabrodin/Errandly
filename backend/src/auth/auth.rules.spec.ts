@@ -1,6 +1,6 @@
 import { generateToken, hashToken } from '../common/tokens.js';
 import {
-  afterFailedLogin,
+  lockAfter,
   LOCKOUT_MS,
   lockRemainingSeconds,
   MAX_FAILED_LOGINS,
@@ -16,17 +16,17 @@ const at = (ms: number) => new Date(now.getTime() + ms);
 
 describe('auth rules', () => {
   describe('lockout (FR-06)', () => {
-    it('counts failures below the limit', () => {
-      expect(afterFailedLogin(0, now)).toEqual({ failedLogins: 1, lockedUntil: null });
-      expect(afterFailedLogin(3, now)).toEqual({ failedLogins: 4, lockedUntil: null });
+    it('does not lock below the limit', () => {
+      expect(lockAfter(1, now)).toBeNull();
+      expect(lockAfter(4, now)).toBeNull();
     });
 
-    it('locks for 15 minutes on the 5th failure and resets the counter', () => {
+    it('locks for 15 minutes from the 5th failure and resets the counter', () => {
       expect(MAX_FAILED_LOGINS).toBe(5);
-      expect(afterFailedLogin(4, now)).toEqual({
-        failedLogins: 0,
-        lockedUntil: at(15 * 60 * 1000),
-      });
+      const lock = { failedLogins: 0, lockedUntil: at(15 * 60 * 1000) };
+      expect(lockAfter(5, now)).toEqual(lock);
+      // A parallel attempt that counted past the limit
+      expect(lockAfter(6, now)).toEqual(lock);
     });
 
     it('reports the remaining lock time in whole seconds, rounded up', () => {

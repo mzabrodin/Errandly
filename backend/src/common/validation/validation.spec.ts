@@ -10,7 +10,7 @@ import {
 } from 'class-validator';
 
 import { code, validationExceptionFactory } from './validation.js';
-import { IsOnOrAfter, IsPassword, isStrongPassword, isTimeZone } from './validators.js';
+import { isIsoDate, IsOnOrAfter, IsPassword, isStrongPassword, isTimeZone } from './validators.js';
 
 class WeekdaysDto {
   @ArrayNotEmpty(code('noWeekdays'))
@@ -111,6 +111,15 @@ describe('validators', () => {
     expect(isStrongPassword('12345678')).toBe(false);
     expect(isStrongPassword('Password')).toBe(false);
     expect(isStrongPassword(12_345_678)).toBe(false);
+  });
+
+  it('accepts only real calendar days as yyyy-mm-dd', () => {
+    expect(isIsoDate('2026-11-15')).toBe(true);
+    expect(isIsoDate('2028-02-29')).toBe(true);
+    expect(isIsoDate('2026-02-30')).toBe(false);
+    expect(isIsoDate('2026-13-01')).toBe(false);
+    expect(isIsoDate('2026-1-5')).toBe(false);
+    expect(isIsoDate('2026-11-15T00:00:00Z')).toBe(false);
   });
 
   it('accepts only IANA time zones', () => {
