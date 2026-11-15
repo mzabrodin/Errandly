@@ -30,6 +30,8 @@ const API_ORIGIN = import.meta.env.VITE_API_URL ?? '';
 export const api = createClient<paths>({
   baseUrl: API_ORIGIN,
   credentials: 'include',
+  // Looked up per request rather than captured once, so tests can stub it
+  fetch: (request) => globalThis.fetch(request),
 });
 
 interface ApiSuccess<T> {

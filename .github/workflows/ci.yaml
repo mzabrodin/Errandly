@@ -57,7 +57,7 @@ jobs:
           test -z "$(git status --porcelain -- backend/drizzle)"
       - run: npm run db:migrate
       - run: npm run db:seed
-      - run: npm test -w frontend
+      - run: npm run test:cov -w frontend
       - run: npm run test:cov -w backend
       - run: npm run test:integration -w backend
 
