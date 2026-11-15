@@ -224,7 +224,7 @@ chore(deps): update vite
 
 ### Pull requests
 
-Зміни в `main` — лише через PR з одним схваленням і зеленим CI (NFR-MAIN-03, NFR-PROC-02). Налаштовується вручну: Settings → Branches → правило для `main`: «Require a pull request» (1 approval) і «Require status checks» (`check`, `docker`).
+Зміни в `main` — лише через PR з одним схваленням і зеленим CI (NFR-MAIN-03, NFR-PROC-02). Налаштовується вручну: Settings → Branches → правило для `main`: «Require a pull request» (1 approval) і «Require status checks» (`lint`, `frontend`, `backend`, `integration`, `e2e`).
 
 ### Оновлення залежностей
 

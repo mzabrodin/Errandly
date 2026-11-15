@@ -13,10 +13,35 @@ concurrency:
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
-  check:
+  lint:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - uses: ./.github/actions/setup
+      - name: Commit messages
+        if: github.event_name == 'pull_request'
+        run: npx commitlint --from ${{ github.event.pull_request.base.sha }} --to ${{ github.event.pull_request.head.sha }}
+      - run: npm run format:check
+      - run: npm run lint
+
+  frontend:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/setup
+      - run: npm run typecheck -w frontend
+      - run: npm run test:cov -w frontend
+      - run: npm run build -w frontend
+
+  backend:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
     services:
-      # Migrations, the dev seed and the integration health check run against a real database
+      # The migrations and the dev seed run against a real database
       postgresql:
         image: postgres:18-alpine
         env:
@@ -33,19 +58,8 @@ jobs:
       DATABASE_URL: postgresql://errandly:errandly@localhost:5432/errandly
     steps:
       - uses: actions/checkout@v7
-        with:
-          fetch-depth: 0
-      - uses: actions/setup-node@v7
-        with:
-          node-version-file: .nvmrc
-          cache: npm
-      - run: npm ci
-      - name: Commit messages
-        if: github.event_name == 'pull_request'
-        run: npx commitlint --from ${{ github.event.pull_request.base.sha }} --to ${{ github.event.pull_request.head.sha }}
-      - run: npm run format:check
-      - run: npm run lint
-      - run: npm run build
+      - uses: ./.github/actions/setup
+      - run: npm run build -w backend
       - name: API contract is up to date
         run: |
           npm run api:sync
@@ -57,14 +71,25 @@ jobs:
           test -z "$(git status --porcelain -- backend/drizzle)"
       - run: npm run db:migrate
       - run: npm run db:seed
-      - run: npm run test:cov -w frontend
       - run: npm run test:cov -w backend
-      - run: npm run test:integration -w backend
 
-  docker:
+  integration:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v7
+      - uses: ./.github/actions/setup
+      - run: npm run test:integration -w backend
+
+  e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      # Every test signs up from the runner's IP
+      AUTH_RATE_LIMIT_PER_MINUTE: 1000
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/setup
       - name: Start the stack
         run: docker compose up --build -d --wait
       - name: Smoke test through nginx
@@ -74,6 +99,18 @@ jobs:
           curl -fsSI http://localhost:8080/ | grep -qi '^content-security-policy:'
           curl -fsSI http://localhost:8080/ | grep -qi '^x-frame-options: deny'
           curl -fsSI http://localhost:8080/api/health | grep -qi '^x-content-type-options: nosniff'
+      - run: npx playwright install --with-deps chromium
+        working-directory: frontend
+      - run: npm run e2e -w frontend
+      - name: Playwright report
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: playwright-report
+          path: |
+            frontend/playwright-report
+            frontend/test-results
+          retention-days: 7
       - name: Logs on failure
         if: failure()
         run: docker compose logs
