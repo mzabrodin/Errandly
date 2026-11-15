@@ -18,7 +18,6 @@ package "Frontend SPA (React 19, TypeScript, Vite)" {
   [pages, features\nекрани й сценарії] as pages
   [shared\nAPI-клієнт (openapi-fetch), TanStack Query, i18n] as shared
 }
-[MSW\nмок-API (лише розробка)] as msw
 
 node "nginx\nстатика SPA, проксі /api, X-Request-Id" as nginx
 
@@ -46,7 +45,6 @@ user --> nginx : HTTPS
 nginx --> app : віддає SPA
 app --> pages
 pages --> shared
-shared ..> msw : VITE_USE_MOCKS=true
 shared --> nginx : REST JSON,\ncookie-сесія
 nginx --> http : /api
 
