@@ -54,6 +54,7 @@ class TasksApi <<з іншого модуля>>
 class UsersApi <<з іншого модуля>>
 class SettingsService <<notifications>>
 class TokenCipher <<спільне ядро>>
+class GoogleClients <<спільне ядро>>
 class EventBus <<спільне ядро>>
 
 CalendarController ..> CalendarService
@@ -74,4 +75,6 @@ SettingsService ..> CalendarApi
 CalendarGateways ..> CalendarGateway
 GoogleCalendarOAuth -up-|> CalendarOAuth
 GoogleCalendarGateway -up-|> CalendarGateway
+GoogleCalendarOAuth ..> GoogleClients
+GoogleCalendarGateway ..> GoogleClients
 @enduml

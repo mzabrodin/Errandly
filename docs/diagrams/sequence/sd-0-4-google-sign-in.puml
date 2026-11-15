@@ -1,0 +1,59 @@
+@startuml sd-0-4-google-sign-in
+skinparam shadowing false
+skinparam defaultFontName "Inter, Segoe UI, Arial"
+skinparam maxMessageSize 220
+skinparam ResponseMessageBelowArrow true
+autonumber
+
+actor "Користувач" as User
+participant "React SPA" as SPA
+participant "OAuthController" as Ctrl
+participant "OAuthSignInService" as Svc
+participant "GoogleOAuthSignIn\n(порт OAuthSignIn)" as Adapter
+participant "Google" as Google
+participant "AuthRepository" as Repo
+participant "UsersApi" as Users
+participant "SessionService" as Sessions
+
+== Початок (FR-07, SYS-06) ==
+User -> SPA : «Увійти через Google»
+SPA -> Ctrl : GET /api/auth/oauth/google?next&locale&timezone\n(перехід сторінки)
+Ctrl -> Svc : start(provider, query)
+Svc -> Svc : nonce; state = зашифровані {провайдер, хеш nonce,\nnext лише в застосунку, мова, пояс, 10 хв}
+Svc -> Adapter : authUrl(state)
+Ctrl --> User : 302 на Google + HttpOnly-cookie з nonce
+User -> Google : згода (openid, email, profile)
+Google --> User : 302 на /api/auth/oauth/google/callback?code&state
+
+== Повернення ==
+User -> Ctrl : GET …/callback?code&state (+ cookie з nonce)
+Ctrl -> Svc : complete(provider, {code, state, error}, nonce)
+alt Скасовано, інший браузер, state протерміновано чи підроблено
+  Ctrl --> User : 302 /login?oauthError=google
+else state і nonce збігаються
+  Svc -> Adapter : exchange(code)
+  Adapter -> Google : обмін коду, перевірка ID-токена
+  Adapter --> Svc : sub, email, emailVerified, ім'я, фото
+  alt Email у Google не підтверджено
+    Ctrl --> User : 302 /login?oauthError=google
+  else
+    Svc -> Repo : findIdentity(google, sub)
+    alt Google-акаунт уже прив'язано
+      Svc -> Repo : touchIdentity
+    else Є обліковий запис із цим email
+      opt Його email ще не підтверджено
+        Svc -> Repo : deletePassword, deleteSessionsOfUser
+        Svc -> Users : markEmailVerified
+      end
+      Svc -> Repo : insertIdentity
+    else Нового користувача
+      Svc -> Users : create(ім'я, email, мова, пояс) + markEmailVerified
+      Svc -> Repo : insertIdentity
+    end
+    Svc -> Users : setProviderAvatar(фото з Google)
+    Svc -> Sessions : create(userId)
+    note right of Svc : усе в одній транзакції
+    Ctrl --> User : 302 на next + cookie errandly_session
+  end
+end
+@enduml

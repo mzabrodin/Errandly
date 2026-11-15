@@ -180,7 +180,7 @@ erDiagram
 ### auth
 
 - **PasswordCredentials** — вхід за email і паролем: хеш argon2id і блокування після 5 невдалих спроб на 15 хвилин (`ACCOUNT_LOCKED` + `retryAfterSeconds`). Акаунт лише з Google такого рядка не має.
-- **AuthIdentity** — прив'язаний зовнішній акаунт (`provider`, `provider_user_id`). Сьогодні це Google; Apple чи Microsoft — нове значення переліку й нова стратегія входу.
+- **AuthIdentity** — прив'язаний зовнішній акаунт (`provider`, `provider_user_id`). Сьогодні це Google; Apple чи Microsoft — нове значення переліку й новий адаптер `OAuthSignIn`. Один запис має щонайбільше один акаунт кожного провайдера (`auth_identities_user_provider_key`), а `email` тут — лише довідково, востаннє отриманий від провайдера.
 - **Session** — cookie-сесія. У cookie лежить випадковий токен, у базі — лише його SHA-256 (SYS-24).
 - **EmailToken** — одноразове посилання з листа: підтвердження email або відновлення пароля (діє 1 год).
 

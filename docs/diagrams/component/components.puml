@@ -78,11 +78,7 @@ tasks --> pg : SQL
 kernel --> pg : event_publications
 users --> s3 : S3 API
 mail --> smtp : SMTP
-auth --> oauth : вхід (заплановано)
+auth --> oauth : вхід (OIDC)
 calendar --> gcal : OAuth та REST
 
-note bottom of tasks
-  calendar, notifications і stats —
-  поки що лише контролери (501)
-end note
 @enduml

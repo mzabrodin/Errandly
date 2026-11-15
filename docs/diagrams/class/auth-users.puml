@@ -20,6 +20,10 @@ package Controllers {
   class AccountController {
     +changePassword(dto)
   }
+  class OAuthController {
+    +start(provider, query)
+    +callback(provider, query)
+  }
   class MeController {
     +updateProfile(dto)
     +deleteAccount()
@@ -45,6 +49,18 @@ package Services {
     +resetPassword(token, password)
     +changePassword(user, current, next)
   }
+  class OAuthSignInService {
+    +start(provider, query)
+    +complete(provider, callback, nonce)
+  }
+  class SignInProviders {
+    +for(provider)
+  }
+  abstract class OAuthSignIn <<порт>> {
+    +authUrl(state)
+    +exchange(code)
+  }
+  class GoogleOAuthSignIn
   class SessionService {
     +create(userId)
     +authenticate(token)
@@ -79,12 +95,23 @@ package Repositories {
 }
 
 class PasswordHasher <<порт>>
+class GoogleClients <<спільне ядро>>
+class TokenCipher <<спільне ядро>>
 class ObjectStorage <<порт>>
 class MailService <<з іншого модуля>>
 class EventBus <<спільне ядро>>
 
 AuthController ..> AuthService
 AccountController ..> AuthService
+OAuthController ..> OAuthSignInService
+OAuthSignInService ..> SignInProviders
+OAuthSignInService ..> SessionService
+OAuthSignInService ..> UsersApi
+OAuthSignInService ..> AuthRepository
+OAuthSignInService ..> TokenCipher
+SignInProviders ..> OAuthSignIn
+GoogleOAuthSignIn -up-|> OAuthSignIn
+GoogleOAuthSignIn ..> GoogleClients
 MeController ..> UsersService
 AvatarController ..> AvatarsService
 AvatarFilesController ..> AvatarsService
