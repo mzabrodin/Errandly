@@ -11,7 +11,7 @@ import {
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { ApiFoundResponse, ApiParam, ApiQuery, ApiTags } from '@nestjs/swagger';
-import { parse } from 'cookie';
+import { parseCookie } from 'cookie';
 import type { CookieOptions, Request, Response } from 'express';
 
 import { AUTH_PROVIDERS, type AuthProvider } from '../common/domain.js';
@@ -123,6 +123,6 @@ export class OAuthController {
 function readNonce(request: Request): string | undefined {
   const header = request.headers.cookie;
   if (header === undefined) return undefined;
-  const nonce = parse(header)[NONCE_COOKIE];
+  const nonce = parseCookie(header)[NONCE_COOKIE];
   return nonce === '' ? undefined : nonce;
 }
