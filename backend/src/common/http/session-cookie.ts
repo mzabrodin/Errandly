@@ -1,5 +1,5 @@
 import type { ConfigService } from '@nestjs/config';
-import { parse } from 'cookie';
+import { parseCookie } from 'cookie';
 import type { CookieOptions, Request, Response } from 'express';
 
 import { NodeEnv, type EnvironmentVariables } from '../../config/env.validation.js';
@@ -25,7 +25,7 @@ export function secureCookies(config: ConfigService<EnvironmentVariables, true>)
 export function readSessionCookie(request: Request): string | undefined {
   const header = request.headers.cookie;
   if (header === undefined) return undefined;
-  const token = parse(header)[SESSION_COOKIE];
+  const token = parseCookie(header)[SESSION_COOKIE];
   return token === undefined || token === '' ? undefined : token;
 }
 
