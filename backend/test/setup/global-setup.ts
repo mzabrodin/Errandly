@@ -18,7 +18,7 @@ declare module 'vitest' {
 }
 
 // Keep in sync with the `storage` service in docker-compose.yaml
-const SEAWEEDFS_IMAGE = 'chrislusf/seaweedfs:4.48';
+const SEAWEEDFS_IMAGE = 'chrislusf/seaweedfs:4.53';
 const S3_PORT = 8333;
 
 const MIGRATIONS_FOLDER = fileURLToPath(new URL('../../drizzle', import.meta.url));

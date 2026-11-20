@@ -73,7 +73,7 @@ services:
   # S3 storage for avatars; the AWS_* pair is its only identity, so anonymous access is refused
   storage:
     <<: *service
-    image: chrislusf/seaweedfs:4.48
+    image: chrislusf/seaweedfs:4.53
     command: ['mini']
     environment:
       AWS_ACCESS_KEY_ID: *s3-access-key-id
